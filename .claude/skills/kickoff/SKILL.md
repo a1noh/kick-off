@@ -127,12 +127,13 @@ __KICKOFF_EOF__
 
 if [ -z "${KIT_HOME:-}" ]; then for d in "$PWD/.claude/skills/kickoff" "$HOME/.claude/skills/kickoff"; do [ -d "$d/templates" ] && KIT_HOME="$d" && break; done; fi
 KIT="${KIT_HOME:-}/templates"   # one source for the kit files (shared with the upgrade block)
-for f in run_tests.sh spec.py spec_template.md progress.py pre-commit; do [ -f "$KIT/$f" ] || { echo "MISSING kit file $KIT/$f"; exit 1; }; done
+for f in run_tests.sh spec.py spec_template.md progress.py pre-commit render_docs.py; do [ -f "$KIT/$f" ] || { echo "MISSING kit file $KIT/$f"; exit 1; }; done
 mkdir -p docs/specs/_template scripts
 cp "$KIT/run_tests.sh" .claude/hooks/run_tests.sh
 cp "$KIT/spec.py" scripts/spec.py
 cp "$KIT/spec_template.md" docs/specs/_template/spec.md
 cp "$KIT/progress.py" ui/progress.py   # the sidebar's plan reader (both UI modes)
+cp "$KIT/render_docs.py" scripts/render_docs.py   # docs/*.md -> docs/*.html (text + diagrams)
 
 cat > '.claude/settings.json' <<'__KICKOFF_EOF__'
 {
@@ -231,6 +232,9 @@ cat > 'CHEATSHEET.md' <<'__KICKOFF_EOF__'
 3. Keep on screen: `notes/raw.md` · the app (from phase 1; `/build` prints its URL) · Source Control `⌃⇧G` → Graph
    (every step commits and tags itself: `kickoff` → `plan` → `phase-1` … `phase-4`)
 
+**Can't see a diagram?** Open `docs/talk.html` or `docs/plan.html` in a browser (`.venv/bin/python scripts/render_docs.py`
+re-renders them), or view the `.md` on GitHub, which draws mermaid itself.
+
 ## Words you'll see
 **the app** = 2 tabs: the user's door (chat, upload, Q&A, form) + the **📊 Owner dashboard** · **Scenario board** = the
 3 demo stories in the sidebar: ⬜ not built · ❌ broken · ✅ works · **spec** = `docs/specs/phase-N/spec.md`, every line
@@ -297,7 +301,8 @@ something ✅. After each phase the user **tries it in the app** and sees what c
 - `docs/plan.md`: the spec. Phases are checkboxes (`- [ ] Phase N: …`), each with `On screen (before → after):`, `Builds:`
   and a `Try it:` list (phase 1 = a tour of the broken shell; phases 2–3 end with one 🚧 still-broken line). Nothing gets built outside it
   without asking; if scope changes, update the plan first.
-- `docs/talk.md`: the presentation, including the file map. **Every phase** appends a §7 Build-story entry; the last
+- `docs/talk.md`: the presentation, including the **architecture diagram with file names** (§3; grey until built) and
+  the file map. `docs/talk.html` / `docs/plan.html` are browser versions (`scripts/render_docs.py`), never edited by hand. **Every phase** appends a §7 Build-story entry; the last
   phase fills §1–§6, from what was actually built.
 - `docs/specs/phase-N/spec.md`: what phase N builds, written by `/build` **before code**: requirements R1..Rn, each
   traced to a source, with exact "quoted" acceptance and a named test. `verify.md` next to it is the proof, written by
@@ -324,6 +329,7 @@ the venv has a `classroom.pth` that puts `src/`, `ui/` and the root on the path.
 | `ui/web/` | **UI react only**: Vite React UI; renders only what `/api/screen` returns (built into `ui/web/dist`, served by `ui/api.py`) |
 | `evals/scenarios.py` | the 3 scenarios + bonus as data + checks (phase 1); drives the Scenario board, tests and evals |
 | `evals/` | eyes: eval runner + cases grown from the 3 scenarios |
+| `scripts/render_docs.py` | kit tool: `docs/talk.md` + `docs/plan.md` → `.html` with the diagrams (when a preview can't show mermaid) |
 | `scripts/spec.py` | kit tool: `check` (every spec grounded + tested; the Stop hook runs it) · `verify N` (writes the proof) |
 
 ## The app (`ui/app.py`: the whole shell in phase 1, every later phase makes part of it real)
@@ -421,7 +427,39 @@ _"You asked for X. I built Y for [user]. Out of scope: Z." + what success looks 
 _Live demo of the 3 scenarios from docs/plan.md: happy path, edge case, handoff._
 
 ## 3. How it works
-_Map first, then trace scenario 1: input → guards.py → agent.py loop (or core.py) → tools.py → guards.py → output. 2–3 short snippets max (the loop, one tool gated in code, one guard). Key line: "LLM understands, Python decides." (app: "Every rule lives in one place, in plain Python.")_
+**Architecture: every file and what it does.** Grey = not built yet; `/build` colors each file the phase it's built.
+View it: ⇧⌘V in VS Code · `docs/talk.html` in a browser (`.venv/bin/python scripts/render_docs.py`) · or on GitHub.
+
+```mermaid
+flowchart LR
+  UI(["💬 ui/app.py · DOOR<br/>chat + 📊 owner dashboard"])
+  GI{{"🛡️ src/guards.py · GUARD IN<br/>stop triggers, before the model"}}
+  AG["🧠 src/agent.py · BRAIN<br/>the loop (app kind: src/core.py)"]
+  LLM["🤖 src/llm.py<br/>Gemini: text → JSON fields"]
+  TO["✋ src/tools.py · HANDS<br/>every action, gated in code"]
+  DA[("💾 src/data.py · MEMORY<br/>data/ → out/ records")]
+  GO{{"🛡️ src/guards.py · GUARD OUT<br/>reply matches the records"}}
+  EV[("👀 evals/ + out/audit.jsonl · EYES<br/>scenario board, evals, log")]
+
+  UI -- "message" --> GI
+  GI -- "ok" --> AG
+  AG -- "understand" --> LLM
+  AG -- "decide + act" --> TO
+  TO -- "read / write" --> DA
+  TO -- "log" --> EV
+  AG -- "reply" --> GO
+  GO -- "shown" --> UI
+
+  classDef door fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+  classDef guard fill:#fef3c7,stroke:#d97706,color:#78350f
+  classDef brain fill:#ede9fe,stroke:#7c3aed,color:#3b0764
+  classDef hands fill:#dcfce7,stroke:#16a34a,color:#14532d
+  classDef store fill:#f1f5f9,stroke:#475569,color:#0f172a
+  classDef todo fill:#f8fafc,stroke:#cbd5e1,color:#94a3b8
+  class UI,GI,AG,LLM,TO,DA,GO,EV todo
+```
+
+_Then trace scenario 1: input → guards.py → agent.py loop (or core.py) → tools.py → guards.py → output. 2–3 short snippets max (the loop, one tool gated in code, one guard). Key line: "LLM understands, Python decides." (app: "Every rule lives in one place, in plain Python.")_
 
 | File | Part | Purpose |
 |---|---|---|
@@ -500,6 +538,7 @@ UV="$(command -v uv || echo "$HOME/.local/bin/uv")"
 "$UV" pip install -q --python .venv/bin/python streamlit==1.40.0 pytest==8.3.3 ruff==0.8.4 python-dotenv==1.0.1
 SITE="$(.venv/bin/python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
 printf '%s\n' "$DEST/src" "$DEST/ui" "$DEST" > "$SITE/classroom.pth"   # flat imports from src/ + ui/
+.venv/bin/python scripts/render_docs.py docs/talk.md >/dev/null   # docs/talk.html, readable without a mermaid preview
 git init -q 2>/dev/null || true
 cp "$KIT/pre-commit" "$(git rev-parse --git-path hooks)/pre-commit" && chmod +x "$(git rev-parse --git-path hooks)/pre-commit"
 git add -A && git commit -q -m "kickoff: classroom (CLAUDE.md, raw notes, talk template, hooks, Explanatory style)"
@@ -515,6 +554,7 @@ mkdir -p docs/specs/_template scripts
 cp "$KIT/run_tests.sh" .claude/hooks/run_tests.sh && chmod +x .claude/hooks/run_tests.sh
 cp "$KIT/spec.py" scripts/spec.py
 cp "$KIT/spec_template.md" docs/specs/_template/spec.md
+cp "$KIT/render_docs.py" scripts/render_docs.py
 echo "UPGRADE OK: specs on"
 ```
 

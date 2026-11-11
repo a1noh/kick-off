@@ -155,6 +155,7 @@ Title: `# Plan: <product name>`. Sections, in order:
 Run `.venv/bin/python <this skill's base directory>/templates/render_diagrams.py && open docs/architecture.html`
 (no `open` command, e.g. in a cloud session → skip opening).
 It must print one line per diagram (2). If it fails, fix plan.md and re-run.
+Then `.venv/bin/python scripts/render_docs.py docs/plan.md` → `docs/plan.html` (the whole plan, readable in any browser).
 
 ## 5. Commit (so the user can see the plan as one step in git)
 `git add -A && git commit -q -m "discovery: plan + data" && git tag -f plan` (on a re-run: message

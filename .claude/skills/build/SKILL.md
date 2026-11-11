@@ -112,6 +112,12 @@ denied, downloads an engine, phones home). Steps:
 ## 4. Talk entry, then commit
 - Append to `docs/talk.md` §7 Build story:
   `**Phase N · <name>** · Was broken: … · Fixed by: <file:line> … · Why it matters: … · Say it: "…"`.
+- **Architecture diagram** (`docs/talk.md` §3, mermaid): give every file this phase built its part's class (`door`,
+  `guard`, `brain`, `hands`, `store`) instead of `todo`; rename a node to the real file if it differs (e.g. `src/core.py`
+  for app kind, `ui/api.py` for UI react) and add a node + one labeled arrow for a new file in the layout (e.g.
+  `ui/dashboard.py`). Only files that exist leave grey. SAFE MERMAID (CLAUDE.md): `flowchart LR`, solid labeled arrows,
+  quoted labels, no HTML tags. Then `.venv/bin/python scripts/render_docs.py` → `docs/talk.html` + `docs/plan.html`
+  (older classrooms without it: copy `$KIT/render_docs.py` to `scripts/` first).
 - Last phase only: fill §1–§6 too (see §6 below).
 - `git add -A && git commit -q -m "phase N: <name>" && git tag -f phase-N`. The spec and verify.md go in the same commit.
 
@@ -144,7 +150,7 @@ Something off? → tell me what you saw. I add it to the spec as a new R, fix it
 ## 6. `docs/talk.md` §1–§6 (last phase, from what was actually built)
 - §1 What this is: asked / built / for whom / out of scope, success in the interviewer's words.
 - §2 The 3 scenarios as "type X → it does Y", in demo order.
-- §3 File map, the S1 trace, **exactly 3 snippets** with `file:line` (the loop, one gated tool, one guard).
+- §3 the architecture diagram (every node a real file, none grey), file map, the S1 trace, **exactly 3 snippets** with `file:line` (the loop, one gated tool, one guard).
   "LLM understands, Python decides."
 - §4 Key decisions: 3-5 lines "Chose X over Y because Z". Include "spec-driven: every requirement traced and tested".
 - §5 Safety & known gaps. §6 Eval score, production metrics, next week. §7 Tighten into a 1-minute broken → fixed story.

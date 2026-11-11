@@ -231,6 +231,19 @@ def main() -> int:
         blocked_env.stderr + blocked_key.stderr + clean.stderr,
     )
 
+    talk = (c / "docs/talk.md").read_text()
+    diagram = re.search(r"```mermaid\n(.*?)```", talk, re.S)
+    body = diagram[1] if diagram else ""
+    files = ("ui/app.py", "src/guards.py", "src/agent.py", "src/llm.py", "src/tools.py", "src/data.py", "evals/")
+    safe = body.startswith("flowchart LR") and not re.search(r"-\.|<-->|<(?!br/>)[a-z]+>|flowchart TD", body)
+    page = (c / "docs/talk.html").read_text() if (c / "docs/talk.html").exists() else ""
+    expect(
+        "T27 talk.md has the architecture diagram (file names, safe mermaid) + talk.html renders it",
+        all(f in body for f in files) and safe and "mermaid@11.12.2" in page and "marked@15.0.7" in page
+        and "src/agent.py" in page and (c / "scripts/render_docs.py").exists(),
+        f"files={[f for f in files if f not in body]} safe={safe} html={bool(page)}",
+    )
+
     repo = KIT.parents[2]
     if (repo / "install.sh").exists():
         home = tmp / "home"
