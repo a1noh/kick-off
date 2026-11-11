@@ -19,7 +19,7 @@ SETUP = """\
 You interview → plan → build → present. The app comes first: every scenario starts ⬜ and turns ✅ step by step.
 
   1  Key    paste your Gemini key into .env → check: .venv/bin/python scripts/check_llm.py
-  2  0:00   interview → notes/raw.md (Goal · Users · Inputs · Tools · Happy path · Danger · Edges · Scale)
+  2  0:00   interview with GUIDES → write it in notes/raw.md (Goal · Users · Inputs · Happy path · Danger · Edges · Scale)
   3  0:10   /discovery (plan mode) → docs/plan.md → read it, approve it
   4  0:15   /build ×4 → after each step do its "Try it" list in the app, then /build again
   5  1:40   code freeze → /rehearse

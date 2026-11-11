@@ -241,11 +241,10 @@ re-renders them), or view the `.md` on GitHub, which draws mermaid itself.
 traced to your notes and tested; `verify.md` next to it is the proof, written by a script · **🚧** = not built yet,
 arrives in step N · **guards / gates** = safety checks in plain Python · **src/** = the product · **ui/** = the screen only
 
-## GUIDES + Tools + Happy path: ask before you build (answers → notes/raw.md)
+## GUIDES + Happy path: ask before you build (answers → notes/raw.md)
 - **G**oal: what problem, and what does success look like?
 - **U**sers: who uses it, who takes over, and who owns it? What does the owner need to see every day? (→ the Owner dashboard)
 - **I**nputs: what data and systems does it touch? (files → `data/`)
-- **Tools**: what may it actually do (look up, book, cancel, refund…)? Which actions need a "yes" or a human first?
 - **Happy path**: walk me through one typical case, start to finish, in their words (→ demo scenario 1)
 - **D**anger: what can it never get wrong? When does a human take over?
 - **E**dges: what are the tricky or messy cases?
