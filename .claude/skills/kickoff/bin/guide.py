@@ -66,7 +66,25 @@ def board(root: Path) -> str:
     code = "from evals.scenarios import run_all\nI={'not_built':'⬜','fail':'❌','pass':'✅'}\n"
     code += "print(' · '.join(f'{I[r.state]} {r.id}' for r in run_all()))"
     out = venv_run(root, ["-c", code]).splitlines()
-    return out[-1] if out else "could not run evals/scenarios.py"
+    if not out:
+        return "could not run evals/scenarios.py"
+    works = works_in(root)  # say when each unbuilt scenario starts working, so "P1 ✅" never reads as "S1 works"
+    return " · ".join(
+        f"{c} (works in P{works[c.split()[1]]})" if c.startswith("⬜") and c.split()[1] in works else c for c in out[-1].split(" · ")
+    )
+
+
+def works_in(root: Path) -> dict[str, int]:
+    """Scenario id -> phase that makes it work, from the plan's On screen lines ("Board S2, S3 ⬜→✅")."""
+    plan = (root / "docs" / "plan.md").read_text() if (root / "docs" / "plan.md").exists() else ""
+    found: dict[str, int] = {}
+    for n in [int(x) for _, x, _ in PHASE.findall(plan)]:
+        m = re.search(rf"^- \[[ x]\] Phase {n}:(.*?)(?=^- \[[ x]\] Phase \d+:|^## |\Z)", plan, re.M | re.S)
+        line = re.search(r"On screen[^\n]*", m[1]) if m else None
+        for group in re.findall(r"Board ([^·]*?)⬜→✅", line.group(0) if line else ""):
+            for sid in re.findall(r"\b(S\d+|[Bb]onus)\b", group):
+                found.setdefault(sid[0].upper() + sid[1:], n)
+    return found
 
 
 def app_url(root: Path) -> str:

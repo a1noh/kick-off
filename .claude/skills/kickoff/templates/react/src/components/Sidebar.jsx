@@ -15,7 +15,7 @@ function Stepper({ phases }) {
           <li key={p.n} className={state} title={`Phase ${p.n}: ${p.name}`}>
             <span className="bar" aria-hidden />
             <span className="lbl">
-              P{p.n}
+              {p.done ? "✅" : "⬜"} P{p.n}
               <span className="sr-only">{p.done ? " done" : p.n === current ? " next" : " not built"}</span>
             </span>
           </li>
@@ -41,6 +41,7 @@ export default function Sidebar({ s, title, onReset, onTry, busy }) {
       <Collapsible.Content className="guide">
         <section className="now" aria-label="Next step">
           <Stepper phases={s.phases} />
+          {s.built_detail && <p className="built small">✅ {s.built_detail}</p>}
           <div className="next">
             <code>{s.next}</code>
             <CopyButton text={s.next} label="next command" />
@@ -54,7 +55,9 @@ export default function Sidebar({ s, title, onReset, onTry, busy }) {
         </section>
 
         <section aria-label="Scenario board">
-          <h2>Scenarios</h2>
+          <h2>
+            Scenarios · {s.board.filter((b) => b.state === "pass").length}/{s.board.length} working
+          </h2>
           <Board board={s.board} />
         </section>
 

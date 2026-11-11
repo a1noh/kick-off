@@ -92,7 +92,7 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 
 .now { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
 .stepper { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.stepper li { display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+.stepper li { display: flex; flex-direction: column; gap: 5px; font-size: 11px; white-space: nowrap; font-weight: 600; color: var(--ink-3); }
 .stepper .bar { height: 4px; border-radius: 4px; background: var(--line); }
 .stepper .done .bar { background: var(--accent); }
 .stepper .done { color: var(--ink); }
@@ -133,6 +133,10 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 .row.fail .state { color: var(--bad); }
 .row .name { flex: 1; min-width: 0; }
 .row .count { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+.works-in { font-size: 11px; font-weight: 600; color: var(--ink-3); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+.checks li.ok { color: var(--ok); }
+.checks li.bad { color: var(--bad); }
+.built { margin: 0 0 8px; color: var(--ink-2); }
 .row .chev { flex: none; color: var(--ink-3); transition: transform 200ms var(--ease); }
 .row-trigger[data-state="open"] .chev { transform: rotate(180deg); }
 .row-content { border-top: 1px solid var(--line); padding: 8px 12px 10px; }

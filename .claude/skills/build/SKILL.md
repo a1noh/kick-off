@@ -88,7 +88,8 @@ Copy `docs/specs/_template/spec.md` and fill it **from the sources only**:
    `docs/specs/phase-N/verify.md` (pass/fail per R + the screen as text) and `docs/specs/README.md`.
    It must print `VERIFY OK`.
 5. Read the screen dump in `verify.md` against the phase's `On screen` line and **every** `Try it` line, character by
-   character for quoted text. Mismatch → fix the code (or, if the plan line is wrong, fix plan + spec and tell the user),
+   character for quoted text. Its "Try-it screen claims" list must be all ✅ (verify fails on a ❌): the plan, the screen and
+   the guide say the same words. Mismatch → fix the code (or, if the plan line is wrong, fix plan + spec and tell the user),
    then repeat from step 1.
 6. `.venv/bin/python scripts/spec.py check` → `SPEC OK` (the Stop hook enforces it too).
 7. The app is running: if `.streamlit.pid` is alive, use the port in `.streamlit.port` ("refresh the tab"). Otherwise take
@@ -137,6 +138,7 @@ Runs twice: **phase 1** (`polish`, after the shell's tests pass, before `verify 
 ## 5. Hand over, then **STOP**
 ```
 ✅ Phase N built · tests X passed · spec R1–Rk verified · committed as phase-N
+⚠️ Not working yet: <each ⬜ scenario + the phase that makes it work, e.g. "S1 → phase 2 · S2, S3 → phase 3"; "nothing" when all ✅>
 🖥  App: http://localhost:<port>  (refresh the tab)
 📄 Spec: docs/specs/phase-N/spec.md · proof: docs/specs/phase-N/verify.md
 

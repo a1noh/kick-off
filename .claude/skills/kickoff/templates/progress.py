@@ -39,6 +39,33 @@ def try_it(n: int) -> list[str]:
     return re.findall(r"^\s+\d+\. (.+)$", after[1], re.M) if len(after) == 2 else []
 
 
+def _block(text: str, n: int) -> str:
+    """The plan text under phase n (up to the next phase or section)."""
+    start = re.search(rf"^- \[[ x]\] Phase {n}:", text, re.M)
+    if not start:
+        return ""
+    rest = text[start.end() :]
+    end = re.search(r"^- \[[ x]\] Phase \d+:|^## ", rest, re.M)
+    return rest[: end.start()] if end else rest
+
+
+def scenario_phases() -> dict[str, int]:
+    """Scenario id -> the phase that makes it work, read from each phase's On screen line ("Board S2, S3 ⬜→✅")."""
+    text, found = _text(), {}
+    for n in phases():
+        line = re.search(r"On screen[^\n]*", _block(text, n))
+        for group in re.findall(r"Board ([^·]*?)⬜→✅", line.group(0) if line else ""):
+            for sid in re.findall(r"\b(S\d+|[Bb]onus)\b", group):
+                found.setdefault(sid[0].upper() + sid[1:], n)
+    return found
+
+
+def built() -> str:
+    """'Phase N: name' of the last ticked phase ('' if none)."""
+    n = last_ticked()
+    return f"Phase {n}: {phases()[n][1]}" if n else ""
+
+
 def next_command() -> str:
     """`/build` while a phase is unticked, then `/rehearse`."""
     p = phases()

@@ -204,18 +204,60 @@ def cmd_verify(n: int) -> int:
             f"| {r['id']} | `{r['test'][0] if r['test'] else '—'}::{name}` | {'✅ pass' if ok else '❌ fail'} |"
         )
     screen = render_screen()
+    claims, missing = screen_claims(n, screen)
     stamp = f"{datetime.now():%Y-%m-%d %H:%M}"
     body = (
         f"# Phase {n} · verification\n\nAuto-written by `scripts/spec.py verify {n}` at {stamp}. Do not edit by hand.\n\n"
         "## Requirements\n" + "\n".join(rows) + "\n\n## Screen (rendered, as the user sees it now)\n```text\n"
-        f"{screen}\n```\n"
+        f"{screen}\n```\n\n## Try-it screen claims (quoted text the plan says is on screen)\n"
+        + "\n".join(claims)
+        + "\n"
     )
     (SPECS / f"phase-{n}" / "verify.md").write_text(body)
     write_index()
     print(body)
     failed = [r["id"] for r in reqs if not results.get(r["test"][1] if r["test"] else "", False)]
-    print("VERIFY OK" if not failed and "APP EXCEPTION" not in screen else f"VERIFY FAIL: {failed or 'app exception'}")
-    return 1 if failed or "APP EXCEPTION" in screen else 0
+    bad = (
+        failed
+        or ("app exception" if "APP EXCEPTION" in screen else "")
+        or (f"not on screen: {missing}" if missing else "")
+    )
+    print("VERIFY OK" if not bad else f"VERIFY FAIL: {bad}")
+    return 1 if bad else 0
+
+
+def screen_claims(n: int, screen: str) -> tuple[list[str], list[str]]:
+    """Plan and screen must agree. A Try-it line with no `input` describes the screen right after the phase: every
+    "quoted" text in it must be on the rendered screen (else verify fails). Lines with inputs describe what appears
+    after typing them; their non-reply quotes are listed as ℹ️ for the by-hand Try-it run."""
+    text = PLAN.read_text() if PLAN.exists() else ""
+    m = re.search(
+        rf"^- \[[ x]\] Phase {n}:.*?\*\*Try it:\*\*(.*?)(?=^- \[[ x]\] Phase \d+:|^## |\Z)", text, re.M | re.S
+    )
+    lines = re.findall(r"^\s+\d+\. (.+)$", m[1], re.M) if m else []
+    shown = "\n".join(
+        x for x in screen.splitlines() if not any(x.endswith(line) for line in lines)
+    )  # not the Try-it list itself
+    rows, missing = [], []
+    for line in lines:
+        tokens = re.findall(r"`([^`]+)`|\"([^\"]+)\"", line)
+        has_input = any(t[0] for t in tokens)
+        prev_input = False
+        for inp, quote in tokens:
+            if inp:
+                prev_input = True
+                continue
+            if prev_input:  # the expected reply to the input before it: that's checked by the tests, not the screen
+                prev_input = False
+                continue
+            ok = quote in shown
+            if has_input:
+                rows.append(f'- ℹ️ after the inputs: "{quote}"')
+            else:
+                rows.append(f"- {'✅' if ok else '❌'} \"{quote}\"")
+                if not ok:
+                    missing.append(quote)
+    return rows or ["- (no Try-it lines)"], missing
 
 
 if __name__ == "__main__":

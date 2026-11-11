@@ -14,12 +14,13 @@ const SAMPLE = {
       { n: 1, name: "the app shell", done: true },
       { n: 2, name: "scenario 1 works", done: false },
     ],
+    built_detail: "Phase 1: the app shell",
     next_detail: "Phase 2: scenario 1 works",
     try_it_phase: 1,
     try_it: [`\`hi\` → "${STUB}"`, 'Open the 📊 Owner dashboard tab → every panel shows "⬜ KPIs: arrives in phase 2"'],
     board: [
-      { id: "S1", title: "Happy path", state: "not_built", label: "⬜ S1 · Happy path", checks: ["⬜ reply matches"], done: 0, total: 1, not_built: true },
-      { id: "S2", title: "Handoff", state: "not_built", label: "⬜ S2 · Handoff", checks: ["⬜ queue row written"], done: 0, total: 1, not_built: true },
+      { id: "S1", title: "Happy path", state: "not_built", label: "⬜ S1 · Happy path", checks: ["⬜ reply matches"], done: 0, total: 1, not_built: true, note: "not built yet (🚧 stub reply)", works_in: 2 },
+      { id: "S2", title: "Handoff", state: "not_built", label: "⬜ S2 · Handoff", checks: ["⬜ queue row written"], done: 0, total: 1, not_built: true, note: "not built yet (🚧 stub reply)", works_in: 3 },
     ],
     next: "/build",
   },
@@ -55,7 +56,11 @@ test("shows the guide: stepper, next command, try-it chips, scenarios", () => {
   expect(screen.getByText("Phase 2: scenario 1 works")).toBeTruthy();
   expect(screen.getAllByText("hi").length).toBeGreaterThan(0);
   expect(screen.getByText(STUB)).toBeTruthy();
-  expect(screen.getByText("S1 · Happy path")).toBeTruthy();
+  // the plan's exact words: Try-it lines quote these, so the screen must show them verbatim
+  for (const s of ["⬜ S1 · Happy path", "✅ Phase 1: the app shell", "works in P2", "works in P3", "Scenarios · 0/2 working"]) {
+    expect(screen.getByText(s, { exact: false })).toBeTruthy();
+  }
+  expect(screen.getByLabelText("Build progress").textContent).toContain("✅ P1");
   expect(screen.getByRole("button", { name: "Copy next command" })).toBeTruthy();
 });
 
@@ -76,15 +81,19 @@ test("Try sends the input to the chat and marks the reply as matching", async ()
   expect(screen.getAllByText(STUB).length).toBeGreaterThan(1); // the expected line + the real reply in the chat
 });
 
-test("board: one row open at a time, Next and Reset stay on screen", async () => {
+test("board: rows open independently, every click toggles, Next and Reset stay on screen", async () => {
+  localStorage.clear();
   render(<App initialScreen={SAMPLE} />);
   const s1 = screen.getByRole("button", { name: /S1 · Happy path/ });
   const s2 = screen.getByRole("button", { name: /S2 · Handoff/ });
-  await act(async () => fireEvent.click(s1));
-  expect(s1.getAttribute("aria-expanded")).toBe("true");
-  expect(screen.getByText("reply matches")).toBeTruthy();
+  for (const expected of ["true", "false", "true"]) {
+    await act(async () => fireEvent.click(s1));
+    expect(s1.getAttribute("aria-expanded")).toBe(expected);
+  }
+  expect(screen.getByText("⬜ reply matches")).toBeTruthy();
+  expect(screen.getAllByText("not built yet (🚧 stub reply)").length).toBeGreaterThan(0);
   await act(async () => fireEvent.click(s2));
-  expect(s1.getAttribute("aria-expanded")).toBe("false");
+  expect(s1.getAttribute("aria-expanded")).toBe("true"); // opening S2 never closes (or moves) S1
   expect(s2.getAttribute("aria-expanded")).toBe("true");
   expect(screen.getByRole("button", { name: /Reset demo data/ })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Copy next command" })).toBeTruthy();

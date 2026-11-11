@@ -35,7 +35,7 @@ notes/raw.md   your interview notes (Claude reads, never edits)
 data/          the interviewer's files
 docs/          plan.md · talk.md · specs/phase-N/{spec.md, verify.md}
 src/           the product: agent.py or core.py, tools.py (gated), guards.py, data.py, llm.py
-ui/            the screen only: Streamlit app.py (or React: api.py + web/)
+ui/            the screen only: React (api.py + web/, default) or Streamlit app.py
 evals/ tests/ scripts/   scenarios + board, tests, spec checker + demo
 ```
 
@@ -46,5 +46,5 @@ evals/ tests/ scripts/   scenarios + board, tests, spec checker + demo
 
 ## Working on the kit
 `./install.sh --link` symlinks the skills so edits here are live. Self-test: `python3 .claude/skills/kickoff/tests/selftest.py`
-(also runs in CI on every push). Optional React UI mode and Impeccable (pinned, opt-in, no hook): see `CHEATSHEET.md`
-inside a practice folder.
+(also runs in CI on every push). The UI is React by default (Node ≥ 18; Streamlit otherwise), designed by the bundled
+Impeccable skill (pinned, no hook, telemetry off) after phase 1 and in phase 4: see `CHEATSHEET.md` inside a practice folder.

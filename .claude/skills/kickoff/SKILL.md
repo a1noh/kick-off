@@ -324,21 +324,20 @@ the venv has a `classroom.pth` that puts `src/`, `ui/` and the root on the path.
 | `src/llm.py` | Gemini REST call (key from `.env`), returns JSON; the only file that touches the network. **App kind: only if the plan has the optional AI helper** |
 | `src/tools.py` | hands: every action, **gated in code** |
 | `scripts/demo.py` | runs the 3 demo scenarios from the terminal |
-| `ui/app.py` | door + owner dashboard: Streamlit UI (the full shell is **phase 1**, see "The app"); helpers like `ui/dashboard.py` next to it |
+| `ui/api.py` + `ui/web/` | **UI react (default)**: door + owner dashboard. `ui/api.py` = FastAPI, the screen as one JSON + the chat, display only; `ui/web/` = the kit's React UI (guide sidebar, chat, panels), built into `ui/web/dist` and served by `ui/api.py` |
+| `ui/app.py` | **UI streamlit** (only without Node ≥ 18 or for a Python-only brief): the same screen in Streamlit; helpers like `ui/dashboard.py` next to it |
 | `ui/progress.py` | kit file: reads `docs/plan.md` for the sidebar (Progress, Try it, Next) |
-| `ui/api.py` | **UI react only** (instead of `app.py`): FastAPI door, `/api/screen` + `/api/chat`; display only, no logic |
-| `ui/web/` | **UI react only**: Vite React UI; renders only what `/api/screen` returns (built into `ui/web/dist`, served by `ui/api.py`) |
 | `evals/scenarios.py` | the 3 scenarios + bonus as data + checks (phase 1); drives the Scenario board, tests and evals |
 | `evals/` | eyes: eval runner + cases grown from the 3 scenarios |
 | `scripts/render_docs.py` | kit tool: `docs/talk.md` + `docs/plan.md` → `.html` with the diagrams (when a preview can't show mermaid) |
 | `scripts/spec.py` | kit tool: `check` (every spec grounded + tested; the Stop hook runs it) · `verify N` (writes the proof) |
 
-## The app (`ui/app.py`: the whole shell in phase 1, every later phase makes part of it real)
+## The app (React `ui/api.py` + `ui/web/` by default, or Streamlit `ui/app.py`: the whole shell in phase 1, every later phase makes part of it real)
 - **Must match the sketch in `docs/plan.md` §2b** (written by `/discovery`, approved by the user).
 - **Everything exists from phase 1.** Panels that aren't live yet show `⬜ <panel>: arrives in phase N`. Unbuilt
   behavior replies `🚧 <feature> arrives in phase N` and never claims success. **Never remove a panel**; phases only turn
   ⬜ → live and 🚧 → real.
-- **Tab 1, the user's door** (the shape). Chat: `st.chat_input` + history and a "New chat" button. Batch: upload or
+- **Tab 1, the user's door** (the shape). Chat: input + history and a "New chat" button (React: the kit's `Chat.jsx`; Streamlit: `st.chat_input`). Batch: upload or
   "use sample" → results table. Q&A: question box + answer with its source. Tool: a form (`st.form`) → result + the
   updated view (e.g. calendar grid). Dashboard: filters → KPIs, chart, table. Workflow: list of records → pick one →
   allowed actions as buttons → its new state. Something else: the closest of these, adapted (say so in the plan).
@@ -350,7 +349,9 @@ the venv has a `classroom.pth` that puts `src/`, `ui/` and the root on the path.
 - **Sidebar = a minimal build guide, not text to read** (React: provided by the kit template; Streamlit: build it the
   same way): a 4-step progress stepper and the next command as copyable code (`st.code`), each Try-it input as copyable
   code with a "Try" button that sends it to the chat and the expected reply as one short caption, the scenario rows as
-  expanders with a checks count. No full sentences. Its content: progress read live from `docs/plan.md` (✅/⬜ per phase), the current phase's `Try it:` lines, and the
+  expanders with a checks count and "works in P<n>" (`progress.scenario_phases()`, read from the plan's "Board S1 ⬜→✅"
+  lines), and what the last ticked phase built (`progress.built()`), so "P1 ✅" never reads as "S1 works". No full sentences.
+  Every "quoted" screen text in a Try-it line must appear on the screen exactly: `scripts/spec.py verify` fails otherwise. Its content: progress read live from `docs/plan.md` (✅/⬜ per phase), the current phase's `Try it:` lines, and the
   **Scenario board** (S1, S2, S3, bonus: ⬜ not built / ❌ / ✅ from `evals/scenarios.py`, offline; a check that something
   did *not* happen is only evaluated after a real reply, so a stub can never show green), and the **next command** (`/build`
   for phase N+1, or `/rehearse`). The user always sees where they are, what to type, what works, and what's next.

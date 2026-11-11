@@ -173,6 +173,19 @@ def main() -> int:
     (c / "ui/api.py").unlink()
     out = render()
     expect("T20 Streamlit mode unchanged (AppTest render)", "✅ P1: probe" in out and "react" not in out, out[-300:])
+    # plan ↔ screen alignment: a quoted screen claim in a Try-it line must be on the rendered screen
+    plan = "# Plan\n## 6. Phases\n- [x] Phase 1: probe\n  - **Try it:**\n    1. Sidebar shows \"{q}\"\n- [ ] Phase 2: next\n"
+    write(c, "docs/plan.md", plan.format(q="✅ P1: probe"))
+    ok_run = sh(".venv/bin/python scripts/spec.py verify 1", c)
+    write(c, "docs/plan.md", plan.format(q="words the screen never shows"))
+    bad_run = sh(".venv/bin/python scripts/spec.py verify 1", c)
+    write(c, "docs/plan.md", plan.format(q="✅ P1: probe"))
+    sh(".venv/bin/python scripts/spec.py verify 1", c)
+    expect(
+        "T29 verify fails when a Try-it screen claim isn't on the screen (plan and screen agree)",
+        ok_run.returncode == 0 and bad_run.returncode == 1 and "not on screen" in bad_run.stdout,
+        ok_run.stdout[-200:] + bad_run.stdout[-200:],
+    )
     react = KIT / "templates" / "react"
     need = ["api_template.py", "test_screen_api.py", "package.json", "vite.config.js", "index.html", "src/App.jsx"]
     need += ["src/main.jsx", "src/App.test.jsx", "src/styles.css"]

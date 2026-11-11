@@ -27,6 +27,7 @@ LIVE: dict = {}  # panel -> () -> {"kind": "metrics", "items": [{"label", "value
 RESET = None  # phase 2+: e.g. lambda: Store(OUT).reset() (data.py owns the reset, never api.py)
 ICON = {"not_built": "⬜", "fail": "❌", "pass": "✅"}
 CHECK = {None: "⬜", True: "✅", False: "❌"}
+NOT_BUILT = "not built yet (🚧 stub reply)"  # same words on the board, in the proof and in plan Try-it lines
 config: dict = {"agent_factory": Agent, "board_agent": None}  # tests swap these (offline extractor, stub agent)
 sessions: dict[str, object] = {}  # session id -> Agent (one per browser chat, in memory)
 
@@ -47,6 +48,7 @@ def screen() -> dict:
     n = progress.last_ticked() or 1
     stub = config["board_agent"]
     results = run_all() if stub is None else run_all(agent_factory=stub)
+    works_in = progress.scenario_phases()  # S1 -> 2 …, from the plan's "Board S1 ⬜→✅" lines
     board = [
         {
             "id": r.id,
@@ -57,6 +59,8 @@ def screen() -> dict:
             "done": sum(ok is True for _, ok in r.checks),
             "total": len(r.checks),
             "not_built": r.state == "not_built",
+            "note": NOT_BUILT if r.state == "not_built" else "",
+            "works_in": works_in.get(r.id),
         }
         for r in results
     ]
@@ -66,6 +70,7 @@ def screen() -> dict:
     sidebar = {
         "progress": progress_line,
         "phases": [{"n": k, "name": name, "done": d} for k, (d, name) in phases.items()],
+        "built_detail": progress.built(),
         "next_detail": f"Phase {upcoming[0]}: {phases[upcoming[0]][1]}" if upcoming else "All phases built",
         "try_it_phase": n,
         "try_it": progress.try_it(n),
@@ -83,7 +88,7 @@ def screen_text() -> str:
     lines += [f"**Try it** (phase {sb['try_it_phase']})"] + [f"{i}. {t}" for i, t in enumerate(sb["try_it"], 1)]
     lines.append("**Scenario board**")
     for b in sb["board"]:
-        lines += b["checks"] + (["not built yet (🚧 stub reply)"] if b["not_built"] else [])
+        lines += b["checks"] + ([b["note"]] if b["note"] else [])
     lines.append(f"**Next:** `{sb['next']}`")
     lines += [f"[row] {b['label']}" for b in sb["board"]] + ["[main]"]
     lines += [f"[info] {p['text']}" for p in s["panels"] if "text" in p]
