@@ -21,6 +21,8 @@ UI = Path(__file__).resolve().parent  # ui/ (the product code is in src/, on the
 TITLE = "Product name"  # /build: from plan.md title
 TABS = ["💬 Chat", "📊 Owner dashboard"]  # /build: tab 1 = the shape's door (plan.md §2b)
 PANELS: dict[str, int] = {"KPIs": 2, "Queue": 3, "Audit log": 3, "Eval score": 4}  # /build: plan.md §2b table
+WIDE: set[str] = {"KPIs", "Queue"}  # /build: panels that run full width in the §2b sketch
+SHOWS: dict[str, str] = {}  # /build: panel -> what it will show (§2b table "Shows" column), for the empty state
 LIVE: dict = {}  # panel -> () -> {"kind": "metrics", "items": [{"label", "value"}]} | {"kind": "table", "rows": [...]}
 RESET = None  # phase 2+: e.g. lambda: Store(OUT).reset() (data.py owns the reset, never api.py)
 ICON = {"not_built": "⬜", "fail": "❌", "pass": "✅"}
@@ -32,7 +34,7 @@ sessions: dict[str, object] = {}  # session id -> Agent (one per browser chat, i
 def panel(name: str) -> dict:
     """A dashboard panel: live once its phase is ticked, else an honest ⬜ placeholder."""
     n = PANELS[name]
-    base = {"name": name, "phase": n}
+    base = {"name": name, "phase": n, "wide": name in WIDE, "shows": SHOWS.get(name, "")}
     if not progress.ticked(n):
         return {**base, "live": False, "text": f"⬜ {name}: arrives in phase {n}"}
     if name in LIVE:
@@ -47,15 +49,24 @@ def screen() -> dict:
     results = run_all() if stub is None else run_all(agent_factory=stub)
     board = [
         {
+            "id": r.id,
+            "title": r.title,
+            "state": r.state,
             "label": f"{ICON[r.state]} {r.id} · {r.title}",
             "checks": [f"{CHECK[ok]} {label}" for label, ok in r.checks],
+            "done": sum(ok is True for _, ok in r.checks),
+            "total": len(r.checks),
             "not_built": r.state == "not_built",
         }
         for r in results
     ]
-    progress_line = " · ".join(f"{'✅' if d else '⬜'} P{k}" for k, (d, _) in progress.phases().items())
+    phases = progress.phases()
+    progress_line = " · ".join(f"{'✅' if d else '⬜'} P{k}" for k, (d, _) in phases.items())
+    upcoming = [k for k, (d, _) in phases.items() if not d]
     sidebar = {
         "progress": progress_line,
+        "phases": [{"n": k, "name": name, "done": d} for k, (d, name) in phases.items()],
+        "next_detail": f"Phase {upcoming[0]}: {phases[upcoming[0]][1]}" if upcoming else "All phases built",
         "try_it_phase": n,
         "try_it": progress.try_it(n),
         "board": board,

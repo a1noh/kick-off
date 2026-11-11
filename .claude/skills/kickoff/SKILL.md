@@ -347,7 +347,10 @@ the venv has a `classroom.pth` that puts `src/`, `ui/` and the root on the path.
   questions + unanswered; workflow → records by state), the handoff/blocked queue, the audit log, the eval score. If the
   product *is* a dashboard, tab 2 shows what's behind it: data-quality issues, excluded rows and why, the change log. At most one owner action (e.g. Approve,
   Resolve), only if the interviewer named a human step (so `/discovery` put it in the plan), through a gated tool and audited.
-- **Sidebar:** progress read live from `docs/plan.md` (✅/⬜ per phase), the current phase's `Try it:` lines, and the
+- **Sidebar = a minimal build guide, not text to read** (React: provided by the kit template; Streamlit: build it the
+  same way): a 4-step progress stepper and the next command as copyable code (`st.code`), each Try-it input as copyable
+  code with a "Try" button that sends it to the chat and the expected reply as one short caption, the scenario rows as
+  expanders with a checks count. No full sentences. Its content: progress read live from `docs/plan.md` (✅/⬜ per phase), the current phase's `Try it:` lines, and the
   **Scenario board** (S1, S2, S3, bonus: ⬜ not built / ❌ / ✅ from `evals/scenarios.py`, offline; a check that something
   did *not* happen is only evaluated after a real reply, so a stub can never show green), and the **next command** (`/build`
   for phase N+1, or `/rehearse`). The user always sees where they are, what to type, what works, and what's next.

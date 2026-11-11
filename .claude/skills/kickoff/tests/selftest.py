@@ -193,7 +193,8 @@ def main() -> int:
         and all((KIT / "vendor/impeccable" / f).exists() for f in ("skill/SKILL.md", "LICENSE", "PINNED"))
         and len(list((KIT / "vendor/impeccable/agents").glob("impeccable-*.md"))) == 4
         and not list((KIT / "vendor/impeccable").rglob("settings*.json"))
-        and "**`react`** (default)" in (skills / "discovery" / "SKILL.md").read_text(),
+        and "**`react`** (default)" in (skills / "discovery" / "SKILL.md").read_text()
+        and all(k in (react / "api_template.py").read_text() for k in ('"id": r.id', '"wide"', '"next_detail"', "SHOWS")),
         f"missing={missing} pinned={pinned} mentions={mentions} compiled={compiled}",
     )
 

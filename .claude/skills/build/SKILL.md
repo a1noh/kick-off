@@ -67,8 +67,10 @@ Copy `docs/specs/_template/spec.md` and fill it **from the sources only**:
     `K=<KIT>` (see Paths):
     `cp $K/react/api_template.py ui/api.py; mkdir -p ui/web; cp -R $K/react/{package.json,vite.config.js,index.html,src} ui/web/; cp $K/react/test_screen_api.py tests/test_screen.py`,
     then `uv pip install --python .venv/bin/python fastapi==0.115.6 uvicorn==0.32.1 httpx==0.28.1` and
-    `(cd ui/web && npm install --no-audit --no-fund && npm run build)`. Fill `ui/api.py`'s TITLE, TABS, PANELS (the §2b
-    panel table); adapt `ui/web/src/components/Chat.jsx` if the shape isn't chat. `ui/api.py` and `ui/web/` stay display only:
+    `(cd ui/web && npm install --no-audit --no-fund && npm run build)`. Fill `ui/api.py`'s TITLE, TABS, PANELS, WIDE and
+    SHOWS (the §2b panel table: phase, full-width panels, the "Shows" column). The guide sidebar (stepper + next command
+    with Copy, Try-it rows with Copy/Try and a ✓/✗ reply check, the scenario accordion) comes with the template: don't
+    rewrite it; adapt `ui/web/src/components/Chat.jsx` if the shape isn't chat. `ui/api.py` and `ui/web/` stay display only:
     the UI renders `/api/screen` strings and never decides. The required tests are the `TestClient` versions in
     `tests/test_screen.py` (same names). Later phases fill `LIVE` (panel → `{"kind": "metrics"|"table"|"lines", …}`)
     and `RESET` in `ui/api.py`. `npm test` (vitest, in `ui/web`) must pass too. Node < 18 → stop and tell the user (see CHEATSHEET).
@@ -105,14 +107,20 @@ Runs twice: **phase 1** (`polish`, after the shell's tests pass, before `verify 
 1. Install it into the project once (skip if `.claude/skills/impeccable/SKILL.md` exists):
    `V=<this skill's base>/../kickoff/vendor/impeccable; mkdir -p .claude/skills .claude/agents .impeccable && cp -R $V/skill .claude/skills/impeccable && cp $V/agents/*.md .claude/agents/ && echo '{"telemetry": false}' > .impeccable/config.json`.
    Never `npx impeccable install` and never its hooks/settings.
-2. **Don't run its launcher** (`scripts/impeccable …`: it downloads and executes a binary). Use the skill's own
-   documented "Launcher unavailable" path: say its one line ("Context loading did not run; I'll read the existing
-   project context directly."), read `docs/plan.md` §1-§2b as the product context (there's no PRODUCT.md/DESIGN.md),
-   read `reference/craft-floor.md` before any edit, then follow `reference/polish.md` (phase 4 first `reference/critique.md`:
-   show the user the score + top 3 issues). Mode = **Operate** (app UI + dashboard).
-3. Scope: **only `ui/web/src/**`**. Every quoted text from the plan, every panel and the board stay exactly as they are
-   (polish is refinement, not redesign; ask before changing any copy). `git diff --stat` proves the scope.
-4. Re-check: `cd ui/web && npm run build && npm test`, pytest, then `verify N` again; quoted texts must still render exactly.
+2. Product context: if `PRODUCT.md` is missing, write it from `docs/plan.md` §1–§2b (users, purpose, operating
+   context: "an agent builds this live in an interview; the guide sidebar shows that on purpose", constraints: quoted
+   texts render exactly, the UI only displays `ui/api.py`). Mark inferred facts. Don't stop for an interview.
+3. With `DO_NOT_TRACK=1`: run its launcher `sh .claude/skills/impeccable/scripts/impeccable context --target ui/web/src`
+   (first run downloads its engine, verified against the bundled checksums). If that fails (offline, cloud network),
+   use the skill's documented "Launcher unavailable" path instead and say its one line. Read `reference/craft-floor.md`
+   before any edit; mode = **Operate**. The kit's shell (guide sidebar, board, chat, panels) is an established surface:
+   extend and polish it, no new-world round inside a timed build.
+4. Phase 1: follow `reference/polish.md`. Phase 4: `reference/critique.md` first (show the user the score + top 3
+   issues), then `polish`. Then run its detector once on the result: `sh .claude/skills/impeccable/scripts/impeccable detect --json ui/web/src`
+   and fix what it flags (or name the deliberate exception).
+5. Scope: **only `ui/web/src/**`**. Every quoted text from the plan, every panel and the board stay exactly as they are
+   (polish is refinement; ask before changing any copy). `git diff --stat` proves the scope.
+6. Re-check: `cd ui/web && npm run build && npm test`, pytest, then `verify N` again; quoted texts must still render exactly.
 
 ## 4. Talk entry, then commit
 - Append to `docs/talk.md` §7 Build story:

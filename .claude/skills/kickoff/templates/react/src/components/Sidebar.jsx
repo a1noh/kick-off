@@ -1,37 +1,67 @@
-// Where am I (Progress), what to try (Try it), what works (Scenario board), what's next.
-export default function Sidebar({ s, title, onReset }) {
+// The build guide: where you are, what to type, what passes. Shown on purpose: it proves the agent built this step by step.
+import * as Collapsible from "@radix-ui/react-collapsible";
+import { ChevronDown, RotateCcw } from "lucide-react";
+import Board from "./Board.jsx";
+import CopyButton from "./CopyButton.jsx";
+import TryIt from "./TryIt.jsx";
+
+function Stepper({ phases }) {
+  const current = phases.find((p) => !p.done)?.n;
   return (
-    <aside className="sidebar">
-      <h1>{title}</h1>
-      <p>
-        <strong>Progress</strong> {s.progress}
-      </p>
-      <p>
-        <strong>Try it</strong> (phase {s.try_it_phase})
-      </p>
-      <ol className="tryit">
-        {s.try_it.map((t) => (
-          <li key={t}>{t}</li>
-        ))}
-      </ol>
-      <p>
-        <strong>Scenario board</strong>
-      </p>
-      {s.board.map((b) => (
-        <details key={b.label} className="row">
-          <summary>{b.label}</summary>
-          {b.checks.map((c) => (
-            <div key={c}>{c}</div>
-          ))}
-          {b.not_built && <div className="muted">not built yet (🚧 stub reply)</div>}
-        </details>
-      ))}
-      <p>
-        <strong>Next:</strong> <code>{s.next}</code>
-      </p>
-      <button className="secondary" onClick={onReset}>
-        🔄 Reset demo data
-      </button>
-    </aside>
+    <ol className="stepper" aria-label="Build progress">
+      {phases.map((p) => {
+        const state = p.done ? "done" : p.n === current ? "current" : "todo";
+        return (
+          <li key={p.n} className={state} title={`Phase ${p.n}: ${p.name}`}>
+            <span className="bar" aria-hidden />
+            <span className="lbl">
+              P{p.n}
+              <span className="sr-only">{p.done ? " done" : p.n === current ? " next" : " not built"}</span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+export default function Sidebar({ s, title, onReset, onTry, busy }) {
+  const done = s.phases.filter((p) => p.done).length;
+  return (
+    <Collapsible.Root className="sidebar" defaultOpen>
+      <div className="brand">
+        <h1>{title}</h1>
+        <Collapsible.Trigger className="guide-toggle" aria-label="Show or hide the build guide">
+          <span>
+            Guide · {done}/{s.phases.length}
+          </span>
+          <ChevronDown size={16} aria-hidden />
+        </Collapsible.Trigger>
+      </div>
+      <Collapsible.Content className="guide">
+        <section className="now" aria-label="Next step">
+          <Stepper phases={s.phases} />
+          <div className="next">
+            <code>{s.next}</code>
+            <CopyButton text={s.next} label="next command" />
+          </div>
+          <p className="muted small">{s.next_detail}</p>
+        </section>
+
+        <section aria-label="Try it">
+          <h2>Try it · phase {s.try_it_phase}</h2>
+          <TryIt key={s.try_it_phase} lines={s.try_it} phase={s.try_it_phase} onTry={onTry} busy={busy} />
+        </section>
+
+        <section aria-label="Scenario board">
+          <h2>Scenarios</h2>
+          <Board board={s.board} />
+        </section>
+
+        <button type="button" className="ghost reset" onClick={onReset}>
+          <RotateCcw size={14} aria-hidden /> Reset demo data
+        </button>
+      </Collapsible.Content>
+    </Collapsible.Root>
   );
 }
