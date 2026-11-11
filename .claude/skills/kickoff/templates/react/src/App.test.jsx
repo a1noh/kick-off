@@ -1,7 +1,10 @@
 // Smoke test: the UI shows every string the API sends (it renders, it never decides). Run: npm test
 import { fireEvent, render, screen } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import App from "./App.jsx";
+
+// No API server in a unit test: the chat tab still opens a session on load, so answer it here.
+vi.stubGlobal("fetch", vi.fn(async () => ({ json: async () => ({ session: "test-session", reply: "" }) })));
 
 const SAMPLE = {
   title: "Probe app",

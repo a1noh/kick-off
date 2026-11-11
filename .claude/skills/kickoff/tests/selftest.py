@@ -189,7 +189,11 @@ def main() -> int:
         "T21 React templates complete + pinned, skills name the UI mode",
         not missing and pinned and mentions and compiled and (KIT / "templates" / "progress.py").exists()
         and all((KIT / f).exists() for f in ("bin/guide.py", "bin/demo.py", "demo/brief.md", "templates/pre-commit"))
-        and (skills / "demo" / "SKILL.md").exists(),
+        and (skills / "demo" / "SKILL.md").exists()
+        and all((KIT / "vendor/impeccable" / f).exists() for f in ("skill/SKILL.md", "LICENSE", "PINNED"))
+        and len(list((KIT / "vendor/impeccable/agents").glob("impeccable-*.md"))) == 4
+        and not list((KIT / "vendor/impeccable").rglob("settings*.json"))
+        and "**`react`** (default)" in (skills / "discovery" / "SKILL.md").read_text(),
         f"missing={missing} pinned={pinned} mentions={mentions} compiled={compiled}",
     )
 
@@ -243,6 +247,15 @@ def main() -> int:
         and "src/agent.py" in page and (c / "scripts/render_docs.py").exists(),
         f"files={[f for f in files if f not in body]} safe={safe} html={bool(page)}",
     )
+
+    node = sh("bash -lc 'node -v' 2>/dev/null", tmp).stdout.strip()
+    if re.match(r"v(1[89]|[2-9]\d)\.", node):
+        web = tmp / "react-web"
+        shutil.copytree(KIT / "templates" / "react", web, ignore=shutil.ignore_patterns("*.py", "__pycache__"))
+        r = sh("bash -lc 'npm install --no-audit --no-fund --loglevel=error && npm run build && npm test'", web)
+        expect(f"T28 React template builds + its UI test passes (node {node})", r.returncode == 0 and (web / "dist/index.html").exists(), (r.stdout + r.stderr)[-500:])
+    else:
+        expect(f"T28 React template build (skipped: node {node or 'missing'} < 18)", True)
 
     repo = KIT.parents[2]
     if (repo / "install.sh").exists():

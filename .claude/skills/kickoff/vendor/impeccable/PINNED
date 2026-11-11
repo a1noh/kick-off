@@ -1,0 +1,5 @@
+Impeccable (https://github.com/pbakaus/impeccable), Apache-2.0, see LICENSE.
+tag: skill-v4.8.2
+commit: 035c8f319edd019936525a062fe99e83ca8d12c6
+fetched: 2026-11-11
+bundled: skill/ (= .claude/skills/impeccable) + agents/ (the 4 impeccable-*.md). NOT bundled: its .claude/settings.json (auto design hook).

@@ -219,11 +219,11 @@ cat > 'CHEATSHEET.md' <<'__KICKOFF_EOF__'
 - [ ] VS Code + the Claude Code extension · `claude` runs in VS Code's terminal (`/ide` connects it)
 - [ ] Free Gemini key from https://aistudio.google.com/apikey works (paste it into `.env` right after `/kickoff`;
       on claude.ai/code set it as the environment variable `GEMINI_API_KEY` and allow `generativelanguage.googleapis.com`)
-- [ ] Only for React mode (`UI: react`): Node ≥ 18 (`node -v`; else `brew install node@20`). Fill the npm cache once:
+- [ ] Node ≥ 18 for the default React UI (`node -v`; nvm: `nvm install 20 && nvm alias default 20`; or `brew install node@20`).
+      Without it `/discovery` falls back to Streamlit. Fill the npm cache once:
       `cp -R <kit>/templates/react /tmp/rw && cd /tmp/rw && npm install && npm run build && npm test`
-- [ ] Only if you want Impeccable in phase 4 (opt-in, pinned, no hook):
-      `git clone --depth 1 --branch skill-v4.8.2 https://github.com/pbakaus/impeccable /tmp/imp && mkdir -p ~/.claude/kickoff-vendor/impeccable-skill-v4.8.2 && cp -R /tmp/imp/.claude/skills/impeccable ~/.claude/kickoff-vendor/impeccable-skill-v4.8.2/`
-      (check the path exists; read its SKILL.md). Never `npx impeccable install` (its hook runs even when you deny commands). Set `DO_NOT_TRACK=1`.
+- [ ] Impeccable (the UI designer) is bundled in the kit, pinned (`<kit>/vendor/impeccable/PINNED`), no hook, no binary
+      download: `/build` runs its polish after phase 1 and critique + polish in phase 4. Nothing to install.
 - [ ] Other machine: `git clone <your kit repo> && ./install.sh` · phone: GitHub "Use this template" → open the new repo in claude.ai/code
 
 ## Minute 0
@@ -575,6 +575,6 @@ printf -- '- [x] Phase 1: probe\n' > "$T/docs/plan.md"
 printf '### R1 · probe\n- Traces to: my gut\n- Acceptance: works\n- Test: tests/test_p1.py::test_r1\n' > "$T/docs/specs/phase-1/spec.md"
 .venv/bin/python "$T/scripts/spec.py" check >/dev/null; [ $? -eq 1 ] && .venv/bin/python scripts/spec.py check >/dev/null && echo "OK 6/6 spec checker rejects an ungrounded spec" || echo "FAIL spec checker"
 rm -rf "$T"
-NODE_MAJOR="$(node -v 2>/dev/null | sed 's/^v\([0-9]*\).*/\1/')"; [ "${NODE_MAJOR:-0}" -ge 18 ] && echo "NOTE node $(node -v): React mode available" || echo "NOTE node ${NODE_MAJOR:-missing}: React mode needs Node >= 18 (Streamlit mode is fine)"
+NODE_MAJOR="$(node -v 2>/dev/null | sed 's/^v\([0-9]*\).*/\1/')"; [ "${NODE_MAJOR:-0}" -ge 18 ] && echo "NOTE node $(node -v): default React UI ready" || echo "NOTE node ${NODE_MAJOR:-missing}: the default React UI needs Node >= 18, so /discovery will use Streamlit"
 rm -f zz_probe.py tests/test_zz_probe.py && rm -rf .pytest_cache .ruff_cache tests/__pycache__ && git checkout -q -- BUILD_LOG.md
 ```

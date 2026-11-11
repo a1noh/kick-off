@@ -19,12 +19,12 @@ explanation, and they come from `$KIT_HOME/bin/demo.py`, printed exactly.
 Read `../discovery/SKILL.md` and follow it fully (§0–§6), with these overrides:
 - No plan mode, no waiting for approval.
 - Wherever it would ask the user (AskUserQuestion), pick the **recommended** option yourself and record it as
-  `Assumption: … · confirmed by demo run <today>`. The UI mode is `streamlit`.
+  `Assumption: … · confirmed by demo run <today>`. The UI mode is `/discovery`'s default (React with Node ≥ 18).
 - Commit and tag as the skill says (`discovery: plan + data`, tag `plan`).
 Then `python3 "$KIT_HOME/bin/demo.py" box 2` → show it exactly.
 
 ## 3. Phase 1: follow `/build`, with demo overrides
-Read `../build/SKILL.md` and follow it for **phase 1 only**: spec → tests → code → verify (`VERIFY OK`) → app running →
+Read `../build/SKILL.md` and follow it for **phase 1 only**: spec → tests → code → (React: Impeccable polish, §3b) → verify (`VERIFY OK`) → app running →
 Build-story entry → commit + tag `phase-1`. Same override: any question → the recommended answer, recorded
 `confirmed by demo run <today>`. Skip the long §5 handover.
 

@@ -33,10 +33,11 @@ in the folder first. Plan mode is optional: if it's on, show the plan for approv
 Say kind + shape and why in one line of the Goal.
 
 **Then the UI mode** (only the door + Owner dashboard change; the Python core is identical in both):
-- **`streamlit`** (default): fastest; fits a 2-hour build best.
-- **`react`**: only when the interviewer names React / a web frontend, or the user says polish matters (or asks for it).
-  FastAPI `api.py` (display only) + a Vite React UI from the kit's `templates/react/` (`../kickoff/` next to this skill). Needs Node ≥ 18
-  (`node -v`; older → say so and stay on streamlit). Phase 4 may run Impeccable on the UI (opt-in, see `/build`).
+- **`react`** (default): FastAPI `ui/api.py` (display only) + a Vite React (JSX) UI from the kit's `templates/react/`
+  (`../kickoff/` next to this skill), designed by the bundled **Impeccable** after phase 1 and in phase 4 (see `/build`).
+  Needs Node ≥ 18: check `node -v` (also try `bash -lc 'node -v'`, nvm may only be on the login shell's PATH).
+- **`streamlit`**: only when Node < 18 / missing (e.g. a cloud session without Node: say so in one line) or the
+  interviewer wants a Python-only app.
 Write it as one line at the top of §2b: `**UI:** streamlit` or `**UI:** react`.
 
 From the interviewer's answers in raw.md, take **exactly 3**, in their words where possible:
@@ -125,7 +126,7 @@ Title: `# Plan: <product name>`. Sections, in order:
      queue + audit panels go live (+ the owner action, if the plan has one); board S2, S3, bonus ⬜→✅.
    - `- [ ] Phase 4: evals + talk`: `evals/` runner (agent: against live Gemini; app: every case end to end through
      `core.py`, plus live Gemini for the helper cases if there is one), scorecard, Eval score panel live on the dashboard, polish,
-     `docs/talk.md` polished in full. UI react: add "Impeccable critique + polish on `ui/web/src` (opt-in)" to `Builds:`.
+     `docs/talk.md` polished in full. UI react: phase 1 `Builds:` ends with "Impeccable polish on `ui/web/src`", phase 4 with "Impeccable critique + polish on `ui/web/src`".
    - Put this line right under the `## 6. Phases` heading: "Every `On screen` and `Try it` line describes the app
      **after** that phase is built and ticked. Expected replies are in \"quotes\". Each phase is built from its spec,
      `docs/specs/phase-N/spec.md`." (`/build` turns every line below into a spec requirement with a test, so write

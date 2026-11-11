@@ -72,6 +72,8 @@ Copy `docs/specs/_template/spec.md` and fill it **from the sources only**:
     the UI renders `/api/screen` strings and never decides. The required tests are the `TestClient` versions in
     `tests/test_screen.py` (same names). Later phases fill `LIVE` (panel → `{"kind": "metrics"|"table"|"lines", …}`)
     and `RESET` in `ui/api.py`. `npm test` (vitest, in `ui/web`) must pass too. Node < 18 → stop and tell the user (see CHEATSHEET).
+    **Then design it with Impeccable** (§3b, "phase 1 pass": `polish`) before the verify step, so the first screen the
+    user opens already looks finished.
 - **Later phases** replace stubs and turn placeholders live. **Never remove a panel or a board row.** An owner action
   calls a gated function in `src/tools.py` and is audited. `ui/` never changes a record itself. From phase 2, keep `scripts/demo.py` running.
 - One short ★ Insight per file: *why*, not what.
@@ -97,17 +99,20 @@ Copy `docs/specs/_template/spec.md` and fill it **from the sources only**:
    `.venv/bin/uvicorn api:app --app-dir ui --port $P > out/app.log 2>&1 &`, save `.app.pid` / `.app.port`, check
    `curl -s localhost:$P/api/screen` returns JSON, and `open http://localhost:$P`.
 
-## 3b. Phase 4 only, UI react only: Impeccable (opt-in)
-Run this only if the user opted in and the pinned copy exists (CHEATSHEET pre-flight:
-`~/.claude/kickoff-vendor/impeccable-skill-v4.8.2`). Never `npx impeccable install` (its hook runs even when commands are
-denied, downloads an engine, phones home). Steps:
-1. `cp -R ~/.claude/kickoff-vendor/impeccable-skill-v4.8.2/impeccable .claude/skills/impeccable` (project only), then
-   `mkdir -p .impeccable && echo '{"telemetry": false}' > .impeccable/config.json`. Read its `SKILL.md` once before using it.
-2. With `DO_NOT_TRACK=1` set: `/impeccable critique` on `ui/web/src` (show the user the score + top 3 issues), then
-   `/impeccable polish` limited to `ui/web/src`. If a command needs Impeccable's engine or init and it isn't there, skip it
-   and say so in one line.
-3. It may change only `ui/web/src/**` (`git diff --stat` proves it). Then `npm run build`, `npm test`, pytest and
-   `scripts/spec.py verify 4` again: every quoted text must still render exactly.
+## 3b. UI react only: Impeccable (bundled, pinned, no hook)
+Runs twice: **phase 1** (`polish`, after the shell's tests pass, before `verify 1`) and **phase 4** (`critique`, then
+`polish`). The kit carries a pinned copy (`../kickoff/vendor/impeccable/`, see its `PINNED` + Apache-2.0 `LICENSE`).
+1. Install it into the project once (skip if `.claude/skills/impeccable/SKILL.md` exists):
+   `V=<this skill's base>/../kickoff/vendor/impeccable; mkdir -p .claude/skills .claude/agents .impeccable && cp -R $V/skill .claude/skills/impeccable && cp $V/agents/*.md .claude/agents/ && echo '{"telemetry": false}' > .impeccable/config.json`.
+   Never `npx impeccable install` and never its hooks/settings.
+2. **Don't run its launcher** (`scripts/impeccable …`: it downloads and executes a binary). Use the skill's own
+   documented "Launcher unavailable" path: say its one line ("Context loading did not run; I'll read the existing
+   project context directly."), read `docs/plan.md` §1-§2b as the product context (there's no PRODUCT.md/DESIGN.md),
+   read `reference/craft-floor.md` before any edit, then follow `reference/polish.md` (phase 4 first `reference/critique.md`:
+   show the user the score + top 3 issues). Mode = **Operate** (app UI + dashboard).
+3. Scope: **only `ui/web/src/**`**. Every quoted text from the plan, every panel and the board stay exactly as they are
+   (polish is refinement, not redesign; ask before changing any copy). `git diff --stat` proves the scope.
+4. Re-check: `cd ui/web && npm run build && npm test`, pytest, then `verify N` again; quoted texts must still render exactly.
 
 ## 4. Talk entry, then commit
 - Append to `docs/talk.md` §7 Build story:
