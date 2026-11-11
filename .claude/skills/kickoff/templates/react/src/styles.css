@@ -1,0 +1,53 @@
+/* Plain starting point: tokens + layout. Phase 4's /impeccable critique + polish (opt-in) improves it. */
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --fg: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --accent: #2563eb;
+  --accent-fg: #ffffff;
+  --warn: #b45309;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1120;
+    --surface: #111827;
+    --fg: #e2e8f0;
+    --muted: #94a3b8;
+    --line: #1f2937;
+    --accent: #60a5fa;
+    --accent-fg: #0b1120;
+    --warn: #fbbf24;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+.layout { display: grid; grid-template-columns: 320px 1fr; min-height: 100vh; }
+.sidebar { background: var(--surface); border-right: 1px solid var(--line); padding: 16px; overflow-y: auto; }
+.sidebar h1 { font-size: 18px; margin: 0 0 12px; }
+.tryit { padding-left: 18px; font-size: 13px; }
+.row { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; margin: 6px 0; font-size: 13px; }
+main { padding: 16px; min-width: 0; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.tabs button { background: none; border: 0; padding: 8px 14px; color: var(--muted); cursor: pointer; font: inherit; }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom: 2px solid var(--accent); }
+button { background: var(--accent); color: var(--accent-fg); border: 0; border-radius: 8px; padding: 8px 14px; font: inherit; cursor: pointer; }
+button.secondary { background: none; color: var(--fg); border: 1px solid var(--line); }
+.messages { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.messages li { padding: 8px 12px; border-radius: 12px; max-width: 80%; background: var(--surface); border: 1px solid var(--line); }
+.messages li.user { align-self: flex-end; background: var(--accent); color: var(--accent-fg); border: 0; }
+.chat form { display: flex; gap: 8px; }
+.chat input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; overflow-x: auto; }
+.panel h2 { font-size: 15px; margin: 0 0 8px; }
+.metrics { display: flex; flex-wrap: wrap; gap: 16px; }
+.metric span { display: block; color: var(--muted); font-size: 12px; }
+.metric strong { font-size: 22px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.placeholder, .muted { color: var(--muted); }
+.warning { color: var(--warn); }
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; } .sidebar { border-right: 0; border-bottom: 1px solid var(--line); } }

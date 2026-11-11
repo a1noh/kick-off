@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# pre-commit: never commit secrets. Blocks .env files and staged lines that look like an API key.
+# Installed by /kickoff into each classroom (.git/hooks/pre-commit) and used by the kit repo (.githooks/pre-commit).
+bad=0
+while IFS= read -r f; do
+  case "$(basename "$f")" in
+    .env | .env.*) echo "BLOCKED: $f is a secrets file. Keep it local (it is git-ignored)." >&2; bad=1 ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACM)
+if git diff --cached -U0 | grep -E '^\+[^+]' | grep -Eq 'AIza[0-9A-Za-z_-]{35}|(GEMINI|OPENAI|ANTHROPIC)_API_KEY *= *[^[:space:]"$]+'; then
+  echo "BLOCKED: a staged change contains what looks like an API key. Keys belong in .env (local) or the cloud env settings." >&2
+  bad=1
+fi
+exit $bad

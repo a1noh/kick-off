@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# The kit repo's secrets guard: the same check every classroom gets (one source of truth).
+exec "$(git rev-parse --show-toplevel)/.claude/skills/kickoff/templates/pre-commit" "$@"
