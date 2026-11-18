@@ -1,13 +1,14 @@
 ---
 name: discovery
-description: Turn the user's raw interview notes (notes/raw.md) and data/ into docs/plan.md for a 2-hour build of an AI agent (chat / batch / Q&A) or a plain app (tool / dashboard / workflow, optional AI helper) - picks the kind and shape, copes with thin notes (sample data, exact questions to ask), 3 demo scenarios from the interviewer, rules traced to the notes, data gotchas, architecture + agent-loop diagrams, 4 phases (phase 1 = the full app shell with every scenario ❌ on a Scenario board, then each phase turns features ✅; each with an "On screen (before → after)" line and a "Try it" checklist incl. one 🚧 still-broken item), eval cases. Works for any use case. Re-runnable after each new round of notes. Use when the user types /discovery inside a /kickoff classroom.
+description: Turn the user's raw interview notes (notes/raw.md) and data/ into docs/requirements.md (business rules + decisions) and a code-level docs/plan.md (Status: draft; functions §5c, records §5d, S1 flow §5e, requirements per phase) that the user approves before any code, for a 2-hour build of an AI agent (chat / batch / Q&A) or a plain app (tool / dashboard / workflow, optional AI helper) - picks the kind and shape, copes with thin notes (sample data, exact questions to ask), 3 demo scenarios from the interviewer, rules traced to the notes, data gotchas, architecture + agent-loop diagrams, 4 phases (phase 1 = the full app shell with every scenario ❌ on a Scenario board, then each phase turns features ✅; each with an "On screen (before → after)" line and a "Try it" checklist incl. one 🚧 still-broken item), eval cases, likely questions. Ends by asking the user to approve the plan. Works for any use case. Re-runnable after each new round of notes. Use when the user types /discovery inside a /kickoff classroom.
 ---
 
-# /discovery: raw notes → plan (any use case)
+# /discovery: raw notes → requirements + a code-level plan → the user approves it
 
 ## 0. Check the room
 This must be a /kickoff classroom: `CLAUDE.md` and `notes/raw.md` exist. If not, say so and suggest running `/kickoff`
-in the folder first. Plan mode is optional: if it's on, show the plan for approval first, then write the files.
+in the folder first. Plan mode isn't needed: the plan file itself is the draft, and §6 asks for approval.
+`KIT` = `../kickoff/templates` next to this skill's base directory (spec.py, progress.py run from there).
 
 ## 1. Read (never edit `notes/raw.md`; it's the user's)
 - Read `notes/raw.md` fully. Number its lines in your head; you'll cite them as `raw.md:L12`.
@@ -17,7 +18,7 @@ in the folder first. Plan mode is optional: if it's on, show the plan for approv
 - Read every file in `data/` and **profile it for gotchas**: duplicates, missing values, inconsistent formats or casing,
   records in the past or outside allowed windows, conflicting rows, inactive/frozen/on-leave entities, capacity already
   full, the same value under two owners, flags stored as strings, values the rules need that the data lacks.
-- If `docs/plan.md` already exists, this is a **re-run**: you'll update it and report what changed.
+- If `docs/plan.md` already exists, this is a **re-run**: you'll update it, set `**Status:** draft` again, and report what changed.
 
 ## 2. Kind, shape, then the 3 demo scenarios (the heart of the plan)
 **First the kind** (CLAUDE.md "Kinds and shapes"). Ask: *does the core job need to understand free text?*
@@ -54,15 +55,23 @@ workflow = a record + the action + its new state.
 - An answer is missing → tell the user the exact question to ask the interviewer ("What's a typical example…?" /
   "What's a tricky or messy case…?" / "When must it refuse or bring in a human?"). At most 2 other blocking questions.
 - **No data given** → write a small sample to `data/sample_<name>.csv` (8–12 rows) with 3–4 realistic gotchas baked in
-  (a duplicate, a bad format, a missing value, an out-of-range value), and mark it **`Assumption: sample data`** in the
-  gotchas table so the user can tell the interviewer.
+  (a duplicate, a bad format, a missing value, an out-of-range value), and add an open question in requirements.md
+  ("No data was given: build on this sample?") so the user can tell the interviewer.
 - **The interviewer names a stack**: React / a web frontend → `**UI:** react` (if Node ≥ 18). Anything else (a database,
-  another framework, an API) → keep the POC as is and add a line to Out of scope + talk §6: "In production this would be
+  another framework, an API) → keep the POC as is and add a line to requirements.md Out of scope + talk §6: "In production this would be
   <their stack>; the logic in core/tools ports as is."
 - **The brief changes mid-build** → the user re-runs `/discovery`; keep built phases ticked, re-plan only the unchecked ones.
 
-## 3. Write `docs/plan.md`
-Title: `# Plan: <product name>`. Sections, in order:
+## 3a. Write `docs/requirements.md` first (WHAT the client needs)
+Copy `templates/requirements.md` (this skill's base directory) and fill it from the notes and data only:
+problem + success in their words, **business rules B1..Bn** (one line each, each traced to `raw.md:L<n>`, `data/<file>`
+or "decided with user <date>"), **decisions D1..Dn** on every ambiguous point (question · answer · why), data facts, out
+of scope (+ the free-LLM-tier gap for personal, financial or health data), open questions. No code and no file names:
+this is the file the client could read. Anything you had to decide that the notes don't say is an open question, asked
+in §5 before approval, never decided silently.
+
+## 3b. Write `docs/plan.md` (HOW it's built: the study file)
+Copy `templates/plan.md` and keep its headings. It starts `**Status:** draft`. Title: `# Plan: <product name>`. Sections, in order:
 1. **Goal**: what was asked, for whom, what success means (cite raw.md lines), and the kind + shape line. If it uses an
    LLM (agent, or an app's optional helper), name it: Gemini free tier via `.env` (CLAUDE.md), and say what it does:
    extract fields only. If not: "No AI: every step is plain Python."
@@ -90,18 +99,23 @@ Title: `# Plan: <product name>`. Sections, in order:
      panels (did the "before → after" in the phase happen?) → for each `Try it` line: start fresh (**New chat** / new
      upload / new question, to fit the shape), give the input, compare
      the reply **and** the panel to the expected result → all match? `/build` · anything off? tell Claude what you saw.
-3. **Rules**: numbered, one per line, each traced to a raw.md line or a data fact. **No intuition:** anything you had
-   to decide that the notes don't say is marked **`Assumption:`**, and it must be confirmed by the user (§6) before
-   `/build` builds a phase that depends on it.
+3. **Business rules**: one line pointing at requirements.md. The plan cites B<n>/D<n>; it never restates a rule.
 4. **Data gotchas**: table `# · Gotcha · How the code handles it` (G1, G2, …). Fail safe: unknown values take the
    careful path.
 5. **Architecture** (§5) and **who decides what** (§5b): copy the template for the kind **exactly**: agent →
-   `templates/architecture.md` (in this skill's base directory), app → `templates/architecture_app.md` (headings, node IDs, shapes, arrow labels,
-   `classDef` colors, the ⇧⌘V line, the 4-row table) and replace every `‹slot›` with this project's words
-   (the template's slot guide lists examples per domain and shape).
-   `templates/example_refill.md` shows a filled-in version. No extra boxes or branches: asks and retries belong in
-   tests and evals. Obey the template's **SAFE MERMAID ONLY** rule (always `flowchart LR`; no HTML tags; no dotted,
-   two-way or chained arrows): anything else renders, then vanishes in the VS Code preview.
+   `templates/architecture.md`, app → `templates/architecture_app.md` (headings, node IDs, shapes, arrow labels,
+   `classDef` colors, the ⇧⌘V line, the 4-row table) and replace every `‹slot›` (`templates/example_refill.md` shows a
+   filled-in one). No extra boxes. Obey its **SAFE MERMAID** rule, including **a clear path, no dead ends**.
+   - **§5c Interfaces** (follow CLAUDE.md "Coding standards": fewest files, each with one job, ~8–10 product files):
+     one `### \`<file>\` · <part>: <its one job>` per file, then one line per **public** function:
+     `` - `Agent.reply(text: str) -> str` · One message in, one checked reply out · guards run around the model ``.
+     The middle part is the function's docstring line 1, word for word (`spec.py check` compares them once the file
+     exists, and the parameter names too). Leave private helpers out. Every product file in `src/` and `ui/*.py` must
+     appear here, including `ui/api.py` (`screen`, `chat`) and the stub in phase 1.
+   - **§5d Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
+   - **§5e Sample flow (S1)**: the call chain for S1 as a table `# · Call · Returns`: each call in backticks with its
+     real arguments, each return as JSON in backticks (or the exact reply in "quotes" on the last row). Use only public
+     functions from §5c. Phase 2's `tests/test_flow.py` asserts every row, so write the real values.
 6. **Phases** as checkboxes, **exactly 4**. **UI first, then features:** phase 1 builds the whole screen with nothing
    working yet, and every later phase visibly turns something from broken (❌ / 🚧 / ⬜) into working (✅ / live). The user
    should never have to read a diff to know what a phase changed.
@@ -120,17 +134,17 @@ Title: `# Plan: <product name>`. Sections, in order:
        never hit the network);
      - **app:** the real `core.py` (one request end to end; rules in plain Python), plus `llm.py` only if the plan has
        the optional helper (same rules as above, and the app still works when the helper is off);
-     `scripts/demo.py` running S1, tests. S1's record goes live on the Owner dashboard (e.g. the refund ledger + KPIs); board S1 ⬜→✅.
+     `scripts/demo.py` running S1, `tests/test_flow.py` (asserts every §5e row), tests. S1's record goes live on the Owner dashboard (e.g. the refund ledger + KPIs); board S1 ⬜→✅.
    - `- [ ] Phase 3: safety + scenarios 2–3`: `guards.py` in/out (agent: stop triggers + output checks; app: input
      validation + "result matches the records"), queue with reasons, audit log JSONL; the dashboard's
      queue + audit panels go live (+ the owner action, if the plan has one); board S2, S3, bonus ⬜→✅.
    - `- [ ] Phase 4: evals + talk`: `evals/` runner (agent: against live Gemini; app: every case end to end through
      `core.py`, plus live Gemini for the helper cases if there is one), scorecard, Eval score panel live on the dashboard, polish,
-     `docs/talk.md` polished in full. UI react: phase 1 `Builds:` ends with "Impeccable polish on `ui/web/src`", phase 4 with "Impeccable critique + polish on `ui/web/src`".
+     `docs/talk.md` (for the client) filled in full, plan §9 Likely questions answered. UI react: phase 1 `Builds:` ends with "Impeccable polish on `ui/web/src`", phase 4 with "Impeccable critique + polish on `ui/web/src`".
    - Put this line right under the `## 6. Phases` heading: "Every `On screen` and `Try it` line describes the app
-     **after** that phase is built and ticked. Expected replies are in \"quotes\". Each phase is built from its spec,
-     `docs/specs/phase-N/spec.md`." (`/build` turns every line below into a spec requirement with a test, so write
-     them so a machine can check them.)
+     **after** that phase is built and ticked. Expected replies are in \"quotes\".
+     Requirements cite B<n>/D<n>, raw.md:L<n>, data/<file> or `user <date>: \"<words>\"`; each names the test that
+     proves it." (write them so a machine can check them).
    - Under **each** phase, in this order:
      - **`On screen (before → after):`** one line naming exactly what changes in the app, e.g.
        `Board S1 ⬜→✅ · Refund requests ⬜→live · S1 reply 🚧→real`.
@@ -145,32 +159,41 @@ Title: `# Plan: <product name>`. Sections, in order:
        - **Phases 2–4:** line 1 = S1 (the regression check). The rest are what this phase fixed; from phase 3 on at least
          one shows a refusal or handoff. **Phases 2–3 end with exactly one 🚧 line**: an input that is *still broken* and
          the phase that fixes it (e.g. `` `can I talk to a person` `` → 🚧 "handoff arrives in phase 3"). Phase 4 has none.
-       - Expected results must be visible in the app (reply, panel or board), not only in code.
+       - Expected results must be visible in the app (reply, panel or board), not only in code. **Never quote text
+         that only appears after a click** (an action button, an upload, a Try): `spec.py verify` renders the
+         screen as loaded (every tab and panel) but can't click.
+     - **`Requirements:`** one per Try-it line, per "Must be true" check of each scenario the phase turns ✅, per rule
+       (B<n>) and gotcha it implements, and the screen contract. Exact format (the kit parses it):
+       ```
+         - **Requirements:**
+           - **P2.R1** · S1 ready bike
+             - Traces to: B1 · raw.md:L34
+             - Acceptance: `is my bike ready? T-100 Nguyen` → "Your blue Trek is ready. …"
+             - Test: tests/test_phase2.py::test_r1_ready_bike
+       ```
+       Each test's docstring cites it (`"""plan.md P2.R1: …"""`). Tests stay true in later phases (they read the ticks).
 7. **Eval cases** (8–15) as a table `# · Input · Expected`, **grown from the 3 scenarios**: exact scenarios, variations,
    wrong inputs, and one case per data gotcha.
-8. **Out of scope**: what we deliberately won't build. If the data is personal, financial, health or otherwise
-   sensitive, add a known gap: the free LLM tier may use prompts for training; production needs a paid endpoint with
-   the right compliance terms (e.g. a BAA for health data) or a local model.
+8. **Out of scope** lives in requirements.md.
+9. **Likely questions**: the heading and its guide line only; `/build` phase 4 fills the answers from what was built.
 
-## 4. Render the diagrams
-Run `.venv/bin/python <this skill's base directory>/templates/render_diagrams.py && open docs/architecture.html`
-(no `open` command, e.g. in a cloud session → skip opening).
-It must print one line per diagram (2). If it fails, fix plan.md and re-run.
-Then `.venv/bin/python scripts/render_docs.py docs/plan.md` → `docs/plan.html` (the whole plan, readable in any browser).
+## 4. Check it
+Run `.venv/bin/python $KIT/spec.py check`. Every requirement must be grounded and quoted (tests may not exist yet: they
+are only checked once a phase is ticked), every B<n> cited must exist, every diagram must have no dead ends. Fix the plan
+until it prints `SPEC OK`.
 
-## 5. Commit (so the user can see the plan as one step in git)
-`git add -A && git commit -q -m "discovery: plan + data" && git tag -f plan` (on a re-run: message
-`discovery: re-run (<what changed>)`; the tag moves to the new commit). Then show `git show --stat --oneline HEAD`.
-
-## 6. Finish
-- Tell the user: view the diagrams with **⇧⌘V** on `docs/plan.md` (or in the browser page that just opened).
-- **Resolve every Assumption now:** ask them with AskUserQuestion (yes/no, max 4 per call; recommended answer first).
-  Write each answer into plan.md as `Assumption: … · confirmed by user <date>` (or change the rule if they said no),
-  then commit. Anything still open is asked again by `/build` before the phase that needs it.
-- On a re-run: list in 3–5 bullets what changed in the plan, and why (which new raw.md lines).
-- Tell the user: Source Control (`⌃⇧G`) → Graph shows the `plan` commit. If they edit the plan, the next `/build`
-  commits that edit together with phase 1.
-- Show the phases as 4 one-liners (board state after each + `Try it` count), so the user sees the road ahead:
-  "Phase 1 → app shell, board all ⬜ (try 3) · Phase 2 → S1 ✅ (try 3) · Phase 3 → S2, S3 ✅ (try 4) · Phase 4 → evals + talk (try 3)".
-  Add: "Each `/build` writes `docs/specs/phase-N/spec.md` first, tests it, and proves it in `verify.md`." 
-- Ask the user to approve the plan (or edit it). **Stop.** The next step is `/build`.
+## 5. Finish: the approval gate
+- Tell the user: view the diagrams with **⇧⌘V** on `docs/plan.md`.
+- **Open questions first:** ask them with AskUserQuestion (max 4 per call; recommended answer first). Write each answer
+  into requirements.md as a decision (`D<n> … · decided with user <date>`) and update the rules and plan that use it.
+- On a re-run: list in 3–5 bullets what changed in requirements.md and plan.md, and why (which new raw.md lines).
+- Show the road ahead as 4 one-liners (board state after each + `Try it` count), and the §5c file list with its function
+  count ("📁 8 files, 17 functions"), so the user knows what they are approving.
+- Then ask with AskUserQuestion: **"Approve plan.md (function list + S1 flow)?"** with options "Approve" (recommended)
+  and "Change something".
+  - **Approve** → replace the Status line with `**Status:** approved <today>`, then
+    `git add -A && git commit -q -m "discovery: plan + data" && git tag -f plan` (re-run: message
+    `discovery: re-run (<what changed>)`; the tag moves). Show `git show --stat --oneline HEAD`. Commits stay local: never push.
+    Next step: `/build`.
+  - **Change something** → make the change in requirements.md / plan.md, keep `**Status:** draft`, run §4 again and ask again.
+- **Stop.** `/build` refuses to start while the plan is a draft.

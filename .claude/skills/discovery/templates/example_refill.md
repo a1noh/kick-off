@@ -5,7 +5,7 @@
 
 ```mermaid
 flowchart LR
-  SMS(["📱 Patient SMS<br/>scripts/demo.py · ui/app.py"])
+  SMS(["📱 Patient SMS<br/>ui/api.py · scripts/demo.py"])
   GI{{"🛡️ guards.py · GUARD IN<br/>emergency words?"}}
   E911(["🚨 'Call 911' · STOP<br/>no verify · no model"])
   AG["🧠 agent.py · BRAIN<br/>loop + session state<br/>verified? · tries left?"]
@@ -20,6 +20,7 @@ flowchart LR
   GI -- "emergency" --> E911
   GI -- "safe" --> AG
   AG -- "understand → JSON" --> LLM
+  LLM -- "fields" --> AG
   AG -- "decide" --> T
   T -- "read / update" --> D
   T -- "handoff" --> Q

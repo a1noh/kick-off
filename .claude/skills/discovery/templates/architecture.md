@@ -16,14 +16,16 @@ SLOT GUIDE (examples, pick what fits):
 <!-- SAFE MERMAID ONLY (tested in the VS Code ⇧⌘V preview): quoted labels, <br/>, emojis, shapes [""] ([""]) {{""}} [("")],
 solid arrows with optional "labels", classDef/class. NEVER: <i>/<b> or other HTML tags, dotted arrows (-. .->),
 two-way arrows (<-->), chained arrows (A --> B --> C), subgraphs, and `flowchart TD`.
-Always `flowchart LR`: the preview's pan/zoom fit pushes tall TD diagrams out of view. -->
+Always `flowchart LR`: the preview's pan/zoom fit pushes tall TD diagrams out of view.
+A CLEAR PATH, NO DEAD ENDS: every node has an arrow out, except end points ([""]) and stores [("")].
+spec.py check fails on a dead end. -->
 
 ## 5. Architecture
 > Open the preview to see the diagram: **⇧⌘V** (or the preview icon at the top right of this tab).
 
 ```mermaid
 flowchart LR
-  SMS(["📨 ‹Input›<br/>scripts/demo.py · ui/app.py"])
+  SMS(["📨 ‹Input›<br/>ui/api.py · scripts/demo.py"])
   GI{{"🛡️ guards.py · GUARD IN<br/>‹stop trigger›?"}}
   E911(["🚨 ‹stop reply› · STOP<br/>no model · no tools"])
   AG["🧠 agent.py · BRAIN<br/>loop + session state<br/>‹state it tracks›"]
@@ -38,6 +40,7 @@ flowchart LR
   GI -- "stop" --> E911
   GI -- "ok" --> AG
   AG -- "understand → JSON" --> LLM
+  LLM -- "fields" --> AG
   AG -- "decide" --> T
   T -- "read / update" --> D
   T -- "handoff" --> Q

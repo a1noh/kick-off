@@ -168,6 +168,8 @@ def doc_problems() -> list[str]:
     for rel in ("docs/talk.md", "docs/plan.md"):
         text = (ROOT / rel).read_text() if (ROOT / rel).exists() else ""
         problems += [f"{rel}: '{ref}' goes stale; name the function instead" for ref in FILE_LINE.findall(text)]
+        for diagram in re.findall(r"```mermaid\n(.*?)```", text, re.S):
+            problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
     checked = [("docs/talk.md", talk, progress.ticked(1)), ("plan.md §5e", progress.section("5e"), progress.ticked(2))]
     for where, text, live in checked:
@@ -176,6 +178,13 @@ def doc_problems() -> list[str]:
             if call.split(".")[-1] not in names:
                 problems.append(f"{where}: `{call}()` is not defined in src/, ui/, evals/ or scripts/")
     return problems
+
+
+def dead_ends(diagram: str) -> list[str]:
+    """Mermaid nodes with no arrow out that are neither an end point (["…"]) nor a store [("…")]."""
+    shapes = dict(re.findall(r"\b([A-Za-z]\w*)(\(\[|\[\(|\{\{|\[|\()\"", diagram))
+    sources = set(re.findall(r"^\s*([A-Za-z]\w*)\b[^\n]*?--", diagram, re.M))
+    return sorted(node for node, shape in shapes.items() if node not in sources and shape not in ("([", "[("))
 
 
 def defined_names() -> set[str]:
