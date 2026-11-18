@@ -53,6 +53,8 @@ flowchart LR
 #### `reply(text: str) -> str` · `src/agent.py`
 Reply to one message. *Why:* probe.
 
+<details><summary>Does · In · Out</summary>
+
 **Does**
 1. Returns "hello" for any message.
 
@@ -67,6 +69,8 @@ Reply to one message. *Why:* probe.
 ```text
 hello
 ```
+
+</details>
 
 ### `ui/api.py` · door
 

@@ -118,7 +118,9 @@ completely; a person must also be able to read it once and understand the code.
    fails when a product file has no box or a box names a file §2 doesn't list.
 4. **Functions**, the implementation spec, grouped by `src/` file: one `### \`<file>\` · <its one job>` per file, then
    one `#### \`signature -> return\` · \`file\`` block per function the rest of the code calls, exactly as the
-   template shows (the kit parses it). Each block, compact and complete:
+   template shows (the kit parses it). **At first glance** a block is its heading and one plain sentence, so a reader
+   skimming §4 sees what every function does; **Does**, **In** and **Out** sit inside
+   `<details><summary>Does · In · Out</summary>` … `</details>` (blank lines around the markdown inside). Each block:
    - its docstring line 1, word for word, then `*Why:* <why it works this way>` (`spec.py check` compares the line and
      the parameter names with the code once the file exists);
    - **Does**: numbered steps in plain words, in order: every path (each check, what it returns, its rule; what it

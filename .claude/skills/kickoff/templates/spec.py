@@ -265,7 +265,8 @@ def hidden_tag_problems(text: str) -> list[str]:
     """A bare <name> outside code is hidden by markdown (it reads as an HTML tag): it must sit inside backticks."""
     prose = re.sub(r"```.*?```", "", text, flags=re.S)
     prose = re.sub(r"`[^`\n]*`", "", prose)
-    return [f"docs/plan.md: {tag} outside backticks is hidden by markdown: write `{tag}`" for tag in sorted(set(re.findall(r"<[a-z_]+>", prose)))]
+    tags = set(re.findall(r"<[a-z_]+>", prose)) - {"<details>", "<summary>"}  # the dropdowns are meant as HTML
+    return [f"docs/plan.md: {tag} outside backticks is hidden by markdown: write `{tag}`" for tag in sorted(tags)]
 
 
 def strings(value: object) -> list[str]:

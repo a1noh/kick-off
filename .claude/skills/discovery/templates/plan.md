@@ -56,7 +56,8 @@ flowchart LR
 
 ## 4. Functions
 The implementation spec: every function the rest of the code calls, grouped by file in `src/` (split by kind of work:
-the model call, the orchestration, the decisions, the reads and writes). Each block is compact and complete:
+the model call, the orchestration, the decisions, the reads and writes). **At first glance** each function is one
+heading and one plain sentence; the detail sits in a dropdown (`<details>`, click to open in VS Code or GitHub):
 - `#### \`signature -> return\` · \`file\``, then its docstring line 1 word for word and `*Why:*`;
 - **Does**: what it does, in order, as numbered steps in plain words; every path, with what it returns and its rule.
   This is what the code is built from: no Python here;
@@ -72,6 +73,8 @@ with placeholders in prose in backticks. `ui/api.py` and tests are not explained
 
 #### `‹tool›(‹param›: dict) -> dict | None` · `src/tools.py`
 ‹docstring line 1›. *Why:* ‹why it works this way›.
+
+<details><summary>Does · In · Out</summary>
 
 **Does**
 1. ‹If …, returns `null` (B1).›
@@ -95,6 +98,8 @@ with placeholders in prose in backticks. `ui/api.py` and tests are not explained
   "‹field›": "‹real value›"  // ‹what it means›
 }
 ```
+
+</details>
 
 ## 5. Records
 Each record as typed JSON (where it lives, every field and its type). JSON is how a Python dictionary looks written
