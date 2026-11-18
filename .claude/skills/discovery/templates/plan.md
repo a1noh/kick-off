@@ -7,6 +7,9 @@ G1, E1), never restate them. The kit's parsers read: the Status line, "Files", "
 
 **Status:** draft
 
+**How to read this (5 minutes):** §1 Overview, then §3's code-at-a-glance table and diagram give a good rough
+idea of the whole system. Go to a §3 Step only when you want the detail of one function.
+
 ## 1. Overview
 ‹Kind + shape and why, in one line. LLM: "Gemini free tier via .env, extracts ‹fields› only" or "No AI: every step
 is plain Python." One line on the path a request takes. What it must do and why: docs/spec.md.›
@@ -32,6 +35,15 @@ One diagram and one story. The diagram has **one box per product file in §2** (
 reads or writes, and the user at each end; a guard, a queue or a stop box appears only when a spec.md rule needs one.
 Each arrow carries the data it passes and a number `step.sub-step` (1.1, 1.2, then 2.1, …): the first number is the
 step below. `spec.py check` fails when a product file has no box, or the numbers and the steps don't match.
+
+**The code at a glance**: every function, one row each, in the order S1 uses them (then the others), each linked to
+its block below. `spec.py check` makes sure each explained function has exactly one row, with the same file.
+| Step | Function | File | What it does | Example: In → Out |
+|---|---|---|---|---|
+| 1 | `‹tool›` | `src/tools.py` | ‹docstring line 1, short› | `‹("T-100", "Nguyen")›` → `‹{"bike": "blue Trek", …}›` |
+| 2 | `Agent.reply` | `src/agent.py` | ‹one message in, one checked reply out› | `‹"is my bike ready? T-100 Nguyen"›` → `‹"Your blue Trek is ready. …"›` |
+| — | `‹other›` | `src/‹file›.py` | ‹…› | `‹…›` → `‹…›` |
+The example column is one line of real values (a cell can't hold more); the full, commented JSON is in each Step.
 
 ```mermaid
 flowchart LR

@@ -99,7 +99,7 @@ names, no function names, so the client or a new teammate can read it top to bot
 
 ## 3b. Write `docs/plan.md`: the technical file, told as one flow (HOW it's built, the study file)
 Copy `templates/plan.md` and keep its headings (the kit parses **Files**, **How it works**, **Evals** and the phases
-by name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<n>) and never restates it. The idea:
+by name). It starts `**Status:** draft`. Under it, the one-line "How to read this (5 minutes)" guide. It cites spec.md (S1, B<n>, D<n>, G<n>, E<n>) and never restates it. The idea:
 the reader follows **one flow**, scenario 1, and meets each function where it is used; nothing is explained twice.
 1. **Overview**: kind + shape and why in one line; if it uses an LLM, name it (Gemini free tier via `.env`) and say it
    extracts fields only, else "No AI: every step is plain Python"; one line on the path a request takes.
@@ -109,6 +109,12 @@ the reader follows **one flow**, scenario 1, and meets each function where it is
    file that isn't in it, and on a ticked phase whose files don't exist. Under it, "How it's checked" in 3 bullets:
    tests, the Scenario board, the evals.
 3. **How it works: spec S1, start to finish.** Write §2 first, then:
+   - **The code at a glance** first: a table `| Step | Function | File | What it does | Example: In → Out |` with one
+     row per explained function (backend and evals), in the order S1 uses them, then the others (Step `—`). "What it
+     does" is its docstring line 1, shortened; "Example" is one line of real values in backticks, the S1 call's key
+     arguments → what comes back (`("L-301", "Maya Lee")` → `null`), trimmed with `…`; the full JSON is in the Step. With §1 and
+     the diagram, this table is meant to give a good rough idea of the whole code in one read. `spec.py check` fails
+     when an explained function has no row, has two, or a row names a function or file that isn't explained below.
    - **One diagram** drawn for this project, never from a fixed template: one box per product file (`src/…`,
      `ui/api.py`) labeled with its job, the data stores it reads or writes, the user at each end. Each arrow carries
      the data it passes and a number `step.sub-step`, once each, in the order things happen (1.1, 1.2, then 2.1, …).

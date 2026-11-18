@@ -106,7 +106,7 @@ def file_problems() -> list[str]:
             problems.append(f"plan.md Files: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
     for rel, entries in progress.interfaces().items():
         problems += [f"{rel}: plan.md {p}" for e in entries for p in shape_problems(e)]
-    problems += flow_problems()
+    problems += flow_problems() + glance_problems()
     return problems
 
 
@@ -124,6 +124,18 @@ def shape_problems(entry: dict) -> list[str]:
             problems.append(f"{name}(): In {param!r} needs the comment `// {kind} · <what it is>`")
     if entry["returns"] and entry["out_type"].replace(" ", "") != entry["returns"].replace(" ", ""):
         problems.append(f"{name}(): the Out label must say its return type: **Out** · `{entry['returns']}`")
+    return problems
+
+
+def glance_problems() -> list[str]:
+    """The code-at-a-glance table lists every explained function once, with the file its block names."""
+    explained = {(e["name"], path) for path, entries in progress.interfaces().items() for e in entries}
+    if not explained:
+        return []
+    rows = progress.glance()
+    problems = [f"plan.md code at a glance: {n}() is listed more than once" for n in sorted({n for n, _ in rows if [r[0] for r in rows].count(n) > 1})]
+    problems += [f"plan.md code at a glance: no row for {n}() in {f}" for n, f in sorted(explained - set(rows))]
+    problems += [f"plan.md code at a glance: {n}() in {f} isn't explained below" for n, f in sorted(set(rows) - explained)]
     return problems
 
 

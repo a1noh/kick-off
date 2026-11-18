@@ -35,6 +35,11 @@ PLAN = """# Plan: probe
 | `tests/test_phase1.py` | 1 | proves P1.R1 | — | — |
 
 ## 3. How it works
+| Step | Function | File | What it does | In → Out |
+|---|---|---|---|---|
+| 1 | `reply` | `src/agent.py` | replies to one message | the message → the reply |
+| — | `screen_text` | `ui/api.py` | the screen as text | nothing → the screen |
+
 ```mermaid
 flowchart LR
   U(["user"])
@@ -240,6 +245,7 @@ def planned_functions(c: Path) -> None:
         '**In** · the arguments, by name\n```jsonc\n{\n  "name": "Dev"  // str · who to greet\n}\n```\n\n**Out** · `str`\n```text\nhi Dev\n```\n\n'
     )
     text = PLAN.format(**GOOD).replace("### Other functions (not on S1's path)\n", "### Other functions (not on S1's path)\n\n" + extra, 1)
+    text = text.replace("| — | `screen_text` |", "| — | `greet` | `src/agent.py` | greets | a name → hi |\n| — | `screen_text` |", 1)
     write(c, "docs/plan.md", text)
     open_run = check(c)
     write(
@@ -270,6 +276,8 @@ def file_rules(c: Path) -> None:
     rejects(c, "T18g an In comment whose type differs from the signature rejected", "needs the comment `// str")
     write(c, "docs/plan.md", text.replace("Reply to one message. *Why:* probe.", "Reply to one message. *Why:* reads out/<name>.jsonl.", 1))
     rejects(c, "T18h a bare <tag> that markdown would hide rejected", "outside backticks")
+    write(c, "docs/plan.md", text.replace("| — | `screen_text` | `ui/api.py` | the screen as text | nothing → the screen |\n", ""))
+    rejects(c, "T18i every explained function needs one row in the code-at-a-glance table", "no row for screen_text()")
     write(c, "docs/plan.md", text.replace('U -- "1.1 hi" --> API', 'U -- "2.1 hi" --> API'))
     rejects(c, "T18f the diagram's 1.1-style arrow numbers must match the steps", "no step 2")
     write(c, "docs/plan.md", text)

@@ -166,6 +166,12 @@ def matches(actual: object, shown: object) -> bool:
     return actual == shown
 
 
+def glance() -> list[tuple[str, str]]:
+    """Plan "How it works": the code-at-a-glance table as (function, file) rows, in the order they're listed."""
+    rows = re.findall(r"^\|[^|\n]*\|\s*`([\w.]+)`\s*\|\s*`?([\w/.]+\.py)`?\s*\|", section("How it works"), re.M)
+    return [(name, path) for name, path in rows]
+
+
 def file_table() -> dict[str, int]:
     """Plan "Files": the table of every file the build writes: path (a folder ends in '/') -> the phase that writes it."""
     return {path: int(phase) for path, phase in re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(\d)\s*\|", section("Files"), re.M)}
