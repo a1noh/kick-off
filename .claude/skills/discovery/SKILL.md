@@ -120,9 +120,9 @@ completely; a person must also be able to read it once and understand the code.
    one block per function the rest of the code calls, exactly as the template shows (the kit parses it):
    `#### \`<name>\` — <a short title or question>` (e.g. `why_not_approve` — can this manager approve it?), then one
    visible sentence, its docstring line 1 word for word. **At first glance** a block is its heading and one plain sentence, so a reader
-   skimming §4 sees what every function does; the rest sits inside
-   `<details><summary>Details: signature, why, steps, in, out</summary>` … `</details>` (blank lines around the markdown
-   inside). Inside, in order:
+   skimming §4 sees what every function does and what goes in and out: **In** and **Out** stay visible, and how it
+   does it sits after them inside `<details><summary>How it does it: signature, why, steps</summary>` … `</details>`
+   (blank lines around the markdown inside). Inside, in order:
    - the full signature alone on a line, `` `name(param: type, …) -> return` `` (`spec.py check` compares it, and the
      visible sentence, with the code once the file exists), then `**Why** <why it works this way, citing its rule>`;
    - **Does**: numbered steps in plain words, in order: every path (each check, what it returns, its rule; what it

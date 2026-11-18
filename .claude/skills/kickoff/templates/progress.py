@@ -120,7 +120,9 @@ def function_entry(block: str) -> dict | None:
         "types": types,
         "returns": (found[3] or "").strip(),
         "summary": summary,
-        "does": re.findall(r"^\d+\. (.+)$", block.split("**Does**", 1)[1].split("**In**", 1)[0], re.M) if "**Does**" in block else [],
+        "does": re.findall(r"^\d+\. (.+)$", re.split(r"\*\*In\*\*|</details>", block.split("**Does**", 1)[1])[0], re.M)
+        if "**Does**" in block
+        else [],
         **in_and_out(block),
     }
 

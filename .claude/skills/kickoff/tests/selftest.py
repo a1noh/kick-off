@@ -53,15 +53,6 @@ flowchart LR
 #### `reply` — answer a message
 Reply to one message.
 
-<details><summary>Details: signature, why, steps, in, out</summary>
-
-`reply(text: str) -> str`
-
-**Why** probe.
-
-**Does**
-1. Returns "hello" for any message.
-
 **In** · the arguments, by name
 ```jsonc
 {{
@@ -73,6 +64,15 @@ Reply to one message.
 ```text
 hello
 ```
+
+<details><summary>How it does it: signature, why, steps</summary>
+
+`reply(text: str) -> str`
+
+**Why** probe.
+
+**Does**
+1. Returns "hello" for any message.
 
 </details>
 

@@ -57,10 +57,11 @@ flowchart LR
 ## 4. Functions
 The implementation spec: every function the rest of the code calls, grouped by file in `src/` (split by kind of work:
 the model call, the orchestration, the decisions, the reads and writes). **At first glance** each function is one
-heading and one plain sentence; the detail sits in a dropdown (`<details>`, click to open in VS Code or GitHub):
+heading, one plain sentence, and its In and Out; how it does it sits in a dropdown (`<details>`, click to open in
+VS Code or GitHub):
 - one `### \`<file>\` — <its one job>` per file, then per function `#### \`<name>\` — <short title or question>` and
-  one visible sentence: its docstring line 1, word for word. Everything else sits in the dropdown, starting with the full
-  signature on its own line and **Why**;
+  one visible sentence: its docstring line 1, word for word; then **In** and **Out**, visible. How it does it (the full
+  signature on its own line, **Why** and **Does**) sits in a dropdown;
 - **Does**: what it does, in order, as numbered steps in plain words; every path, with what it returns and its rule.
   This is what the code is built from: no Python here;
 - **In** · the arguments, by name (```jsonc): each `// <type from the signature> · <what it is>`, the fields it uses
@@ -75,16 +76,6 @@ with placeholders in prose in backticks. `ui/api.py` and tests are not explained
 
 #### `‹tool›` — ‹what it does, as a short title or question›
 ‹docstring line 1: one plain sentence, what it takes and gives back›.
-
-<details><summary>Details: signature, why, steps, in, out</summary>
-
-`‹tool›(‹param›: dict) -> dict | None`
-
-**Why** ‹why it works this way, citing its rule›.
-
-**Does**
-1. ‹If …, returns `null` (B1).›
-2. ‹Otherwise …, saves … and returns the saved row (B3).›
 
 **In** · the arguments, by name
 ```jsonc
@@ -104,6 +95,16 @@ with placeholders in prose in backticks. `ui/api.py` and tests are not explained
   "‹field›": "‹real value›"  // ‹what it means›
 }
 ```
+
+<details><summary>How it does it: signature, why, steps</summary>
+
+`‹tool›(‹param›: dict) -> dict | None`
+
+**Why** ‹why it works this way, citing its rule›.
+
+**Does**
+1. ‹If …, returns `null` (B1).›
+2. ‹Otherwise …, saves … and returns the saved row (B3).›
 
 </details>
 
