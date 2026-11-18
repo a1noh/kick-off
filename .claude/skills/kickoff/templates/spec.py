@@ -104,7 +104,7 @@ def file_problems() -> list[str]:
             problems.append(f"plan.md Files: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
     for rel, entries in progress.interfaces().items():
         problems += [
-            f"{rel}: plan.md Functions: {e['name']}() needs an '- in:' and an '- out:' shape line"
+            f"{rel}: plan.md Functions: {e['name']}() needs an In table (argument · example) and an **Out** block"
             for e in entries
             if not (e["in"] and e["out"])
         ]

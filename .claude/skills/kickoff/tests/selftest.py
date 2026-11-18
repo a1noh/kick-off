@@ -36,18 +36,39 @@ PLAN = """# Plan: probe
 
 ## 4. Functions
 ### `src/agent.py` · brain: replies
-- `reply(text: str) -> str` · Reply to one message · probe
-  - in: `text` "hi"
-  - out: "hello"
+
+#### `reply(text: str) -> str`
+Reply to one message. *Why:* probe.
+
+| In | Example |
+|---|---|
+| `text` | `"hi"` |
+
+**Out**
+```text
+hello
+```
+
 ### `ui/api.py` · door: the screen
-- `screen_text() -> str` · The screen as text · probe
-  - in: nothing
-  - out: "[tabs] door | …"
+
+#### `screen_text() -> str`
+The screen as text. *Why:* probe.
+
+| In | Example |
+|---|---|
+| nothing | — |
+
+**Out**
+```text
+[tabs] door | …
+```
 
 ## 6. Flow (S1)
-| # | Call | Returns |
-|---|---|---|
-| 1 | `reply("hi")` | "hello" |
+### 1 · the reply
+`reply("hi")` in `src/agent.py`.
+```text
+hello
+```
 
 ## 7. Phases
 - [{tick}] Phase 1: probe
@@ -201,8 +222,8 @@ def code_rules(c: Path) -> None:
 
 def planned_functions(c: Path) -> None:
     """T18b: a planned function a later phase adds warns while phases are open, fails once all are ticked."""
-    extra = "- `greet(name: str) -> str` · Greet someone · a later phase\n  - in: `name` \"Dev\"\n  - out: \"hi Dev\"\n### `ui/api.py`"
-    text = PLAN.format(**GOOD).replace("\n### `ui/api.py`", "\n" + extra, 1)
+    extra = "#### `greet(name: str) -> str`\nGreet someone. *Why:* a later phase.\n\n| In | Example |\n|---|---|\n| `name` | `\"Dev\"` |\n\n**Out**\n```text\nhi Dev\n```\n\n### `ui/api.py`"
+    text = PLAN.format(**GOOD).replace("### `ui/api.py`", extra, 1)
     write(c, "docs/plan.md", text)
     open_run = check(c)
     write(c, "docs/plan.md", text.replace("- [ ] Phase 2: next", "- [x] Phase 2: next").replace("- [ ] Phase 1", "- [x] Phase 1"))
@@ -217,8 +238,8 @@ def file_rules(c: Path) -> None:
     """T18c–T18e: plan.md Files + Functions list every file the build writes, with in/out shapes, and ticked phases' files exist."""
     plan(c, tick="x")
     text = (c / "docs/plan.md").read_text()
-    write(c, "docs/plan.md", text.replace('  - in: `text` "hi"\n', ""))
-    rejects(c, "T18c a function without its in: shape rejected", "needs an '- in:'")
+    write(c, "docs/plan.md", text.replace('| `text` | `"hi"` |\n', ""))
+    rejects(c, "T18c a function without its In table rejected", "needs an In table")
     write(c, "docs/plan.md", text)
     write(c, "scripts/demo.py", '"""Demo."""\n')
     rejects(c, "T18d a code file missing from plan.md Files rejected", "missing from plan.md Files")

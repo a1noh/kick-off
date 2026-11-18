@@ -116,18 +116,21 @@ name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<
        each Python file in `src/`, `ui/`, `evals/`, `scripts/` and `tests/`, data files, and `ui/web/` (the kit's React
        template, one row). `spec.py check` fails on a code file that isn't in it, and on a ticked phase whose files
        don't exist yet.
-4. **Functions**: one `### \`<file>\` · <part>: <its one job>` per Python file (tests excepted), and one entry per function
-       the rest of the code calls: the signature line
-       `` - `Agent.reply(text: str) -> str` · One message in, one checked reply out · guards run around the model ``
-       followed by two shape lines, indented: `  - in: \`text\` "is my bike ready? T-100 Nguyen"` (each argument with a
-       real example value) and `  - out: "Your blue Trek is ready. …"` (the real JSON or text that comes back; name the
-       record from §5 Records when it is one). The middle part of the signature line is the function's docstring line 1, word for word
-       (`spec.py check` compares it and the parameter names once the file exists, and fails on a missing `in:`/`out:`).
-       Include `ui/api.py` (`screen`, `chat`), `evals/scenarios.py` (`run_all`), `evals/run.py` and `scripts/demo.py`.
+4. **Functions**: one `### \`<file>\` · <part>: <its one job>` per Python file (tests excepted), then one block per
+   function the rest of the code calls, exactly as the template shows (the kit parses it):
+   - a `#### \`signature -> return\`` heading;
+   - one line: the docstring line 1, word for word, then `*Why:* <why>` (`spec.py check` compares the line and the
+     parameter names with the code once the file exists);
+   - an **In** table `| In | Example |`: one row per argument with a real value (`nothing` when it takes none);
+   - `**Out**` and a ```json block with the real value it returns (```text for plain text), plus one line for the
+     other outcome when there is one ("wrong name → `null`"). `spec.py check` fails on a function without In or Out.
+   Include `ui/api.py` (`screen`, `chat`), `evals/scenarios.py` (`run_all`), `evals/run.py` and `scripts/demo.py`.
 5. **Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
-6. **Flow (S1)**: the call chain for S1 as a table `# · Call · Returns`: each call in backticks with its
-     real arguments, each return as JSON in backticks (or the exact reply in "quotes" on the last row). Use only public
-     functions from §4 Functions. Phase 2's `tests/test_flow.py` asserts every row, so write the real values.
+6. **Flow (S1)**: spec S1 as a story, one customer start to finish. First a `flowchart LR` whose arrows are labeled
+   with the data they carry. Then one `### <n> · <what happens, in plain words>` per hop: a line with the call in
+   backticks (real arguments) and the file it runs in, one line on why, and the real object it returns in a ```json
+   block (```text for the reply the user sees). Use only functions from §4. Phase 2's `tests/test_flow.py` asserts
+   every step (`progress.flow()` reads them), so write the real values.
 7. **Phases** as checkboxes, **exactly 4**. **UI first, then features:** phase 1 builds the whole screen with nothing
    working yet, and every later phase visibly turns something from broken (❌ / 🚧 / ⬜) into working (✅ / live). The user
    should never have to read a diff to know what a phase changed.

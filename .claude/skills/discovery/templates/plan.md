@@ -26,17 +26,38 @@ is plain Python." One line on the path a message takes. What it must do and why:
 | `tests/test_phase1.py` | 1 | ‹proves P1.R*› | — | — |
 
 ## 4. Functions
-One `###` per Python file (tests excepted), one entry per function the rest of the code calls: the signature line
-`` `signature -> return` · <its docstring line 1, word for word> · <why> `` and two shape lines: **`in:`** each
-argument with a real example value, **`out:`** what comes back, as real JSON (name the record from §5 when it is one).
+Every function the rest of the code calls, file by file: one `###` per Python file (tests excepted), one `####` per
+function. Under it: its docstring line 1 word for word, then `*Why:*`; an **In** table (each argument with a real
+example, or `nothing`); the **Out** it returns as a ```json block (or ```text), with real values. §5 names the records.
+
 ### `src/agent.py` · brain: ‹one job›
-- `Agent.reply(text: str) -> str` · ‹One message in, one checked reply out› · ‹guards run around the model›
-  - in: `text` "‹S1 input›"
-  - out: "‹the exact reply›"
+
+#### `Agent.reply(text: str) -> str`
+‹One message in, one checked reply out›. *Why:* ‹guards run around the model›.
+
+| In | Example |
+|---|---|
+| `text` | `"‹S1 input›"` |
+
+**Out**
+```text
+‹the exact reply›
+```
+
 ### `src/tools.py` · hands: ‹one job›
-- `‹name›(‹params›) -> ‹type›` · ‹docstring line 1› · ‹why›
-  - in: `‹param›` ‹example value›
-  - out: ‹example JSON / §5 record›
+
+#### `‹name›(‹params›) -> ‹type›`
+‹docstring line 1›. *Why:* ‹why›.
+
+| In | Example |
+|---|---|
+| `‹param›` | `‹example value›` |
+
+**Out**
+```json
+‹the real JSON it returns›
+```
+‹Optional: the other outcome, e.g. "wrong name → `null`".›
 
 ## 5. Records
 Each record as typed JSON (where it lives, every field and its type).
@@ -45,14 +66,44 @@ Each record as typed JSON (where it lives, every field and its type).
 {"‹field›": "str", "‹field›": "int", "at": "str (ISO time)"}
 ```
 
-## 6. Flow (S1)
-Spec S1 step by step, with the real object at each step, ending in the reply text. `tests/test_flow.py` runs it
-offline and asserts every row, so it can't drift from the code.
-| # | Call | Returns |
-|---|---|---|
-| 1 | `‹extract("<S1 input>")›` | `‹{"intent": "…", …}›` |
-| 2 | `‹tool(…)›` | `‹{record}›` |
-| 3 | `‹Agent.reply("<S1 input>")›` | "‹the exact reply›" |
+## 6. Flow (S1): one customer, start to finish
+Spec S1 told hop by hop: which file runs, what it's called with, and the real object it hands on.
+`tests/test_flow.py` runs these steps offline and asserts every one, so this story can't drift from the code.
+
+```mermaid
+flowchart LR
+  C(["💬 ‹the user›"])
+  API["ui/api.py<br/>chat()"]
+  AG["src/agent.py<br/>Agent.reply()"]
+  TO["src/tools.py<br/>‹tools›"]
+  DA[("out/‹records›.jsonl")]
+
+  C -- "‹what they send›" --> API
+  API -- "text" --> AG
+  AG -- "‹fields›" --> TO
+  TO -- "‹record›" --> DA
+  TO -- "‹result›" --> AG
+  AG -- "reply" --> C
+```
+Label every arrow with the data it carries. No dead ends (CLAUDE.md, SAFE MERMAID).
+
+### 1 · ‹what happens, in plain words›
+`‹extract("<S1 input>")›` in `‹src/llm.py›`. ‹One line on why this step exists.›
+```json
+‹{"intent": "…", …}›
+```
+
+### 2 · ‹…›
+`‹tool(…)›` in `‹src/tools.py›`.
+```json
+‹{record}›
+```
+
+### 3 · The reply the user sees
+`‹Agent.reply("<S1 input>")›` in `src/agent.py`.
+```text
+‹the exact reply›
+```
 
 ## 7. Phases
 Every `On screen` and `Try it` line describes the app **after** that phase is built and ticked. Expected replies are in

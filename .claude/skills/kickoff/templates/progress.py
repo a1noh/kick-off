@@ -12,7 +12,7 @@ from pathlib import Path
 
 PHASE = re.compile(r"^- \[( |x)\] Phase (\d+): (.*)$", re.M)
 REQUIREMENT = re.compile(r"^\s+- \*\*P(\d+)\.R(\d+)\*\*[^\n]*\n((?:\s{6,}- [^\n]*\n?)*)", re.M)
-SIGNATURE = re.compile(r"^- `([A-Za-z_][\w.]*)\((.*?)\)[^`]*`\s*·\s*([^·]+?)\s*(?:·.*)?$", re.M)
+SIGNATURE = re.compile(r"^`([A-Za-z_][\w.]*)\((.*?)\)[^`]*`")  # a `#### `signature`` heading in "Functions"
 
 
 def plan_text() -> str:
@@ -97,23 +97,20 @@ def interfaces() -> dict[str, list[dict]]:
         path = re.match(r"`([^`]+)`", block)
         if not path:
             continue
-        files[path[1]] = []
-        for entry in re.split(r"^(?=- `)", block, flags=re.M)[1:]:
-            found = SIGNATURE.match(entry)
-            if not found:
-                continue
-            shape_in = re.search(r"^\s+- in:\s*(.+)$", entry, re.M)
-            shape_out = re.search(r"^\s+- out:\s*(.+)$", entry, re.M)
-            files[path[1]].append(
-                {
-                    "name": found[1],
-                    "params": params_of(found[2]),
-                    "summary": found[3],
-                    "in": shape_in[1].strip() if shape_in else "",
-                    "out": shape_out[1].strip() if shape_out else "",
-                }
-            )
+        files[path[1]] = [entry for entry in map(function_entry, re.split(r"^#### ", block, flags=re.M)[1:]) if entry]
     return files
+
+
+def function_entry(block: str) -> dict | None:
+    """One `#### `signature`` block: its name, parameter names, summary line, In table rows and Out block (None if malformed)."""
+    found = SIGNATURE.match(block)
+    if not found:
+        return None
+    lines = [line.strip() for line in block.splitlines()[1:] if line.strip()]
+    summary = re.split(r"\s*\*Why:\*", lines[0])[0] if lines else ""
+    rows = re.findall(r"^\|\s*(`[^`]+`|—|nothing)\s*\|\s*(.+?)\s*\|\s*$", block, re.M)
+    out = block.split("**Out**", 1)[1].strip() if "**Out**" in block else ""
+    return {"name": found[1], "params": params_of(found[2]), "summary": summary, "in": rows, "out": out}
 
 
 def file_table() -> dict[str, int]:
@@ -128,11 +125,13 @@ def params_of(signature: str) -> list[str]:
 
 
 def flow() -> list[tuple[str, object]]:
-    """Plan "Flow": the S1 flow as (call, expected object), JSON in backticks parsed, "quoted" text kept as a string."""
+    """Plan "Flow": each `### <n> · <title>` step as (its call, the object it returns): ```json parsed, ```text kept as text."""
     steps = []
-    for call, returns in re.findall(r"^\|\s*\d+\s*\|\s*`(.+?)`\s*\|\s*(.+?)\s*\|\s*$", section("Flow"), re.M):
-        code = re.fullmatch(r"`(.*)`", returns)
-        steps.append((call, json.loads(code[1]) if code else returns.strip('"')))
+    for step in re.split(r"^### \d+ · ", section("Flow"), flags=re.M)[1:]:
+        call = re.search(r"`([A-Za-z_][\w.]*\([^`]*\))`", step)
+        code = re.search(r"```(json|text)\n(.*?)\n```", step, re.S)
+        if call and code:
+            steps.append((call[1], json.loads(code[2]) if code[1] == "json" else code[2]))
     return steps
 
 
