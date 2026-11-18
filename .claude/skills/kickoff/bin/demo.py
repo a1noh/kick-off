@@ -37,7 +37,7 @@ Your turn: approve the plan (the question below). Nothing is built until you do.
 🎓 Demo 3/3 · The app shell (/build phase 1)
 What happened: /build wrote phase 1's tests from its requirements in plan.md, then the code in src/ and ui/ (every
 file named in Functions, every function documented), and proved it: the kit's spec.py verify 1 rendered the real screen.
-git diff plan phase-1 --stat shows exactly what phase 1 added (committed locally, never pushed).
+git diff --name-status plan phase-1 lists every file phase 1 added (one local commit, never pushed).
 Look at: the app (URL above). Both tabs, every panel ⬜, the Scenario board all ⬜, the chat answers 🚧. That honest
 "nothing works yet" screen is the starting point every real build has too.
 Your turn: /build → phase 2 makes scenario 1 work (paste your Gemini key into .env first). Then 3 and 4.
