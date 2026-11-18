@@ -2,7 +2,7 @@
 it turns progress + the Scenario board + the owner panels into ONE JSON screen, and passes chat to the agent.
 Every decision stays in agent.py (app kind: core.py) and tools.py.
 
-/build fills in: TABS (tab 1 named for the shape), PANELS (plan.md §2b panel table: panel -> phase), and LIVE
+/build fills in: TABS (tab 1 named for the shape), PANELS (spec.md §3 panel table: panel -> phase), and LIVE
 (panel -> function returning {"kind": "metrics"|"table"|"lines", ...}) as phases go live.
 """
 
@@ -19,8 +19,8 @@ from evals.scenarios import run_all
 
 UI = Path(__file__).resolve().parent  # ui/ (the product code is in src/, on the path via classroom.pth)
 TITLE = "Product name"  # /build: from plan.md title
-TABS = ["💬 Chat", "📊 Owner dashboard"]  # /build: tab 1 = the shape's door (plan.md §2b)
-PANELS: dict[str, int] = {"KPIs": 2, "Queue": 3, "Audit log": 3, "Eval score": 4}  # /build: plan.md §2b table
+TABS = ["💬 Chat", "📊 Owner dashboard"]  # /build: tab 1 = the shape's door (spec.md §3)
+PANELS: dict[str, int] = {"KPIs": 2, "Queue": 3, "Audit log": 3, "Eval score": 4}  # /build: spec.md §3 table
 WIDE: set[str] = {"KPIs", "Queue"}  # /build: panels that run full width in the §2b sketch
 SHOWS: dict[str, str] = {}  # /build: panel -> what it will show (§2b table "Shows" column), for the empty state
 LIVE: dict = {}  # panel -> () -> {"kind": "metrics", "items": [{"label", "value"}]} | {"kind": "table", "rows": [...]}

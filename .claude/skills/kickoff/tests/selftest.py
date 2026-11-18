@@ -27,29 +27,29 @@ PLAN = """# Plan: probe
 
 **Status:** {status}
 
-## 2. Architecture
-```mermaid
-flowchart LR
-  U(["user"])
-  API["ui/api.py<br/>door"]
-  AG["src/agent.py<br/>brain"]
-
-  U -- "text" --> API
-  API -- "text" --> AG
-  AG -- "reply" --> U
-```
-
-## 3. Files
+## 2. Files
 | File | Phase | Job | Takes in | Gives back |
 |---|---|---|---|---|
 | `src/agent.py` | 1 | brain | a message | the reply |
 | `ui/api.py` | 1 | door | — | the screen |
 | `tests/test_phase1.py` | 1 | proves P1.R1 | — | — |
 
-## 4. Functions
-### `src/agent.py` · brain: replies
+## 3. How it works
+```mermaid
+flowchart LR
+  U(["user"])
+  API["ui/api.py<br/>door"]
+  AG["src/agent.py<br/>brain"]
 
-#### `reply(text: str) -> str`
+  U -- "1.1 hi" --> API
+  API -- "1.2 hi" --> AG
+  AG -- "1.3 hello" --> U
+```
+
+### Step 1 · the reply
+`reply("hi")` runs in `src/agent.py`.
+
+#### `reply(text: str) -> str` · `src/agent.py`
 Reply to one message. *Why:* probe.
 
 **In** · the arguments, by name
@@ -64,9 +64,9 @@ Reply to one message. *Why:* probe.
 hello
 ```
 
-### `ui/api.py` · door: the screen
+### Other functions (not on S1's path)
 
-#### `screen_text() -> str`
+#### `screen_text() -> str` · `ui/api.py`
 The screen as text. *Why:* probe.
 
 **In** · the arguments, by name
@@ -79,32 +79,7 @@ The screen as text. *Why:* probe.
 [tabs] door | …
 ```
 
-## 6. Flow (S1)
-```mermaid
-flowchart LR
-  U(["user"])
-  AG["src/agent.py<br/>reply()"]
-
-  U -- "① hi" --> AG
-  AG -- "① hello" --> U
-```
-
-### 1 · the reply
-`reply("hi")` in `src/agent.py`.
-
-**In**
-```json
-{{
-  "text": "hi"
-}}
-```
-
-**Out**
-```text
-hello
-```
-
-## 7. Phases
+## 6. Phases
 - [{tick}] Phase 1: probe
   - **On screen (before → after):** nothing → Board S1 ⬜→✅
   - **Try it:**
@@ -234,20 +209,20 @@ def code_rules(c: Path) -> None:
             AGENT.replace('    """Reply to one message."""\n', ""),
             "has no docstring",
         ),
-        "T16 plan.md Functions parameters that differ from the code rejected": (
+        "T16 plan.md function parameters that differ from the code rejected": (
             "src/agent.py",
             AGENT.replace("text: str", "message: str"),
             "takes",
         ),
-        "T17 plan.md Functions line that differs from docstring line 1 rejected": (
+        "T17 a plan.md function line that differs from docstring line 1 rejected": (
             "src/agent.py",
             AGENT.replace("Reply to one message.", "Answer."),
             "must match",
         ),
-        "T18 a file with no section in plan.md Functions rejected": (
+        "T18 a src/ file with no function explained in plan.md rejected": (
             "src/extra.py",
             '"""Extra."""\n',
-            "has no section",
+            "no function of it is explained",
         ),
     }
     for name, (rel, text, needle) in cases.items():
@@ -261,10 +236,10 @@ def code_rules(c: Path) -> None:
 def planned_functions(c: Path) -> None:
     """T18b: a planned function a later phase adds warns while phases are open, fails once all are ticked."""
     extra = (
-        "#### `greet(name: str) -> str`\nGreet someone. *Why:* a later phase.\n\n"
-        '**In** · the arguments, by name\n```jsonc\n{\n  "name": "Dev"  // str · who to greet\n}\n```\n\n**Out** · `str`\n```text\nhi Dev\n```\n\n### `ui/api.py`'
+        "#### `greet(name: str) -> str` · `src/agent.py`\nGreet someone. *Why:* a later phase.\n\n"
+        '**In** · the arguments, by name\n```jsonc\n{\n  "name": "Dev"  // str · who to greet\n}\n```\n\n**Out** · `str`\n```text\nhi Dev\n```\n\n'
     )
-    text = PLAN.format(**GOOD).replace("### `ui/api.py`", extra, 1)
+    text = PLAN.format(**GOOD).replace("### Other functions (not on S1's path)\n", "### Other functions (not on S1's path)\n\n" + extra, 1)
     write(c, "docs/plan.md", text)
     open_run = check(c)
     write(
@@ -285,7 +260,7 @@ def planned_functions(c: Path) -> None:
 
 
 def file_rules(c: Path) -> None:
-    """T18c–T18e: plan.md Files + Functions list every file the build writes, each function with its In and Out, and ticked phases' files exist."""
+    """T18c–T18e: plan.md Files + How it works list every file the build writes, each function with its In and Out, and ticked phases' files exist."""
     plan(c, tick="x")
     text = (c / "docs/plan.md").read_text()
     in_block = '**In** · the arguments, by name\n```jsonc\n{\n  "text": "hi"  // str · the message\n}\n```\n\n'
@@ -295,8 +270,8 @@ def file_rules(c: Path) -> None:
     rejects(c, "T18g an In comment whose type differs from the signature rejected", "needs the comment `// str")
     write(c, "docs/plan.md", text.replace("Reply to one message. *Why:* probe.", "Reply to one message. *Why:* reads out/<name>.jsonl.", 1))
     rejects(c, "T18h a bare <tag> that markdown would hide rejected", "outside backticks")
-    write(c, "docs/plan.md", text.replace('U -- "① hi" --> AG', 'U -- "② hi" --> AG'))
-    rejects(c, "T18f the Flow diagram's numbered arrows must match the steps", "no step 2")
+    write(c, "docs/plan.md", text.replace('U -- "1.1 hi" --> API', 'U -- "2.1 hi" --> API'))
+    rejects(c, "T18f the diagram's 1.1-style arrow numbers must match the steps", "no step 2")
     write(c, "docs/plan.md", text)
     write(c, "scripts/demo.py", '"""Demo."""\n')
     rejects(c, "T18d a code file missing from plan.md Files rejected", "missing from plan.md Files")
@@ -389,14 +364,14 @@ def verify_and_hooks(c: Path) -> None:
 
 
 def parser(c: Path) -> None:
-    """T28: progress.py reads the plan's Status, requirements, Functions and Flow."""
+    """T28: progress.py reads the plan's Status, requirements, function blocks and steps."""
     code = (
         "import progress as p; f = p.flow()[0]; print(p.status(), p.requirements(1)[0]['id'],"
         " p.interfaces()['src/agent.py'][0]['in'], p.interfaces()['src/agent.py'][0]['in_notes'], f['call'], f['in'], f['out'], p.flow_arrows(),"
         " p.matches({'a': 1, 'b': 2}, {'a': 1, '…': 'b'}), p.matches({'a': 1}, {'a': 2}))"
     )
     out = sh(f'.venv/bin/python -c "{code}"', c).stdout.strip()
-    want = "approved 2026-01-01 P1.R1 {'text': 'hi'} {'text': 'str · the message'} reply(\"hi\") {'text': 'hi'} hello [1, 1] True False"
+    want = "approved 2026-01-01 P1.R1 {'text': 'hi'} {'text': 'str · the message'} reply(\"hi\") {'text': 'hi'} hello [(1, 1), (1, 2), (1, 3)] True False"
     expect("T28 progress parses Status, requirements, In/Out blocks, numbered arrows, and … matching", out == want, out)
 
 

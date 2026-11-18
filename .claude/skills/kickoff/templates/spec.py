@@ -92,7 +92,7 @@ def product_files() -> list[Path]:
 
 
 def file_problems() -> list[str]:
-    """plan.md Files + Functions show every file the build writes and what goes in and out of each function."""
+    """plan.md Files + How it works show every file the build writes and what goes in and out of each function."""
     if not progress.plan_text():
         return []
     table, problems = progress.file_table(), []
@@ -105,7 +105,7 @@ def file_problems() -> list[str]:
         if progress.ticked(phase) and not (ROOT / row).exists():
             problems.append(f"plan.md Files: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
     for rel, entries in progress.interfaces().items():
-        problems += [f"{rel}: plan.md Functions: {p}" for e in entries for p in shape_problems(e)]
+        problems += [f"{rel}: plan.md {p}" for e in entries for p in shape_problems(e)]
     problems += flow_problems()
     return problems
 
@@ -128,27 +128,31 @@ def shape_problems(entry: dict) -> list[str]:
 
 
 def flow_problems() -> list[str]:
-    """Plan "Flow": every step shows its In and Out, and the diagram's arrows are numbered ①… like the steps."""
+    """Plan "How it works": every step shows its In and Out, and the diagram's arrows are numbered 1.1, 1.2, … by step."""
     steps = progress.flow()
     if not steps:
         return []
-    problems = [f"plan.md Flow step {s['n']} needs an **In** and an **Out** block" for s in steps if s["in"] == "" or s["out"] == ""]
-    drawn, numbered = set(progress.flow_arrows()), {s["n"] for s in steps}
-    problems += [f"plan.md Flow: no arrow in the diagram is numbered for step {n}" for n in sorted(numbered - drawn)]
-    problems += [f"plan.md Flow: the diagram has an arrow numbered {n}, but there is no step {n}" for n in sorted(drawn - numbered)]
+    problems = [f"plan.md How it works: Step {s['n']} needs an **In** and an **Out** block" for s in steps if s["in"] == "" or s["out"] == ""]
+    arrows = progress.flow_arrows()
+    drawn, numbered = {step for step, _ in arrows}, {s["n"] for s in steps}
+    problems += [f"plan.md How it works: no arrow in the diagram is numbered {n}.1 for step {n}" for n in sorted(numbered - drawn)]
+    problems += [f"plan.md How it works: the diagram has arrows numbered {n}.x, but there is no step {n}" for n in sorted(drawn - numbered)]
+    expected = sorted(arrows)
+    if arrows != expected or len(set(arrows)) != len(arrows):
+        problems.append("plan.md How it works: number the arrows 1.1, 1.2, … 2.1, … once each, in the order they're drawn")
     return problems
 
 
 def code_problems() -> tuple[list[str], list[str]]:
-    """Coding standards: (failures, warnings) for docstrings, plan.md Functions (file list, signatures) and sizes."""
+    """Coding standards: (failures, warnings) for docstrings, the functions plan.md explains (signatures) and sizes."""
     listed, fails, warns = progress.interfaces(), [], []
     for path in product_files():
         rel = str(path.relative_to(ROOT))
         tree = ast.parse(path.read_text())
         if not ast.get_docstring(tree):
             fails.append(f"{rel}: starts with no docstring (what it does + where it sits in the S1 flow)")
-        if rel.startswith(("src/", "evals/")) and rel not in listed:  # §4 explains the backend + evals; ui/ gets a §3 line
-            fails.append(f"{rel}: has no section in plan.md Functions (every backend and eval file is explained there)")
+        if rel.startswith(("src/", "evals/")) and rel not in listed:  # §3 explains the backend, §5 the evals; ui/ gets a §2 line
+            fails.append(f"{rel}: no function of it is explained in plan.md How it works (src/) or Evals (evals/)")
         lines = len(path.read_text().splitlines())
         if lines > MAX_FILE:
             warns.append(f"{rel}: {lines} lines (aim for ~{MAX_FILE})")
@@ -163,12 +167,12 @@ def code_problems() -> tuple[list[str], list[str]]:
         for problem in signature_problems(tree, listed.get(rel, [])):
             # A planned function a later phase adds is only a warning until every phase is ticked.
             planned = problem.endswith("listed but not defined") and not all(d for d, _ in progress.phases().values())
-            (warns if planned else fails).append(f"{rel}: plan.md Functions: {problem}")
+            (warns if planned else fails).append(f"{rel}: plan.md: {problem}")
     return fails, warns
 
 
 def signature_problems(tree: ast.Module, entries: list[dict]) -> list[str]:
-    """plan.md Functions lines that don't match the code: a missing function, other parameters, or a different docstring line 1."""
+    """plan.md function blocks that don't match the code: a missing function, other parameters, or a different docstring line 1."""
     problems = []
     for entry in entries:
         node = find(tree, entry["name"])
@@ -229,7 +233,7 @@ def doc_problems() -> list[str]:
             problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
     problems += architecture_problems()
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
-    checked = [("docs/talk.md", talk, progress.ticked(1)), ("plan.md Flow", progress.section("Flow"), progress.ticked(2))]
+    checked = [("docs/talk.md", talk, progress.ticked(1)), ("plan.md How it works", progress.section("How it works"), progress.ticked(2))]
     for where, text, live in checked:
         lines = [line for line in text.splitlines() if live and not line.lstrip().startswith("_")]
         for call in {c for line in lines for c in CALL.findall(line)}:
@@ -242,7 +246,7 @@ def architecture_problems() -> list[str]:
     """The architecture diagram matches the code plan: one box per product file in plan.md Files, and no other files."""
     planned = {f for f in progress.file_table() if re.match(r"(src/.+|ui/[^/]+)\.py$", f)}
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
-    diagrams = [("plan.md §2 Architecture", progress.section("Architecture"), bool(planned))]
+    diagrams = [("plan.md How it works", progress.section("How it works"), bool(planned))]
     diagrams.append(("docs/talk.md §3", talk, progress.ticked(4)))  # talk.md copies the diagram in phase 4
     problems = []
     for where, text, live in diagrams:

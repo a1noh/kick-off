@@ -17,18 +17,18 @@ Before presenting (1:40, code freeze): `.venv/bin/python scripts/demo.py`, then 
 |---|---|---|
 | `notes/raw.md` | the user's raw interview notes. **Never edit it** (a hook blocks it) | the user |
 | `docs/spec.md` | **the whole discovery in plain English (what + why)**: problem + success, the demo scenarios S1–S3, what the app shows, business rules B1..Bn (each traced to `raw.md:L<n>` or "decided with user <date>"), decisions D1..Dn, messy data G1..Gn, eval cases E1..En, out of scope. No code | `/discovery` (+ scope changes) |
-| `docs/plan.md` | **the technical file (how), the one to study**: Status, overview, architecture, §3 Files (every file the build writes), §4 Functions (each with its in/out shapes), §5 Records, §6 Flow (S1 step by step), §7 Phases with requirements P<n>.R<k>, §8 Likely questions. Cites spec.md, never restates it | `/discovery`; `/build` ticks phases |
+| `docs/plan.md` | **the technical file (how), the one to study, told as one flow**: Status, §1 Overview, §2 Files (every file the build writes), §3 How it works (one diagram + spec S1 step by step, each function explained where it's used, with its In and Out), §4 Records, §5 Evals (how it's checked), §6 Phases with requirements P<n>.R<k>, §7 Likely questions. Cites spec.md, never restates it | `/discovery`; `/build` ticks phases |
 | `docs/talk.md` | **for the client and viewers**: the problem, the demo, how it works, decisions, safety, results, the build story. Cites functions by name (never `file:line`) | `/build` (§7 every phase, the rest in phase 4) |
 View the diagrams with ⇧⌘V in VS Code. Git history is the build log.
 
-## Product layout (Coding standards below decide what exists: every file is named in plan.md Functions)
+## Product layout (Coding standards below decide what exists: every file is named in plan.md §2 Files)
 `src/` = the product (Python decides) · `ui/` = the screen only · `tests/` · `evals/` · `data/` · `scripts/demo.py`.
 Imports stay flat (`from agent import Agent`): the venv's `classroom.pth` puts `src/`, `ui/`, the root and the kit's
 `templates/` (for `progress`) on the path. In `src/` and `ui/` use `ROOT = Path(__file__).resolve().parents[1]`.
 Always there: `src/agent.py` (agent kind: the loop) or `src/core.py` (app kind: one request end to end), `ui/api.py` +
 `ui/web/` (the kit's React screen), `evals/scenarios.py` (the Scenario board). Everything else only when the spec needs it:
 `src/llm.py` (Gemini REST, the only network file), `src/data.py` (data + records), `src/tools.py` (actions gated in code),
-`src/guards.py` (see Architecture), `evals/run.py`, `scripts/demo.py`. plan.md §3 Files is the list for this project.
+`src/guards.py` (see Architecture), `evals/run.py`, `scripts/demo.py`. plan.md §2 Files is the list for this project.
 
 ## Kit tools run from the kit, never copied into the project
 `KIT` = `.claude/skills/kickoff/templates` if it exists, else `~/.claude/skills/kickoff/templates`. Run them from the project folder:
@@ -57,7 +57,7 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 - Every requirement (P<n>.R<k>) has `Traces to:` (B<n>, `raw.md:L<n>`, `data/<file>` or `user <date>: "<their words>"`),
   `Acceptance:` with the exact expected value in "quotes", and `Test:` naming a test whose docstring cites `plan.md P<n>.R<k>`.
 - Something no source says → **ask the user**, then record it (`decided with user <date>` in spec.md). Never guess.
-- Files/Functions/Records change only by editing plan.md **first**; the handover says `📐 Plan changed: …`. A scope change the user asks
+- Files, functions and records change only by editing plan.md **first**; the handover says `📐 Plan changed: …`. A scope change the user asks
   for becomes a requirement sourced to their words (no re-approval needed).
 - `On screen` / `Try it` lines describe the app **after** the phase is ticked. A Try-it line never quotes text that only
   appears after a click (verify can't click). Tests stay true in later phases (they read the plan's ticks).
@@ -79,7 +79,7 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 ## Architecture: as small as the code, drawn from the plan
 - **The LLM understands; plain Python decides.** Every rule (identity, limits, money, eligibility, capacity, clashes,
   allowed state changes, safety) lives in code. An action that must never go wrong re-checks its own conditions.
-- The diagram (plan.md §2) has **one box per product file in §3 Files** and one arrow per call, labeled with the data it
+- The diagram (plan.md §3 How it works) has **one box per product file in §2 Files** and one arrow per call, labeled with the data it
   carries. It is drawn for this project, never from a fixed template; `spec.py check` fails if a file has no box.
 - **Guards only when a rule needs one**, never by default:
   - **guard in** (before the model): when a spec rule must hold even if the model is wrong, down or talked into
@@ -94,26 +94,26 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 - Diagrams: mermaid `flowchart LR`, quoted labels, labeled solid arrows. No HTML tags, no dotted, two-way or chained
   arrows. **A clear path, no dead ends**: every node has an arrow out, except stores and end points.
 
-## Coding standards (the one place these rules live: plan.md Functions, `/build` and `spec.py check` all follow it)
+## Coding standards (the one place these rules live: plan.md, `/build` and `spec.py check` all follow it)
 **Minimal**
-- Fewest files that do the job, each with a clear job named in plan.md Functions. Merge a file into its caller when it is small
+- Fewest files that do the job, each with a clear job named in plan.md §2 Files. Merge a file into its caller when it is small
   and used once, only re-exports, or only holds constants. A build like this needs about 8–10 product files.
 - Fewest lines that do the job. Only the code a requirement asks for: nothing "for later", no unused parameters,
   options or config. No duplicate helpers, no dead or commented-out code.
 - No clever indirection (mixins, registries, dynamic dispatch, metaprogramming) unless plan.md says why.
 
 **Readable as plain English**
-- Every file starts with a 3–5 line docstring: what it does, and where it sits in the S1 flow (plan.md Flow).
+- Every file starts with a 3–5 line docstring: what it does, and where it sits in the S1 flow (plan.md §3).
 - Every function has a docstring, private helpers included. Line 1, plain English: what it does, what it takes and
-  returns. Optional line 2: why it works this way. A public function's line 1 is word for word its plan.md Functions line.
+  returns. Optional line 2: why it works this way. A public function's line 1 is word for word its plan.md function block's line.
 - Inline comments explain *why* (a business rule, a gotcha like G3, a safety choice), never *what*.
 - Plain names (`expense`, not `e`; loop variables excepted). Type hints on every function.
 - Short functions in top-down order: public first, helpers below, one job each, early returns over nested ifs.
 - One way to do each thing across the codebase (e.g. every reply comes from one place).
 
 **Enforced by `spec.py check`** (every phase): it fails when a Python file in `src/`, `ui/`, `evals/` or `scripts/` has no top docstring, a function
-or method has no docstring, a file isn't in §3 Files, a `src/` or `evals/` file has no §4 Functions section or no box in the §2 diagram, a §4 function or a §6 Flow step has no
-In or Out block, the Flow diagram's numbered arrows don't match its steps, a signature or docstring line 1 doesn't match the code, a JSON block isn't pretty-printed, a doc cites
+or method has no docstring, a file isn't in §2 Files, a `src/` file has no function explained in §3 or an `evals/` file none in §5 Evals, or no box in the §2 diagram, a function block or a §3 step has no
+In or Out block, the §3 diagram's arrows aren't numbered 1.1, 1.2, … to match its steps, a signature or docstring line 1 doesn't match the code, a JSON block isn't pretty-printed, a doc cites
 `file:line` or a function that doesn't exist, or kit scaffolding is committed. It warns past ~150 lines per file or ~30 per function.
 Explain as you go: one short ★ Insight per file, on *why*.
 

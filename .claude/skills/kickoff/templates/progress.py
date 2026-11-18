@@ -12,8 +12,7 @@ from pathlib import Path
 
 PHASE = re.compile(r"^- \[( |x)\] Phase (\d+): (.*)$", re.M)
 REQUIREMENT = re.compile(r"^\s+- \*\*P(\d+)\.R(\d+)\*\*[^\n]*\n((?:\s{6,}- [^\n]*\n?)*)", re.M)
-CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
-SIGNATURE = re.compile(r"^`([A-Za-z_][\w.]*)\((.*?)\)(?:\s*->\s*([^`]+))?`")  # a `#### `signature`` heading in "Functions"
+SIGNATURE = re.compile(r"^`([A-Za-z_][\w.]*)\((.*?)\)(?:\s*->\s*([^`]+))?`")  # a `#### `signature` · `file`` heading
 
 
 def plan_text() -> str:
@@ -92,13 +91,14 @@ def section(title: str) -> str:
 
 
 def interfaces() -> dict[str, list[dict]]:
-    """Plan "Functions": file -> its functions, each {'name', 'params', 'summary', 'in', 'out'} (summary = docstring line 1)."""
+    """Every `#### `signature` · `file`` block in "How it works" and "Evals": file -> its functions, each parsed."""
     files: dict[str, list[dict]] = {}
-    for block in re.split(r"^### ", section("Functions"), flags=re.M)[1:]:
-        path = re.match(r"`([^`]+)`", block)
-        if not path:
-            continue
-        files[path[1]] = [entry for entry in map(function_entry, re.split(r"^#### ", block, flags=re.M)[1:]) if entry]
+    text = section("How it works") + section("Evals")
+    for chunk in re.split(r"^(?=#{2,4} )", text, flags=re.M):
+        head = re.match(r"#### (`[^`]+`)\s*·\s*`([^`]+)`", chunk)
+        entry = function_entry(chunk[len("#### ") :]) if head else None
+        if entry:
+            files.setdefault(head[2], []).append(entry)
     return files
 
 
@@ -188,19 +188,19 @@ def params_of(signature: str) -> list[str]:
 
 
 def flow() -> list[dict]:
-    """Plan "Flow": each `### <n> · <title>` step as {'n', 'call', 'in', 'out'}, its In and Out blocks parsed."""
+    """Plan "How it works": each `### Step <n> · <title>` as {'n', 'call', 'in', 'out'}, its In and Out blocks parsed."""
     steps = []
-    for n, step in re.findall(r"^### (\d+) · (.*?)(?=^### \d+ · |\Z)", section("Flow"), re.M | re.S):
+    for n, step in re.findall(r"^### Step (\d+) · (.*?)(?=^### |^## |\Z)", section("How it works"), re.M | re.S):
         call = re.search(r"`([A-Za-z_][\w.]*\([^`]*\))`", step)
         if call:
             steps.append({"n": int(n), "call": call[1], **in_and_out(step)})
     return steps
 
 
-def flow_arrows() -> list[int]:
-    """The step numbers (①, ②, …) on the arrows of the Flow diagram, in the order they're drawn."""
-    diagrams = re.findall(r"```mermaid\n(.*?)```", section("Flow"), re.S)
-    return [CIRCLED.index(mark) + 1 for mark in re.findall(r'-- "([①-⑳])', diagrams[0] if diagrams else "")]
+def flow_arrows() -> list[tuple[int, int]]:
+    """The (step, sub-step) numbers on the How-it-works diagram's arrows, e.g. "1.2 …" -> (1, 2), in the order they're drawn."""
+    diagrams = re.findall(r"```mermaid\n(.*?)```", section("How it works"), re.S)
+    return [(int(step), int(sub)) for step, sub in re.findall(r'-- "(\d+)\.(\d+) ', diagrams[0] if diagrams else "")]
 
 
 def scenario_phases() -> dict[str, int]:
