@@ -188,6 +188,20 @@ def code_rules(c: Path) -> None:
             (c / "src/extra.py").unlink()
 
 
+def planned_functions(c: Path) -> None:
+    """T18b: a §5c function a later phase adds warns while phases are open, fails once all are ticked."""
+    extra = "- `greet(name: str) -> str` · Greet someone · a later phase\n### `ui/api.py`"
+    text = PLAN.format(**GOOD).replace("\n### `ui/api.py`", "\n" + extra, 1)
+    write(c, "docs/plan.md", text)
+    open_run = check(c)
+    write(c, "docs/plan.md", text.replace("- [ ] Phase 2: next", "- [x] Phase 2: next").replace("- [ ] Phase 1", "- [x] Phase 1"))
+    done_run = check(c)
+    plan(c, tick="x")
+    expect("T18b a planned §5c function warns while phases are open, fails once all are ticked",
+           open_run.returncode == 0 and "WARN" in open_run.stdout and done_run.returncode == 1 and "greet" in done_run.stdout,
+           open_run.stdout + done_run.stdout)
+
+
 def doc_rules(c: Path) -> None:
     """T19–T22: docs stay accurate, and kit scaffolding stays out of git."""
     talk = (c / "docs/talk.md").read_text()
@@ -392,6 +406,7 @@ def main() -> int:
     setup(c)
     plan_rules(c)
     code_rules(c)
+    planned_functions(c)
     doc_rules(c)
     verify_and_hooks(c)
     parser(c)

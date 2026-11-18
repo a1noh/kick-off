@@ -108,7 +108,10 @@ def code_problems() -> tuple[list[str], list[str]]:
                     warns.append(
                         f"{rel}: {node.name}() is {node.end_lineno - node.lineno + 1} lines (aim for ~{MAX_FUNCTION})"
                     )
-        fails += [f"{rel}: §5c {p}" for p in signature_problems(tree, listed.get(rel, []))]
+        for problem in signature_problems(tree, listed.get(rel, [])):
+            # A listed function a later phase adds is only a warning until every phase is ticked.
+            planned = problem.endswith("listed but not defined") and not all(d for d, _ in progress.phases().values())
+            (warns if planned else fails).append(f"{rel}: §5c {problem}")
     return fails, warns
 
 
