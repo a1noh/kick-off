@@ -105,12 +105,25 @@ def file_problems() -> list[str]:
         if progress.ticked(phase) and not (ROOT / row).exists():
             problems.append(f"plan.md Files: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
     for rel, entries in progress.interfaces().items():
-        problems += [
-            f"{rel}: plan.md Functions: {e['name']}() needs an **In** and an **Out** block (```json or ```text)"
-            for e in entries
-            if e["in"] == "" or e["out"] == ""
-        ]
+        problems += [f"{rel}: plan.md Functions: {p}" for e in entries for p in shape_problems(e)]
     problems += flow_problems()
+    return problems
+
+
+def shape_problems(entry: dict) -> list[str]:
+    """One plan.md function: it has In and Out, In names exactly its parameters, each with its type, and Out its return type."""
+    name = entry["name"]
+    if entry["in"] == "" or entry["out"] == "":
+        return [f"{name}() needs an **In** and an **Out** block (```jsonc, ```json or ```text)"]
+    problems = []
+    if isinstance(entry["in"], dict) and set(entry["in"]) - {"…"} != set(entry["params"]):
+        problems.append(f"{name}(): In must name exactly its parameters {entry['params']}, not {list(entry['in'])}")
+    for param, kind in entry["types"].items():
+        note = entry["in_notes"].get(param, "")
+        if kind and note.split("·")[0].strip().replace(" ", "") != kind.replace(" ", ""):
+            problems.append(f"{name}(): In {param!r} needs the comment `// {kind} · <what it is>`")
+    if entry["returns"] and entry["out_type"].replace(" ", "") != entry["returns"].replace(" ", ""):
+        problems.append(f"{name}(): the Out label must say its return type: **Out** · `{entry['returns']}`")
     return problems
 
 
@@ -211,7 +224,7 @@ def doc_problems() -> list[str]:
         text = (ROOT / rel).read_text() if (ROOT / rel).exists() else ""
         problems += [f"{rel}: '{ref}' goes stale; name the function instead" for ref in FILE_LINE.findall(text)]
         if rel == "docs/plan.md":
-            problems += json_problems(text)
+            problems += json_problems(text) + hidden_tag_problems(text)
         for diagram in re.findall(r"```mermaid\n(.*?)```", text, re.S):
             problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
     problems += architecture_problems()
@@ -244,7 +257,8 @@ def architecture_problems() -> list[str]:
 def json_problems(text: str) -> list[str]:
     """Every ```json block in plan.md is valid JSON, pretty-printed: one key per line, 2-space indent."""
     problems = []
-    for block in re.findall(r"```json\n(.*?)\n```", text, re.S):
+    for kind, raw in re.findall(r"```(jsonc|json)\n(.*?)\n```", text, re.S):
+        block = progress.without_comments(raw)[0] if kind == "jsonc" else raw
         try:
             value = json.loads(block)
         except json.JSONDecodeError as error:
@@ -258,6 +272,13 @@ def json_problems(text: str) -> list[str]:
             if '"' in text or CODE_IN_TEXT.search(text)
         ]
     return problems
+
+
+def hidden_tag_problems(text: str) -> list[str]:
+    """A bare <name> outside code is hidden by markdown (it reads as an HTML tag): it must sit inside backticks."""
+    prose = re.sub(r"```.*?```", "", text, flags=re.S)
+    prose = re.sub(r"`[^`\n]*`", "", prose)
+    return [f"docs/plan.md: {tag} outside backticks is hidden by markdown: write `{tag}`" for tag in sorted(set(re.findall(r"<[a-z_]+>", prose)))]
 
 
 def strings(value: object) -> list[str]:

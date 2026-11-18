@@ -13,7 +13,7 @@ from pathlib import Path
 PHASE = re.compile(r"^- \[( |x)\] Phase (\d+): (.*)$", re.M)
 REQUIREMENT = re.compile(r"^\s+- \*\*P(\d+)\.R(\d+)\*\*[^\n]*\n((?:\s{6,}- [^\n]*\n?)*)", re.M)
 CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
-SIGNATURE = re.compile(r"^`([A-Za-z_][\w.]*)\((.*?)\)[^`]*`")  # a `#### `signature`` heading in "Functions"
+SIGNATURE = re.compile(r"^`([A-Za-z_][\w.]*)\((.*?)\)(?:\s*->\s*([^`]+))?`")  # a `#### `signature`` heading in "Functions"
 
 
 def plan_text() -> str:
@@ -103,22 +103,53 @@ def interfaces() -> dict[str, list[dict]]:
 
 
 def function_entry(block: str) -> dict | None:
-    """One `#### `signature`` block: its name, parameter names, summary line, In block and Out block (None if malformed)."""
+    """One `#### `signature`` block: name, parameter types, return type, summary line, In and Out (None if malformed)."""
     found = SIGNATURE.match(block)
     if not found:
         return None
     lines = [line.strip() for line in block.splitlines()[1:] if line.strip()]
     summary = re.split(r"\s*\*Why:\*", lines[0])[0] if lines else ""
-    return {"name": found[1], "params": params_of(found[2]), "summary": summary, **in_and_out(block)}
+    types = params_typed(found[2])
+    return {
+        "name": found[1],
+        "params": list(types),
+        "types": types,
+        "returns": (found[3] or "").strip(),
+        "summary": summary,
+        **in_and_out(block),
+    }
 
 
 def in_and_out(block: str) -> dict:
-    """The ```json / ```text blocks under **In** and **Out** in a plan block, parsed ('' when one is missing)."""
-    found = {}
+    """The blocks under **In** and **Out**: parsed values, the comment on each In key, and the type on the Out label."""
+    found: dict = {"in": "", "out": "", "in_notes": {}, "out_type": ""}
     for label in ("In", "Out"):
-        code = re.search(rf"\*\*{label}\*\*\s*\n```(json|text)\n(.*?)\n```", block, re.S)
-        found[label.lower()] = (json.loads(code[2]) if code[1] == "json" else code[2]) if code else ""
+        code = re.search(rf"\*\*{label}\*\*([^\n]*)\n```(jsonc|json|text)\n(.*?)\n```", block, re.S)
+        if not code:
+            continue
+        if label == "Out":
+            typed = re.search(r"`([^`]+)`", code[1])
+            found["out_type"] = typed[1] if typed else ""
+        if code[2] == "text":
+            found[label.lower()] = code[3]
+            continue
+        clean, notes = without_comments(code[3])
+        found[label.lower()] = json.loads(clean)
+        if label == "In":
+            found["in_notes"] = notes
     return found
+
+
+def without_comments(block: str) -> tuple[str, dict[str, str]]:
+    """A ```jsonc block without its `  // …` line comments, and each top-level key's comment (key -> comment)."""
+    lines, notes = [], {}
+    for line in block.splitlines():
+        code, _, comment = line.partition("  //")
+        lines.append(code.rstrip())
+        key = re.match(r'^  "([^"]+)":', code)
+        if key and comment:
+            notes[key[1]] = comment.strip()
+    return "\n".join(lines), notes
 
 
 def matches(actual: object, shown: object) -> bool:
@@ -140,10 +171,20 @@ def file_table() -> dict[str, int]:
     return {path: int(phase) for path, phase in re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(\d)\s*\|", section("Files"), re.M)}
 
 
+def params_typed(signature: str) -> dict[str, str]:
+    """Parameter name -> its type from a signature's inside, e.g. 'text: str, n: int = 2' -> {'text': 'str', 'n': 'int'}."""
+    found = {}
+    for part in re.split(r",(?![^\[]*\])", signature):
+        name, _, rest = part.partition(":")
+        name = name.split("=")[0].strip().lstrip("*")
+        if name and name not in ("self", "/"):
+            found[name] = rest.split("=")[0].strip()
+    return found
+
+
 def params_of(signature: str) -> list[str]:
     """Parameter names from a signature's inside, e.g. 'text: str, n: int = 2' -> ['text', 'n'] (self dropped)."""
-    names = [re.split(r"[:=]", part)[0].strip().lstrip("*") for part in re.split(r",(?![^\[]*\])", signature)]
-    return [name for name in names if name and name not in ("self", "/")]
+    return list(params_typed(signature))
 
 
 def flow() -> list[dict]:

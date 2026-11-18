@@ -52,14 +52,14 @@ flowchart LR
 #### `reply(text: str) -> str`
 Reply to one message. *Why:* probe.
 
-**In**
-```json
+**In** · the arguments, by name
+```jsonc
 {{
-  "text": "hi"
+  "text": "hi"  // str · the message
 }}
 ```
 
-**Out**
+**Out** · `str`
 ```text
 hello
 ```
@@ -69,12 +69,12 @@ hello
 #### `screen_text() -> str`
 The screen as text. *Why:* probe.
 
-**In**
-```json
+**In** · the arguments, by name
+```jsonc
 {{}}
 ```
 
-**Out**
+**Out** · `str`
 ```text
 [tabs] door | …
 ```
@@ -262,7 +262,7 @@ def planned_functions(c: Path) -> None:
     """T18b: a planned function a later phase adds warns while phases are open, fails once all are ticked."""
     extra = (
         "#### `greet(name: str) -> str`\nGreet someone. *Why:* a later phase.\n\n"
-        '**In**\n```json\n{\n  "name": "Dev"\n}\n```\n\n**Out**\n```text\nhi Dev\n```\n\n### `ui/api.py`'
+        '**In** · the arguments, by name\n```jsonc\n{\n  "name": "Dev"  // str · who to greet\n}\n```\n\n**Out** · `str`\n```text\nhi Dev\n```\n\n### `ui/api.py`'
     )
     text = PLAN.format(**GOOD).replace("### `ui/api.py`", extra, 1)
     write(c, "docs/plan.md", text)
@@ -288,8 +288,13 @@ def file_rules(c: Path) -> None:
     """T18c–T18e: plan.md Files + Functions list every file the build writes, each function with its In and Out, and ticked phases' files exist."""
     plan(c, tick="x")
     text = (c / "docs/plan.md").read_text()
-    write(c, "docs/plan.md", text.replace('**In**\n```json\n{\n  "text": "hi"\n}\n```\n\n**Out**\n```text\nhello\n```\n\n### `ui/api.py`', '**Out**\n```text\nhello\n```\n\n### `ui/api.py`', 1))
+    in_block = '**In** · the arguments, by name\n```jsonc\n{\n  "text": "hi"  // str · the message\n}\n```\n\n'
+    write(c, "docs/plan.md", text.replace(in_block, "", 1))
     rejects(c, "T18c a function without its In block rejected", "needs an **In**")
+    write(c, "docs/plan.md", text.replace('"text": "hi"  // str · the message', '"text": "hi"  // int · the message', 1))
+    rejects(c, "T18g an In comment whose type differs from the signature rejected", "needs the comment `// str")
+    write(c, "docs/plan.md", text.replace("Reply to one message. *Why:* probe.", "Reply to one message. *Why:* reads out/<name>.jsonl.", 1))
+    rejects(c, "T18h a bare <tag> that markdown would hide rejected", "outside backticks")
     write(c, "docs/plan.md", text.replace('U -- "① hi" --> AG', 'U -- "② hi" --> AG'))
     rejects(c, "T18f the Flow diagram's numbered arrows must match the steps", "no step 2")
     write(c, "docs/plan.md", text)
@@ -387,11 +392,11 @@ def parser(c: Path) -> None:
     """T28: progress.py reads the plan's Status, requirements, Functions and Flow."""
     code = (
         "import progress as p; f = p.flow()[0]; print(p.status(), p.requirements(1)[0]['id'],"
-        " p.interfaces()['src/agent.py'][0]['in'], f['call'], f['in'], f['out'], p.flow_arrows(),"
+        " p.interfaces()['src/agent.py'][0]['in'], p.interfaces()['src/agent.py'][0]['in_notes'], f['call'], f['in'], f['out'], p.flow_arrows(),"
         " p.matches({'a': 1, 'b': 2}, {'a': 1, '…': 'b'}), p.matches({'a': 1}, {'a': 2}))"
     )
     out = sh(f'.venv/bin/python -c "{code}"', c).stdout.strip()
-    want = "approved 2026-01-01 P1.R1 {'text': 'hi'} reply(\"hi\") {'text': 'hi'} hello [1, 1] True False"
+    want = "approved 2026-01-01 P1.R1 {'text': 'hi'} {'text': 'str · the message'} reply(\"hi\") {'text': 'hi'} hello [1, 1] True False"
     expect("T28 progress parses Status, requirements, In/Out blocks, numbered arrows, and … matching", out == want, out)
 
 

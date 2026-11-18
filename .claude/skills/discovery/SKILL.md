@@ -120,13 +120,15 @@ name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<
    - a `#### \`signature -> return\`` heading;
    - one line: the docstring line 1, word for word, then `*Why:* <why>` (`spec.py check` compares the line and the
      parameter names with the code once the file exists);
-   - `**In**` and a ```json block: the call's real arguments as one object (`{"<param>": <real value>}`), and
-     `**Out**` and a ```json block with the real value it returns (```text for plain text), plus one line for the other
-     outcome when there is one ("wrong name → `null`"). Both pretty-printed (one key per line, 2-space indent, as
-     `json.dumps(value, indent=2)` writes it). Anything the call doesn't read becomes `"…": "<what was left out>"`, so
-     the reader sees exactly what goes in. Every value is data a person can read: an object is shown by what it holds
-     (a Store → `{"folder": "out", "moves.jsonl": [...]}`, a path → `"out"`), never as code like `Store("out")`, and
-     no escaped `\"` quotes. `spec.py check` fails on a function without In or Out, or on code inside a value.
+   - `**In** · the arguments, by name` and a ```jsonc block (JSON with comments): its keys are exactly the
+     parameters, each with a comment `  // <type from the signature> · <what it is>` (so `"name": "moves"  // str ·
+     which file to read` explains why a str sits in a JSON object);
+   - `**Out** · \`<the return type>\`` and a ```jsonc block with the real value it returns, a comment on each
+     important field (```text for plain text), plus one line for the other outcome when there is one;
+   - pretty-printed (2-space indent, comments after two spaces); `"…": "<what was left out>"` for parts a call doesn't
+     read; every value is data a person can read (an object shown by what it holds, never code like `Store("out")`);
+     paths and placeholders in prose go in backticks, or markdown hides `<name>`. `spec.py check` enforces each rule:
+     In keys = the parameters, the comment types = the signature, the Out label = the return type.
    Include `ui/api.py` (`screen`, `chat`), `evals/scenarios.py` (`run_all`), `evals/run.py` and `scripts/demo.py`.
 5. **Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
 Every ```json block in plan.md (§4, §5, §6) is pretty-printed; `spec.py check` fails otherwise.

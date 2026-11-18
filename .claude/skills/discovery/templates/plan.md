@@ -49,45 +49,55 @@ flowchart LR
 
 ## 4. Functions
 Every function the rest of the code calls, file by file: one `###` per Python file (tests excepted), one `####` per
-function. Under it: its docstring line 1 word for word, then `*Why:*`; then **In**, the real arguments as one JSON object
-(`{"<param>": <real value>, …}`), and **Out**, the real value it returns. Both are pretty-printed ```json blocks
-(```text for plain text). Anything the call doesn't read is replaced by `"…": "<what was left out>"`, so you see exactly
-what goes in. Every value is **data a person can read**: an object is shown by what it holds (a Store → `{"folder": "out",
-"moves.jsonl": []}`, a path → `"out"`), never as code like `Store("out")`; `spec.py check` rejects code and `\"` in values. §5 names the record shapes.
+function. Each one reads top to bottom:
+- its docstring line 1 word for word, then `*Why:*`;
+- **In** · the arguments, by name: a ```jsonc block (JSON with comments) whose keys are exactly the parameters, each
+  with a comment `// <its type from the signature> · <what it is>`;
+- **Out** · `<its return type>`: the real value it returns, as ```jsonc with a comment on each important field
+  (```text for plain text).
+
+Values are real and pretty-printed (2-space indent, comments after two spaces). Anything a call doesn't read becomes
+`"…": "<what was left out>"`. Every value is data a person can read: an object is shown by what it holds (a Store →
+`{"folder": "out", "moves.jsonl": []}`), never as code. A path or placeholder in prose goes in backticks, or markdown
+hides it. `spec.py check` enforces all of this.
 
 ### `src/agent.py` · brain: ‹one job›
 
 #### `Agent.reply(text: str) -> str`
 ‹One message in, one checked reply out›. *Why:* ‹why›.
 
-**In**
-```json
+**In** · the arguments, by name
+```jsonc
 {
-  "text": "‹S1 input›"
+  "text": "‹S1 input›"  // str · ‹what the user typed›
 }
 ```
 
-**Out**
+**Out** · `str`
 ```text
 ‹the exact reply›
 ```
 
 ### `src/tools.py` · hands: ‹one job›
 
-#### `‹name›(‹params›) -> ‹type›`
+#### `‹name›(‹param›: dict) -> dict | None`
 ‹docstring line 1›. *Why:* ‹why›.
 
-**In**
-```json
+**In** · the arguments, by name
+```jsonc
 {
-  "‹param›": "‹the real value, with only the fields this call reads›",
-  "…": "‹what was left out, e.g. 4 more requests›"
+  "‹param›": {  // dict · ‹what it is›
+    "‹field›": "‹real value›",  // ‹why this field matters here›
+    "…": "‹what was left out›"
+  }
 }
 ```
 
-**Out**
-```json
-‹the real JSON it returns›
+**Out** · `dict | None`
+```jsonc
+{
+  "‹field›": "‹real value›"  // ‹what it means›
+}
 ```
 ‹Optional: the other outcome, e.g. "wrong name → `null`".›
 
