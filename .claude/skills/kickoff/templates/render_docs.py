@@ -1,7 +1,8 @@
-"""Render the project's Markdown docs (text + mermaid diagrams) to HTML, for when the .md preview can't show diagrams.
+"""Render docs/talk.md (text + mermaid diagrams) to docs/talk.html, for when the .md preview can't show diagrams.
 
-  .venv/bin/python scripts/render_docs.py                 docs/talk.md + docs/plan.md -> docs/talk.html + docs/plan.html
-  .venv/bin/python scripts/render_docs.py docs/talk.md    just that one
+  .venv/bin/python <kit>/templates/render_docs.py               docs/talk.md -> docs/talk.html (git-ignored)
+  .venv/bin/python <kit>/templates/render_docs.py docs/plan.md  any other doc, on demand
+Runs from the kit, in the project folder.
 
 Open the .html in any browser. (On GitHub the .md files already render their mermaid diagrams.)
 Mermaid is pinned to the version the VS Code preview uses, so a diagram that renders here renders there too.
@@ -13,7 +14,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path.cwd()
 MERMAID = "https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.esm.min.mjs"
 MARKED = "https://cdn.jsdelivr.net/npm/marked@15.0.7/lib/marked.esm.js"
 
@@ -33,7 +34,7 @@ table{{border-collapse:collapse;display:block;overflow-x:auto}} th,td{{border:1p
 .mermaid{{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;overflow-x:auto}}
 .note{{color:var(--muted);font-size:13px}}
 </style></head><body><main>
-<p class="note">Rendered from {source}. Edit the .md, then re-run scripts/render_docs.py.</p>
+<p class="note">Rendered from {source}. Edit the .md, then re-run the kit render_docs.py.</p>
 <div id="doc">Loading…</div>
 </main>
 <script type="module">
@@ -75,10 +76,11 @@ def render(md_path: Path) -> Path:
 
 
 def main(args: list[str]) -> int:
-    paths = [Path(a).resolve() for a in args] or [p for p in (ROOT / "docs/talk.md", ROOT / "docs/plan.md") if p.exists()]
+    """Render the docs named in args (default: docs/talk.md); returns the exit code."""
+    paths = [Path(a).resolve() for a in args] or [ROOT / "docs" / "talk.md"]
     missing = [p for p in paths if not p.exists()]
     if missing or not paths:
-        print(f"nothing to render: {missing or 'no docs/talk.md or docs/plan.md'}", file=sys.stderr)
+        print(f"nothing to render: {missing or 'no docs/talk.md'}", file=sys.stderr)
         return 1
     for p in paths:
         render(p)
