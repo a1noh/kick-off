@@ -27,7 +27,7 @@ You interview → plan → build → present. The app comes first: every scenari
   4  0:15   /build ×4 → after each step do its "Try it" list in the app, then /build again
   5  1:40   code freeze → scripts/demo.py, then read docs/talk.md with the app open
 
-New here? /demo fills in a sample interview and runs steps 2–4 up to phase 1, explaining each one.
+New here? /demo fills in a sample interview and runs discovery up to the approved plan, explaining each step.
 Lost? /kickoff shows where you are. Everything else: {KIT}/CHEATSHEET.md"""
 
 CLOCK = {"discovery": "0:10–0:15", 1: "0:15–0:25", 2: "0:25–0:50", 3: "0:50–1:15", 4: "1:15–1:30", "present": "1:40–1:55"}

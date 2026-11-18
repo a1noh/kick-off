@@ -24,7 +24,7 @@ the environment variable `GEMINI_API_KEY` in the cloud environment settings and 
 | Time | Command | What happens |
 |---|---|---|
 | 0:00 | `/kickoff` | sets up the folder and prints a short, fixed welcome (`/kickoff` again = "where am I") |
-| learn | `/demo` | fills in a sample interview (bike repair shop), plans it, builds phase 1, explains each step |
+| learn | `/demo` | fills in a sample interview (`/demo maintenance` for a second one), runs discovery, stops at the approved plan |
 | 0:00–0:10 | you | interview with GUIDES (Goal · Users · Inputs · Danger · Edges · Scale) → `notes/raw.md` |
 | 0:10 | `/discovery` | notes → `docs/requirements.md` (rules + decisions) + `docs/plan.md` (functions, records, S1 flow, 4 phases) → you approve it |
 | 0:15–1:30 | `/build` ×4 | per phase: tests → code → verify → the app updates → local commit + tag → your "Try it" list + diff stat |

@@ -210,7 +210,11 @@ def code_rules(c: Path) -> None:
             AGENT.replace("Reply to one message.", "Answer."),
             "must match",
         ),
-        "T18 a file with no section in plan.md Functions rejected": ("src/extra.py", '"""Extra."""\n', "has no section"),
+        "T18 a file with no section in plan.md Functions rejected": (
+            "src/extra.py",
+            '"""Extra."""\n',
+            "has no section",
+        ),
     }
     for name, (rel, text, needle) in cases.items():
         write(c, rel, text)
@@ -222,16 +226,25 @@ def code_rules(c: Path) -> None:
 
 def planned_functions(c: Path) -> None:
     """T18b: a planned function a later phase adds warns while phases are open, fails once all are ticked."""
-    extra = "#### `greet(name: str) -> str`\nGreet someone. *Why:* a later phase.\n\n| In | Example |\n|---|---|\n| `name` | `\"Dev\"` |\n\n**Out**\n```text\nhi Dev\n```\n\n### `ui/api.py`"
+    extra = '#### `greet(name: str) -> str`\nGreet someone. *Why:* a later phase.\n\n| In | Example |\n|---|---|\n| `name` | `"Dev"` |\n\n**Out**\n```text\nhi Dev\n```\n\n### `ui/api.py`'
     text = PLAN.format(**GOOD).replace("### `ui/api.py`", extra, 1)
     write(c, "docs/plan.md", text)
     open_run = check(c)
-    write(c, "docs/plan.md", text.replace("- [ ] Phase 2: next", "- [x] Phase 2: next").replace("- [ ] Phase 1", "- [x] Phase 1"))
+    write(
+        c,
+        "docs/plan.md",
+        text.replace("- [ ] Phase 2: next", "- [x] Phase 2: next").replace("- [ ] Phase 1", "- [x] Phase 1"),
+    )
     done_run = check(c)
     plan(c, tick="x")
-    expect("T18b a planned function warns while phases are open, fails once all are ticked",
-           open_run.returncode == 0 and "WARN" in open_run.stdout and done_run.returncode == 1 and "greet" in done_run.stdout,
-           open_run.stdout + done_run.stdout)
+    expect(
+        "T18b a planned function warns while phases are open, fails once all are ticked",
+        open_run.returncode == 0
+        and "WARN" in open_run.stdout
+        and done_run.returncode == 1
+        and "greet" in done_run.stdout,
+        open_run.stdout + done_run.stdout,
+    )
 
 
 def file_rules(c: Path) -> None:
@@ -244,7 +257,13 @@ def file_rules(c: Path) -> None:
     write(c, "scripts/demo.py", '"""Demo."""\n')
     rejects(c, "T18d a code file missing from plan.md Files rejected", "missing from plan.md Files")
     (c / "scripts/demo.py").unlink()
-    write(c, "docs/plan.md", text.replace("| `tests/test_phase1.py` | 1 |", "| `tests/test_phase1.py` | 1 |\n| `src/later.py` | 1 | x | x | x |"))
+    write(
+        c,
+        "docs/plan.md",
+        text.replace(
+            "| `tests/test_phase1.py` | 1 |", "| `tests/test_phase1.py` | 1 |\n| `src/later.py` | 1 | x | x | x |"
+        ),
+    )
     rejects(c, "T18e a ticked phase's planned file that doesn't exist rejected", "doesn't exist")
     write(c, "docs/plan.md", text)
 
@@ -283,7 +302,10 @@ def verify_and_hooks(c: Path) -> None:
     good = sh(f".venv/bin/python {SPEC} verify 1", c)
     expect(
         "T23 verify: failing test → VERIFY FAIL, passing → VERIFY OK, and it writes no files",
-        bad.returncode == 1 and good.returncode == 0 and "✅ P1.R1" in good.stdout and set((c / "docs").rglob("*")) == before,
+        bad.returncode == 1
+        and good.returncode == 0
+        and "✅ P1.R1" in good.stdout
+        and set((c / "docs").rglob("*")) == before,
         bad.stdout[-300:] + good.stdout[-300:],
     )
     plan(c, tick="x", claim="words the screen never shows")
@@ -347,10 +369,18 @@ def kit_files(c: Path, tmp: Path) -> None:
     )
     sh("git stash -q -u", c)
     seeded, again = sh(f"python3 {KIT}/bin/demo.py seed", c), sh(f"python3 {KIT}/bin/demo.py seed", c)
+    bike_ok = "Spoke & Chain" in (c / "notes/raw.md").read_text()
+    sh("git checkout -q -- notes/raw.md", c)
+    other, unknown = sh(f"python3 {KIT}/bin/demo.py seed maintenance", c), sh(f"python3 {KIT}/bin/demo.py seed nope", c)
     expect(
-        "T30 /demo seeds empty notes once, then refuses",
-        seeded.returncode == 0 and "Spoke & Chain" in (c / "notes/raw.md").read_text() and again.returncode == 1,
-        seeded.stdout + again.stdout,
+        "T30 /demo seeds empty notes once (bike by default, or a named sample), then refuses",
+        seeded.returncode == 0
+        and bike_ok
+        and again.returncode == 1
+        and other.returncode == 0
+        and "Greenleaf" in (c / "notes/raw.md").read_text()
+        and "NO SUCH SAMPLE" in unknown.stdout,
+        seeded.stdout + again.stdout + other.stdout + unknown.stdout,
     )
     sh("git checkout -q -- notes/raw.md && git stash pop -q", c)
 

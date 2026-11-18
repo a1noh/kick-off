@@ -5,7 +5,7 @@ Lives in the kit only (`<kit>/CHEATSHEET.md`); `/kickoff` prints its path.
 ## Pre-flight (the day before)
 - [ ] Kit self-test: `python3 <kit>/tests/selftest.py` → all passed (`<kit>` = `~/.claude/skills/kickoff` after `install.sh`,
       or `.claude/skills/kickoff` in a repo made from the template)
-- [ ] Learn the flow once: empty folder → `claude` → `/kickoff` → `/demo` (sample interview, up to phase 1)
+- [ ] Learn the flow once: empty folder → `claude` → `/kickoff` → `/demo` (sample interview, up to the approved plan)
 - [ ] VS Code + the Claude Code extension · `claude` runs in VS Code's terminal (`/ide` connects it)
 - [ ] Free Gemini key from https://aistudio.google.com/apikey works (paste it into `.env` right after `/kickoff`;
       on claude.ai/code set it as the environment variable `GEMINI_API_KEY` and allow `generativelanguage.googleapis.com`)
