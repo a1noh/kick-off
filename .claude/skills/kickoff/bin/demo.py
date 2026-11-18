@@ -30,8 +30,8 @@ Next (automatic): /discovery turns these notes into docs/spec.md and docs/plan.m
 🎓 Demo 2/3 · The discovery (/discovery)
 What happened: docs/spec.md is the whole discovery in plain English: the 3 scenarios, what the app shows, the
 business rules (B1…, each traced to a notes line), the decisions on what the notes left open (D1…), the messy data and
-what "good" looks like. docs/plan.md (Status: draft) is the technical file: every file the build will write, every
-function with what goes in and what comes out, and scenario 1 step by step.
+what "good" looks like. docs/plan.md (Status: draft) is the implementation spec: every file the build will write,
+one diagram, and every function with what goes in and what comes out (how it does it is one click away).
 The demo answered the open questions with the recommended option: search spec.md for "demo run".
 Your turn: read plan.md §2 Files, §3 How it works and §4 Functions (⇧⌘V), then answer the approval question below.""",
     "3": """\
