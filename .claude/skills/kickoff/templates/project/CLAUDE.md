@@ -11,7 +11,10 @@ phase visibly turns something ✅. After each phase the user **tries it in the a
 | `/discovery` | 0:10–0:15, after the interview; re-run after new notes | notes + data → `docs/spec.md` + `docs/plan.md` (**Status: draft**) → the user approves it |
 | `/build` | 0:15–1:30, once per phase (×4) | next unticked phase of the approved plan → tests → code → `spec.py verify N` → app running → commit + tag → **Try it** list → stop |
 A new feature mid-build: add it to the bottom of `notes/raw.md`, run `/discovery` again (it lands in the phases not built
-yet, or as Phase 5), approve. A small tweak: just tell `/build`.
+yet, or as Phase 5), approve. A small tweak: just tell `/build`. Either way the docs change **before** the code, in one
+order: spec.md (the rule) → plan.md (the requirement + the function block) → the test → the code; the last phase
+rewrites talk.md §1–§6 and plan.md §8. `spec.py check` fails on a rule with no requirement, a built phase with no
+Build-story entry, or a finished build whose talk.md doesn't cover the last phase.
 Before presenting (1:40, code freeze): `.venv/bin/python scripts/demo.py`, then read `docs/talk.md` top to bottom with the app open.
 
 ## Docs: each has one job (nothing else is written)
@@ -68,8 +71,9 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 
 ## After every phase (`/build` does this)
 1. Tests pass (`.venv/bin/python -m pytest -q tests`); `scripts/demo.py` runs (from phase 2).
-2. Tick the phase, then `spec.py verify N` → `VERIFY OK` and `spec.py check` → `SPEC OK`. The app is running.
-3. Append the phase's Build-story entry to `docs/talk.md` §7, then one commit for the phase (its body lists every changed
+2. Tick the phase, then `spec.py verify N` → `VERIFY OK`. Append the phase's Build-story entry to `docs/talk.md` §7
+   (last phase: rewrite §1–§6 and plan.md §8 too), then `spec.py check` → `SPEC OK`. The app is running.
+3. One commit for the phase (its body lists every changed
    file) and `git tag -f phase-N`. Commits stay local: **never push**. `git diff phase-<N-1> phase-N` shows the change.
 4. Hand over what changed on screen, the board before → after, the **Try it** list and **every changed file**, then **STOP**.
 

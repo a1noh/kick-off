@@ -120,6 +120,18 @@ AGENT = '"""Probe agent: replies to one message (S1, step 1)."""\n\n\ndef reply(
 API = '"""Probe screen: the door (S1 ends here)."""\n\n\ndef screen_text() -> str:\n    """The screen as text."""\n    return "[tabs] door | 📊 Owner dashboard\\n[sidebar]\\n✅ P1: probe"\n'
 TEST = 'from agent import reply\n\n\ndef test_r1_greeting():\n    """plan.md P1.R1: hi -> hello."""\n    assert reply("hi") == "{want}"\n'
 
+STORY = '\n**Phase {n} · probe** · Was broken: nothing · Fixed by: `reply()` · Say it: "it replies"\n'
+REQ2 = (
+    '    - **P1.R2** · bye\n      - Traces to: B2 · user 2026-01-02: "say bye too"\n'
+    '      - Acceptance: input `bye` → reply "hello"\n      - Test: tests/test_phase1.py::test_r2_bye\n'
+)
+PHASE = (
+    "- [{tick}] Phase {n}: {name}\n  - **On screen (before → after):** same → same\n  - **Requirements:**\n"
+    "    - **P{n}.R1** · {name}\n      - Traces to: {rule} · raw.md:L9\n"
+    '      - Acceptance: input `yo` → reply "hello"\n      - Test: tests/test_phase{n}.py::test_r1_{name}\n'
+)
+PHASE_TEST = 'from agent import reply\n\n\ndef test_r1_{name}():\n    """plan.md P{n}.R1: yo -> hello."""\n    assert reply("yo") == "hello"\n'
+
 
 def block(title: str) -> str:
     """The bash block under a '## <title>' heading in SKILL.md."""
@@ -214,7 +226,9 @@ def plan_rules(c: Path) -> None:
     plan(c, tick="x", status="draft")
     rejects(c, "T12 ticked phase under a draft plan rejected (approval gate)", "not approved")
     plan(c, tick="x")
-    expect("T13 approved + ticked + tested + on screen → SPEC OK", check(c).returncode == 0, check(c).stdout)
+    rejects(c, "T12b ticked phase with no Build-story entry in talk.md rejected", "no Build-story entry")
+    write(c, "docs/talk.md", (c / "docs/talk.md").read_text() + STORY.format(n=1))
+    expect("T13 approved + ticked + tested + story told + on screen → SPEC OK", check(c).returncode == 0, check(c).stdout)
 
 
 def code_rules(c: Path) -> None:
@@ -406,6 +420,89 @@ def changes(c: Path) -> None:
     sh("git add -A && git commit -qm restore", c)
 
 
+def amend(c: Path, rel: str, old: str, new: str) -> None:
+    """Replace old with new once in a classroom file (old must be there)."""
+    text = (c / rel).read_text()
+    assert old in text, f"{rel}: no {old!r}"
+    write(c, rel, text.replace(old, new, 1))
+
+
+def new_phase(c: Path, n: int, name: str, rule: str, before: str) -> None:
+    """Add rule to spec.md and an unticked phase n (one requirement tracing to it, its test file in Files) before a plan line."""
+    amend(c, "docs/spec.md", "- **B1**", f"- **{rule}** {name} back · raw.md:L9\n- **B1**")
+    amend(c, "docs/plan.md", before, PHASE.format(tick=" ", n=n, name=name, rule=rule) + before.replace("- [ ] Phase 2: next\n", ""))
+    row = "| `tests/test_phase1.py` | 1 | proves P1.R1 | — | — |\n"
+    amend(c, "docs/plan.md", row, row + f"| `tests/test_phase{n}.py` | {n} | proves P{n}.R1 | — | — |\n")
+
+
+def build_phase(c: Path, n: int, name: str) -> None:
+    """What /build leaves behind for phase n, minus the docs: an approved plan, the test, the tick."""
+    amend(c, "docs/plan.md", "**Status:** draft", "**Status:** approved 2026-01-03")
+    write(c, f"tests/test_phase{n}.py", PHASE_TEST.format(n=n, name=name))
+    amend(c, "docs/plan.md", f"- [ ] Phase {n}:", f"- [x] Phase {n}:")
+
+
+def mid_build(c: Path) -> None:
+    """M1–M12: a tweak, a feature folded into an unbuilt phase, and a phase added after everything was built keep the three docs in step."""
+    start = sh("git add -A && git commit -qm before-scenarios; git rev-parse HEAD", c).stdout.split()[-1]
+    plan(c, tick="x")
+    command = '.venv/bin/python -c "import progress as p; print(p.status(), p.next_command())"'
+
+    # scenario 1: a small tweak, told to /build
+    amend(c, "docs/spec.md", "- **B1**", "- **B2** say bye back · decided with user 2026-01-02\n- **B1**")
+    rejects(c, "M1 tweak: a new spec.md rule with no requirement is rejected", "B2: no requirement")
+    amend(c, "docs/plan.md", "- [ ] Phase 2: next", REQ2 + "- [ ] Phase 2: next")
+    rejects(c, "M2 tweak: the new requirement's test must exist before the phase stays ticked", "test_r2_bye does not exist")
+    amend(c, "tests/test_phase1.py", "hello\"\n", 'hello"\n\n\ndef test_r2_bye():\n    """plan.md P1.R2: bye -> hello."""\n    assert reply("bye") == "hello"\n')
+    expect("M3 tweak: rule + requirement + test → SPEC OK", check(c).returncode == 0, check(c).stdout)
+    out = sh(f".venv/bin/python {SPEC} changes 1", c).stdout
+    expect("M4 tweak: the handover's 📚 Docs lines name what each doc gained", "+ B2" in out and "P1.R2" in out and "📚" in out, out)
+
+    amend(c, "docs/plan.md", '1. Returns "hello" for any message.', '1. Returns "hello" for any message, bye included (B2).')
+    out = sh(f".venv/bin/python {SPEC} changes 1", c).stdout
+    expect("M4b tweak: a reworded function block shows as changed (~)", "~ reply" in out and "~ screen_text" not in out, out)
+
+    # scenario 2: a real feature mid-build (/discovery re-run), folded into the phase not built yet
+    new_phase(c, 2, "wave", "B3", "- [ ] Phase 2: next\n")
+    amend(c, "docs/plan.md", "**Status:** approved 2026-01-01", "**Status:** draft")
+    state = sh(command, c).stdout.strip()
+    expect("M5 feature: a re-run's draft keeps the built, tagged phase ticked and /build is next", check(c).returncode == 0 and state == "draft /build", check(c).stdout + state)
+    sh("git tag -d phase-1", c)
+    rejects(c, "M6 feature: a phase ticked under a draft with no phase tag is still rejected", "not approved")
+    sh("git tag -f phase-1", c)
+    build_phase(c, 2, "wave")
+    rejects(c, "M7 feature: the built phase needs its Build-story entry", "phase 2 is ticked but has no Build-story entry")
+    write(c, "docs/talk.md", (c / "docs/talk.md").read_text() + STORY.format(n=2))
+    rejects(c, "M8 last phase: talk.md must cover every phase", "phases 1–2")
+    amend(c, "docs/talk.md", "**Covers:** nothing built yet", "**Covers:** phases 1–2")
+    rejects(c, "M9 last phase: the Likely questions must be answered", "Likely questions")
+    write(c, "docs/plan.md", (c / "docs/plan.md").read_text() + "\n## 8. Likely questions\n- **Why no AI?** It only greets (`reply()`).\n")
+    expect("M10 everything built, three docs in step → SPEC OK, All built", check(c).returncode == 0 and "All built" in sh(command, c).stdout, check(c).stdout)
+    sh("git add -A && git commit -qm p2 && git tag -f phase-2", c)
+
+    # scenario 3: a feature after everything is built becomes the next phase
+    new_phase(c, 3, "nod", "B4", "\n## 8. Likely questions")
+    amend(c, "docs/plan.md", "**Status:** approved 2026-01-03", "**Status:** draft")
+    state = sh(command, c).stdout.strip()
+    expect("M11 new phase after all built: plan is valid as a draft, /build is next, talk still covers what is built", check(c).returncode == 0 and state == "draft /build", check(c).stdout + state)
+    build_phase(c, 3, "nod")
+    write(c, "docs/talk.md", (c / "docs/talk.md").read_text() + STORY.format(n=3))
+    rejects(c, "M12 new phase built: a talk.md that still covers phases 1–2 is rejected", "phases 1–3")
+    amend(c, "docs/talk.md", "**Covers:** phases 1–2", "**Covers:** phases 1–3")
+    verify = sh(f".venv/bin/python {SPEC} verify 3", c).stdout
+    out = sh(f".venv/bin/python {SPEC} changes 3", c).stdout
+    expect("M13 new phase built and told → SPEC OK, VERIFY OK, 📚 names B4, Phase 3 and its entry",
+           check(c).returncode == 0 and "VERIFY OK" in verify and "+ B4" in out and "+ Phase 3, + P3.R1" in out and "nothing, every phase is built" in out,
+           check(c).stdout + verify + out)
+    amend(c, "docs/talk.md", "Fixed by: `reply()`", "Fixed by: the greeter")
+    amend(c, "docs/talk.md", "Fixed by: `reply()`", "Fixed by: the greeter")
+    amend(c, "docs/talk.md", "Fixed by: `reply()`", "Fixed by: the greeter")
+    amend(c, "docs/plan.md", "It only greets (`reply()`).", "It only greets.")
+    run = check(c)
+    expect("M14 a function the client docs never name is a warning, not a failure", run.returncode == 0 and "WARN reply() is in plan.md Functions but never named" in run.stdout, run.stdout)
+    sh(f"git add -A && git commit -qm scenarios; git reset -q --hard {start}; git tag -d phase-2", c)
+
+
 def kit_files(c: Path, tmp: Path) -> None:
     """T29–T36: the welcome, /demo, the secrets guard, the talk template, the kit's own code, React, the installer."""
     first, second = (
@@ -544,6 +641,7 @@ def main() -> int:
     verify_and_hooks(c)
     parser(c)
     changes(c)
+    mid_build(c)
     kit_files(c, tmp)
     passed = sum(ok for _, ok, _ in results)
     print(f"\n{passed}/{len(results)} passed")

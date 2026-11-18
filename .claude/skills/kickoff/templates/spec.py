@@ -47,11 +47,17 @@ def plan_problems() -> list[str]:
         problems.append("plan.md: the first lines need '**Status:** draft' or '**Status:** approved <date>'")
     rules = rule_ids()
     for n, (done, _) in sorted(progress.phases().items()):
-        if done and not state.startswith("approved"):
+        if done and not state.startswith("approved") and not tagged(n):
             problems.append(f"phase {n} is ticked but plan.md is not approved (Status: {state or 'missing'})")
         for req in progress.requirements(n):
             problems += requirement_problems(req, done, rules)
     return problems
+
+
+def tagged(n: int) -> bool:
+    """True when git has the tag phase-n: the phase was built under an approved plan, so a /discovery re-run may leave it ticked."""
+    found = subprocess.run(["git", "tag", "-l", f"phase-{n}"], cwd=ROOT, capture_output=True, text=True)
+    return found.stdout.strip() == f"phase-{n}"
 
 
 def requirement_problems(req: dict, built: bool, rules: set[str]) -> list[str]:
@@ -307,6 +313,79 @@ def defined_names() -> set[str]:
     }
 
 
+def sync_problems() -> tuple[list[str], list[str]]:
+    """The three docs agree: every spec.md rule has a requirement, every built phase its Build-story entry, and talk.md covers the last phase. Returns (failures, warnings)."""
+    every = progress.phases()
+    talk_path = ROOT / "docs" / "talk.md"
+    if not every or not talk_path.exists():
+        return [], []
+    talk, fails, warns = talk_path.read_text(), [], []
+    cited = {b for n in every for req in progress.requirements(n) for b in re.findall(r"\bB\d+\b", req["traces"])}
+    fails += [
+        f"docs/spec.md {rule}: no requirement in plan.md traces to it (a rule needs a requirement and a test)"
+        for rule in sorted(rule_ids() - cited, key=lambda b: int(b[1:]))
+    ]
+    fails += [
+        f"docs/talk.md §7: phase {n} is ticked but has no Build-story entry (**Phase {n} · …**)"
+        for n, (done, _) in sorted(every.items())
+        if done and not re.search(rf"\*\*Phase {n} ·", talk)
+    ]
+    if not all(done for done, _ in every.values()):
+        return fails, warns
+    last = max(every)
+    covers = re.search(r"^\*\*Covers:\*\* phases 1–(\d+)\s*$", talk, re.M)
+    if not covers or int(covers[1]) != last:
+        fails.append(
+            f"docs/talk.md: every phase is built, so rewrite §1–§6 for all {last} phases and set '**Covers:** phases 1–{last}'"
+        )
+    questions = progress.section("Likely questions")
+    if "‹" in questions or not re.search(r"^- \*\*", questions, re.M):
+        fails.append("plan.md Likely questions: every phase is built, so answer the questions (no ‹placeholders›)")
+    named = talk + questions
+    warns += [
+        f"{entry['name']}() is in plan.md Functions but never named in docs/talk.md or Likely questions"
+        for rel, entries in progress.interfaces().items()
+        for entry in entries
+        if rel.startswith("src/") and f"{entry['name'].split('.')[-1]}(" not in named
+    ]
+    return fails, warns
+
+
+def at_tag(tag: str, rel: str) -> str:
+    """The text of file rel as it was at a git tag ('' when the tag or the file doesn't exist)."""
+    old = subprocess.run(["git", "show", f"{tag}:{rel}"], cwd=ROOT, capture_output=True, text=True)
+    return old.stdout if old.returncode == 0 else ""
+
+
+DOC_IDS = {
+    "docs/spec.md": r"^### (S\d+)|^\s*- \*\*([BD]\d+)\*\*|^\| ([EG]\d+) \|",
+    "docs/plan.md": r"^- \[[ x]\] (Phase \d+)|\*\*(P\d+\.R\d+)\*\*|^#### `([\w.]+)`",
+    "docs/talk.md": r"\*\*(Phase \d+) ·",
+}
+
+
+def doc_changes(before_tag: str) -> list[str]:
+    """One line per doc: the ids it gained (+) or whose text changed (~) since before_tag: rules, requirements, functions, entries."""
+    lines = []
+    for rel, pattern in DOC_IDS.items():
+        path = ROOT / rel
+        now, old = chunks(path.read_text() if path.exists() else "", pattern), chunks(at_tag(before_tag, rel), pattern)
+        marks = [f"+ {i}" for i in now if i not in old] + [f"~ {i}" for i in now if i in old and now[i] != old[i]]
+        lines.append(f"   {rel:<14} {', '.join(marks) if marks else 'no rule, requirement, function or entry changed'}")
+    return lines
+
+
+def chunks(text: str, pattern: str) -> dict[str, str]:
+    """Id -> the text from that id up to the next id or `## ` heading, so a reworded rule or function block shows as changed."""
+    marks = list(re.finditer(pattern + r"|^## ", text, re.M))
+    found = {}
+    for mark, following in zip(marks, [*marks[1:], None]):
+        name = "".join(g or "" for g in mark.groups())
+        if name:
+            found[name] = text[mark.start() : following.start() if following else len(text)].strip()
+    return found
+
+
 def repo_problems() -> list[str]:
     """Kit scaffolding never lands in the project's git history (it runs from the kit)."""
     tracked = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True).stdout.splitlines()
@@ -396,8 +475,7 @@ def cmd_changes(n: int) -> int:
     any_change = False
     for path in product_files():
         rel = str(path.relative_to(ROOT))
-        old = subprocess.run(["git", "show", f"{before_tag}:{rel}"], cwd=ROOT, capture_output=True, text=True)
-        before, after = functions_in(old.stdout if old.returncode == 0 else ""), functions_in(path.read_text())
+        before, after = functions_in(at_tag(before_tag, rel)), functions_in(path.read_text())
         lines = [f"+ {name}" for name in after if name not in before]
         lines += [f"~ {name}" for name in after if name in before and before[name] != after[name]]
         if not lines:
@@ -408,6 +486,7 @@ def cmd_changes(n: int) -> int:
             label = f"{line} — {titles[name]}" if titles.get(name) else line
             print(f"   {rel if i == 0 else '':<22} {label}")
     print("   (no function changes)" if not any_change else f"   See the code: git diff {before_tag} phase-{n} -- src/ ui/*.py evals/")
+    print(f"📚 Docs since {before_tag}", *doc_changes(before_tag), sep="\n")
     written = {name for path in product_files() for name in functions_in(path.read_text())}
     coming = [(path, e) for path, entries in progress.interfaces().items() for e in entries if e["name"] not in written]
     upcoming = [k for k, (done, _) in sorted(progress.phases().items()) if not done]
@@ -427,7 +506,9 @@ def cmd_changes(n: int) -> int:
 def cmd_check() -> int:
     """Print every rule problem (and warning); exit 1 when any rule fails."""
     fails, warns = code_problems()
-    problems = plan_problems() + fails + file_problems() + doc_problems() + repo_problems()
+    sync_fails, sync_warns = sync_problems()
+    problems = plan_problems() + fails + file_problems() + doc_problems() + sync_fails + repo_problems()
+    warns += sync_warns
     if progress.last_ticked() and (ROOT / "ui" / "api.py").exists():
         _, missing = screen_claims(progress.last_ticked(), render_screen())
         problems += [f"phase {progress.last_ticked()} Try it says {q} is on screen, but it isn't" for q in missing]

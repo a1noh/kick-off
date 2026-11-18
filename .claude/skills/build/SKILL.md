@@ -32,7 +32,11 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
   exactly those paths, no more.
 - Need a signature, file or record the plan doesn't have, or a different one? **Edit plan.md first** (§2 Files, a §4 function block, §5 Records, plus a
   requirement if behavior changes), keep it minimal, and list it in the handover as `📐 Plan changed: …`.
-- A scope change the user asks for → a new requirement with `Traces to: user <date>: "<their words>"` (no re-approval).
+- A scope change the user asks for (a small tweak; a real feature goes through `/discovery`) → **all three docs, in this
+  order, before the code**: ① spec.md: a new rule `B<n> … · decided with user <date>` (plus an eval case E<n> when it
+  changes a reply); ② plan.md: a requirement `Traces to: B<n> · user <date>: "<their words>"`, and the changed §4
+  function block (its **Does** steps, In, Out); ③ its test. No re-approval. A change to something that already works
+  (a bug, a layout fix) needs no rule: just the requirement and its test.
 - Run `.venv/bin/python $KIT/spec.py check` before coding: the only failures allowed now are this phase's missing tests.
 
 ## 2. Tests from the requirements, then code
@@ -67,19 +71,26 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 4. `.venv/bin/python $KIT/spec.py verify N`: runs the phase's requirement tests and its Try-it screen claims against
    the rendered screen, prints them, and must end `VERIFY OK`. A ❌ claim means the plan, the screen and the guide
    disagree: fix the code (or, if the plan line is wrong, fix the plan and say so), then repeat from step 1.
-5. `.venv/bin/python $KIT/spec.py check` → `SPEC OK` (the Stop hook enforces it too). Read its `WARN` lines: a file over
-   ~150 lines or a function over ~30 is a hint to split or simplify, per the Coding standards.
+5. Write the docs for this phase (§4: the Build-story entry; in the last phase also the client sections), then
+   `.venv/bin/python $KIT/spec.py check` → `SPEC OK` (the Stop hook enforces it too). It also holds the three docs
+   together: every spec.md rule B<n> has a requirement, every ticked phase has its Build-story entry, and once every
+   phase is ticked talk.md says `**Covers:** phases 1–<last>` and §8 is answered. Read its `WARN` lines: a file over
+   ~150 lines or a function over ~30 is a hint to split or simplify; a function never named in talk.md or §8 is one
+   the user can't present yet.
 6. The app is running. **React:** rebuild if `ui/web/` changed (`cd ui/web && npm run build`). If `.app.pid` is alive,
    restart it (uvicorn doesn't reload Python). Else take the first free port from 8501 to 8510 (`lsof -ti tcp:$P` empty),
    run `.venv/bin/uvicorn api:app --app-dir ui --port $P > out/app.log 2>&1 &`, save `echo $! > .app.pid; echo $P > .app.port`,
    check `curl -s localhost:$P/api/screen` returns JSON, `open http://localhost:$P`.
 
-## 4. Talk entry, then commit (local only)
+## 4. Docs for this phase, then commit (local only)
 - Append to `docs/talk.md` §7 Build story: `**Phase N · <name>** · Was broken: … · Fixed by: `function()` … · Why it
   matters: … · Say it: "…"`. Name functions, never `file:line` (`spec.py check` rejects it: line numbers go stale).
 - A new product file this phase needs is added to plan.md §2 Files **and** to the §3 diagram first, with its §4 function blocks (`📐 Plan changed`):
   `spec.py check` fails when a product file has no box.
-- **Phase 4 only**, from what was actually built:
+- **The last phase only** (phase 4; after a later feature, phase 5, 6, …: the same step runs again), from what was
+  actually built. On a later run **rewrite, don't append**: re-read every section against spec.md and plan.md so the
+  new feature shows up in the demo, the decisions, the limits and the questions. Then set talk.md's
+  `**Covers:** phases 1–<last>` line:
   - `docs/talk.md` §1–§6, for the client: the problem in their words (spec.md), the 3 scenarios as "type X →
     it does Y", how it works (plan.md §3's diagram copied as is, "LLM understands, Python decides", a pointer to plan.md
     §4 for each function), 3–5 decisions
@@ -104,10 +115,13 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
    M docs/plan.md
    …  (ui/web/ template files as one line: "A ui/web/ (15 files, kit React template)")
    See any file's change: git diff <plan | phase-(N-1)> phase-N -- <file> · or VS Code Source Control → Graph
-<the output of `.venv/bin/python $KIT/spec.py changes N`, exactly:>
+<the output of `.venv/bin/python $KIT/spec.py changes N`, exactly (run it before the commit moves the tag's base):>
 🧩 Added in phase N (code vs. <plan | phase-(N-1)>)   every function now in the code that wasn't (+) or changed (~),
    src/rules.py   + why_not_approve — can this manager approve it?        with its title from plan.md
    See the code: git diff <plan | phase-(N-1)> phase-N -- src/ ui/*.py evals/
+📚 Docs since <plan | phase-(N-1)>                    what each doc gained: rules, requirements, functions, entries
+   docs/spec.md   + B8, E11        (+ new · ~ reworded)
+   docs/plan.md   + P2.R9, ~ dashboard
 🔜 Coming in phase N+1: <name>   its On screen line, then every plan function still to write
 
 👀 What changed on screen:  <the plan's "before → after" line>
@@ -121,13 +135,14 @@ Try it (in the app):
 🎤 Say it: "<the Build-story sentence>"
 
 Looks right? → `/build` for Phase N+1: <name>
-   (phase 4: Before you present: `.venv/bin/python scripts/demo.py`, then read docs/talk.md top to bottom with the app open.)
+   (last phase: Before you present: `.venv/bin/python scripts/demo.py`, then read docs/talk.md top to bottom with the app open.)
 Something off? → tell me what you saw. I add it as a requirement, fix it as "phase N fix" and re-tag.
 ```
 - Try it items come from plan.md. Item 1 is always S1. From phase 3 on, at least one is a refusal or handoff.
-- All numbers are real (the last pytest run, the verify output, the real changed-file list from git). The 🧩 / 🔜
+- All numbers are real (the last pytest run, the verify output, the real changed-file list from git). The 🧩 / 📚 / 🔜
   lines are pasted from `spec.py changes N` as printed, never written by hand. If anything is red, line 1 is
   `❌ …: <what>`, and the phase is not ticked or tagged.
-- **The user reports a mismatch:** add a requirement (`Traces to: user <date>: "<their report>"`) and its test, then
+- **The user reports a mismatch:** add a requirement (`Traces to: user <date>: "<their report>"`) and its test (if it
+  changes what the product should do, it is a scope change: §1, spec.md rule first), then
   fix, re-verify, `git add -A && git commit -q -m "phase N fix: <what>" && git tag -f phase-N` (local, never pushed), and
   list that fix's changed files the same way.

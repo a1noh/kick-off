@@ -1,7 +1,9 @@
 # Talk: <product name>
 
-For the client and anyone watching. Talk it through with the app open. `/build` adds a §7 entry every phase and fills
-§1–§6 in phase 4 from what was actually built. Functions are named, never `file:line`; the study file is `docs/plan.md`.
+**Covers:** nothing built yet
+
+For the client and anyone watching. Talk it through with the app open. `/build` adds a §7 entry every phase and rewrites
+§1–§6 in the last phase from what was actually built (then the line above says `**Covers:** phases 1–N`). Functions are named, never `file:line`; the study file is `docs/plan.md`.
 
 ## 1. The problem
 _In the client's words: what hurts today, who it's for, and what success looks like (cite spec.md)._

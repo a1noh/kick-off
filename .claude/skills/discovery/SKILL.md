@@ -56,10 +56,16 @@ workflow = a record + the action + its new state.
 - **The interviewer names a stack**: React / a web frontend → `**UI:** react` (if Node ≥ 18). Anything else (a database,
   another framework, an API) → keep the POC as is and add a line to spec.md Out of scope + talk §6: "In production this would be
   <their stack>; the logic in core/tools ports as is."
-- **A new feature mid-build** → the user adds it to the bottom of `notes/raw.md` and re-runs `/discovery`: keep built
-  phases ticked and unchanged, fold the feature into the unticked phases; when every phase is already ticked, add it as
-  **Phase 5** (6, …) with the same four parts. `**Status:** draft` again, list what changed, ask for approval. (A small
-  tweak doesn't need this: the user tells `/build`, which records it as a requirement from their words.)
+- **A new feature mid-build** → the user adds it to the bottom of `notes/raw.md` and re-runs `/discovery`. Update
+  **both docs everywhere the feature touches, not just the phases**: spec.md (a scenario or a variation, the §3 panel
+  table, new rules B<n> and decisions D<n> numbered after the existing ones, messy data, eval cases, out of scope) and
+  plan.md (§1, §2 Files, the §3 diagram, new or changed §4 function blocks, §5 Records, §6 Evals, requirements).
+  Never renumber or delete an existing id; a rule that changes keeps its id and gets the new raw.md line as a source.
+  Where it lands: built phases stay ticked and their requirements unchanged; the feature goes into the unticked
+  phases; when every phase is already ticked, it becomes **Phase 5** (6, …) with the same four parts, and that phase
+  ends by refreshing talk.md §1–§6 and §8 (see `/build` §4). A built function the feature changes is listed in the
+  new phase's **Builds** line as "changes `name`". `**Status:** draft` again, list what changed, ask for approval.
+  (A small tweak doesn't need this: the user tells `/build`, which adds the rule, the requirement and the test.)
 
 ## 3a. Write `docs/spec.md` first: the whole discovery in plain English
 Copy `templates/spec.md` (this skill's base directory) and keep its headings. It is the WHAT and WHY: no code, no file
@@ -202,11 +208,11 @@ completely; a person must also be able to read it once and understand the code.
              - Test: tests/test_phase2.py::test_r1_ready_bike
        ```
        Each test's docstring cites it (`"""plan.md P2.R1: …"""`). Tests stay true in later phases (they read the ticks).
-8. **Likely questions**: the heading and its guide line only; `/build` phase 4 fills the answers from what was built.
+8. **Likely questions**: the heading and its guide line only; `/build` fills the answers in the last phase, from what was built.
 
 ## 4. Check it
 Run `.venv/bin/python $KIT/spec.py check`. Every requirement must be grounded and quoted (tests may not exist yet: they
-are only checked once a phase is ticked), every B<n> cited must exist, every diagram must have no dead ends. Fix the plan
+are only checked once a phase is ticked), every B<n> cited must exist and every B<n> in spec.md must be cited by a requirement, every diagram must have no dead ends. Fix the plan
 until it prints `SPEC OK`.
 
 ## 5. Finish: the approval gate
