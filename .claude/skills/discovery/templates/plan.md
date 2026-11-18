@@ -52,7 +52,8 @@ Every function the rest of the code calls, file by file: one `###` per Python fi
 function. Each one reads top to bottom:
 - its docstring line 1 word for word, then `*Why:*`;
 - **In** · the arguments, by name: a ```jsonc block (JSON with comments) whose keys are exactly the parameters, each
-  with a comment `// <its type from the signature> · <what it is>`;
+  with a comment `// <its type from the signature> · <what it is>`, and a comment on each nested field the
+  function actually uses (why it matters here, citing the rule: `"price": 2600  // compared with the budget left (B2)`);
 - **Out** · `<its return type>`: the real value it returns, as ```jsonc with a comment on each important field
   (```text for plain text).
 
@@ -165,8 +166,8 @@ flowchart LR
 
 ## 7. Phases
 Every `On screen` and `Try it` line describes the app **after** that phase is built and ticked. Expected replies are in
-"quotes". A Try-it line never quotes text that only appears after a click. Requirements cite spec.md (B<n>, D<n>),
-raw.md:L<n>, data/<file> or `user <date>: "<words>"`; each names the test that proves it.
+"quotes". A Try-it line never quotes text that only appears after a click. Requirements cite spec.md (`B<n>`, `D<n>`),
+`raw.md:L<n>`, `data/<file>` or `user <date>: "<words>"`; each names the test that proves it.
 - [ ] Phase 1: the app shell (everything visible, nothing working yet)
   - **On screen (before → after):** ‹nothing → both tabs, every panel ⬜, board all ⬜, chat 🚧›
   - **Builds:** the phase-1 rows of §3 Files

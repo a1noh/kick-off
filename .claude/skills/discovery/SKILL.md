@@ -122,7 +122,8 @@ name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<
      parameter names with the code once the file exists);
    - `**In** · the arguments, by name` and a ```jsonc block (JSON with comments): its keys are exactly the
      parameters, each with a comment `  // <type from the signature> · <what it is>` (so `"name": "moves"  // str ·
-     which file to read` explains why a str sits in a JSON object);
+     which file to read` explains why a str sits in a JSON object), plus a comment on each nested field the function
+     actually uses, saying why it matters and citing its rule (`"price": 2600  // compared with the budget left (B2)`);
    - `**Out** · \`<the return type>\`` and a ```jsonc block with the real value it returns, a comment on each
      important field (```text for plain text), plus one line for the other outcome when there is one;
    - pretty-printed (2-space indent, comments after two spaces); `"…": "<what was left out>"` for parts a call doesn't
