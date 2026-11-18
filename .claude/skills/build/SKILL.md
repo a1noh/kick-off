@@ -1,6 +1,6 @@
 ---
 name: build
-description: Build the next unticked phase of an APPROVED docs/plan.md in a /kickoff classroom - refuses a draft plan; reads the phase's requirements (P<n>.R<k>, each traced, quoted, with a named test) and §5c/§5d/§5e from plan.md, writes the tests first, then the code (following CLAUDE.md's Coding standards), then verifies (pytest + the kit's spec.py verify N renders the real screen, spec.py check enforces plan + standards). UI first (React via ui/api.py + ui/web/ by default, Streamlit otherwise; phase 1 = full app shell, board all ⬜, honest 🚧 stubs), each phase visibly turns features ✅. Keeps the app running, adds a Build-story entry, commits + tags locally (never pushes), hands over a "Try it" checklist and the diff stat, stops. One phase per call. Use when the user types /build.
+description: Build the next unticked phase of an APPROVED docs/plan.md in a /kickoff classroom - refuses a draft plan; reads the phase's requirements (P<n>.R<k>, each traced, quoted, with a named test) and Files/Functions/Records/Flow from plan.md, writes the tests first, then the code (following CLAUDE.md's Coding standards), then verifies (pytest + the kit's spec.py verify N renders the real screen, spec.py check enforces plan + standards). UI first (React via ui/api.py + ui/web/ by default, Streamlit otherwise; phase 1 = full app shell, board all ⬜, honest 🚧 stubs), each phase visibly turns features ✅. Keeps the app running, adds a Build-story entry, commits + tags locally (never pushes), hands over a "Try it" checklist and the diff stat, stops. One phase per call. Use when the user types /build.
 ---
 
 # /build: approved plan → tests → code → verify → the user tries it
@@ -8,9 +8,9 @@ description: Build the next unticked phase of an APPROVED docs/plan.md in a /kic
 Two goals, in order: **(1) a working build**, **(2) the user understands it and can present it**. The user learns by
 **using the product**. The whole screen exists from phase 1, everything starts ⬜ / 🚧, and each phase turns something ✅.
 
-**No intuition.** Everything you build is a requirement in `docs/plan.md` (traced to `docs/requirements.md`, `raw.md` or
+**No intuition.** Everything you build is a requirement in `docs/plan.md` (traced to `docs/spec.md`, `raw.md` or
 `data/`). If you need something no source says, **ask the user** (AskUserQuestion) and write the answer down first
-(requirements.md decision + a plan requirement). The plan comes before the code; the proof is printed by a script.
+(spec.md decision + a plan requirement). The plan comes before the code; the proof is printed by a script.
 
 **Paths:** `KIT` = `../kickoff/templates` next to this skill's base directory. Kit tools run from there, in the project
 folder, and are never copied into it: `.venv/bin/python $KIT/spec.py check | verify N`. `progress` imports through the
@@ -23,12 +23,12 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 - Take the **first unticked phase** (`- [ ] Phase N: …`). If all are ticked, say "All built. Before you present:
   `.venv/bin/python scripts/demo.py`, then read docs/talk.md top to bottom with the app open." and stop.
 - Say in one line which phase you're building, quoting its `On screen (before → after)` line.
-- Open questions in requirements.md that this phase depends on → ask them now, record the answers, then continue.
+- Open questions in spec.md that this phase depends on → ask them now, record the answers, then continue.
 
 ## 1. Read the phase, change the plan only on purpose
 - The phase's **Requirements** (P<n>.R<k>) are the spec: each has `Traces to`, `Acceptance` (exact "quoted" value) and `Test`.
-- The code must match **§5c** (files, public signatures, docstring line 1) and **§5d** (records). §5e is the S1 flow.
-- Need a signature, file or record the plan doesn't have, or a different one? **Edit plan.md first** (§5c/§5d, plus a
+- The code must match **Functions** (files, public signatures, docstring line 1) and **Records** (records). Flow is the S1 flow.
+- Need a signature, file or record the plan doesn't have, or a different one? **Edit plan.md first** (Files/Functions/Records, plus a
   requirement if behavior changes), keep it minimal, and list it in the handover as `📐 Plan changed: …`.
 - A scope change the user asks for → a new requirement with `Traces to: user <date>: "<their words>"` (no re-approval).
 - Run `.venv/bin/python $KIT/spec.py check` before coding: the only failures allowed now are this phase's missing tests.
@@ -37,8 +37,8 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 - Write each requirement's test first, with the name it gives and a docstring citing it (`"""plan.md P2.R3: …"""`).
   Assert the **quoted** value exactly. **Tests stay true in later phases:** read the plan's ticks instead of hard-coding
   "still broken" (e.g. "panel shows ⬜ iff its phase isn't ticked", "a 🚧 reply names an unticked phase").
-- Then the code: only what the requirements ask for, in the files §5c names, following CLAUDE.md **Coding standards**
-  (file docstring with its place in the S1 flow, a docstring on every function, line 1 = the §5c line for public ones).
+- Then the code: only what the requirements ask for, in the files Functions names, following CLAUDE.md **Coding standards**
+  (file docstring with its place in the S1 flow, a docstring on every function, line 1 = the Functions line for public ones).
 - **Phase 1 = the app shell, nothing else:**
   - Tab 1 = the user's door. Tab 2 = **📊 Owner dashboard** (KPIs, domain view, queue, audit, eval score), read-only.
     Panels not live yet show `⬜ <panel>: arrives in phase N`.
@@ -46,17 +46,17 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
     ❌ fail · ✅ pass), computed offline by `evals/scenarios.py` `run_all(extractor) -> list[Result]`
     (`Result.state`, `Result.checks: [(label, bool | None)]`), cached on file mtimes. A "did *not* happen" check is
     vacuously true on a stub, so it is only evaluated after a real reply.
-  - A stub `src/agent.py` (app: `src/core.py`) with the final §5c interface; every reply is `🚧 <feature> arrives in
+  - A stub `src/agent.py` (app: `src/core.py`) with the final Functions interface; every reply is `🚧 <feature> arrives in
     phase N.` and never claims success or shows data. No `llm.py` / `data.py` yet.
   - Required tests: `test_stub_replies_never_show_green` and `tests/test_screen.py::test_screen_matches_plan_and_board`.
-  - **UI react** (plan §2b `**UI:** react`; otherwise build `ui/app.py` the same way in Streamlit):
+  - **UI react** (plan.md §1 `**UI:** react`; otherwise build `ui/app.py` the same way in Streamlit):
     `cp $KIT/react/api_template.py ui/api.py; mkdir -p ui/web; cp -R $KIT/react/{package.json,vite.config.js,index.html,src} ui/web/; cp $KIT/react/test_screen_api.py tests/test_screen.py`,
     then `uv pip install --python .venv/bin/python fastapi==0.115.6 uvicorn==0.32.1 httpx==0.28.1` and
     `(cd ui/web && npm install --no-audit --no-fund && npm run build)`. Fill `ui/api.py`'s TITLE, TABS, PANELS, WIDE,
-    SHOWS (§2b table) and ACTIONS (§2b one-click actions, shown in the chat header). The guide sidebar comes with the
+    SHOWS (spec.md §3 table) and ACTIONS (spec.md §3 one-click actions, shown in the chat header). The guide sidebar comes with the
     template: don't rewrite it. `npm test` must pass. Then **Impeccable polish** (§3b) before verifying.
 - **Phase 2** also writes `tests/test_flow.py`: run S1 offline (fixed extractor) step by step and assert each step's
-  object equals its row in `progress.flow()` (plan §5e), so the study doc can't drift from the code.
+  object equals its row in `progress.flow()` (plan.md Flow), so the study doc can't drift from the code.
 - **Later phases** replace stubs and turn placeholders live. **Never remove a panel or a board row.** An owner action
   calls a gated function in `src/tools.py` and is audited. From phase 2, keep `scripts/demo.py` running.
 - One short ★ Insight per file: *why*, not what.
@@ -84,7 +84,7 @@ Nothing is copied into the project: no `.claude/skills/impeccable`, no `.claude/
 1. In the project folder: `DO_NOT_TRACK=1 sh "$IMP/scripts/impeccable" context --target ui/web/src` (first run
    downloads its engine, verified against the bundled checksums; its `.impeccable/` folder is git-ignored). If it fails
    (offline, cloud network), use the skill's "Launcher unavailable" path and say its one line.
-2. Product context comes from plan.md §1–§2b (users, purpose; "the guide sidebar shows the build on purpose"; quoted
+2. Product context comes from spec.md §1–§3 (users, purpose; "the guide sidebar shows the build on purpose"; quoted
    texts render exactly; the UI only displays `ui/api.py`). Read `$IMP/reference/craft-floor.md` before any edit; mode =
    **Operate**: the kit's shell is an established surface, so extend and polish it.
 3. Phase 1: follow `$IMP/reference/polish.md`. Phase 4: `$IMP/reference/critique.md` first, running its two assessments
@@ -101,11 +101,11 @@ Nothing is copied into the project: no `.claude/skills/impeccable`, no `.claude/
   `store`) instead of `todo`; rename a node to the real file if it differs; add a node + a labeled arrow for a new file.
   SAFE MERMAID (CLAUDE.md), including **no dead ends**.
 - **Phase 4 only**, from what was actually built:
-  - `docs/talk.md` §1–§6, for the client: the problem in their words (requirements.md), the 3 scenarios as "type X →
-    it does Y", how it works (the diagram, "LLM understands, Python decides", a pointer to plan §5e), 3–5 decisions
+  - `docs/talk.md` §1–§6, for the client: the problem in their words (spec.md), the 3 scenarios as "type X →
+    it does Y", how it works (the diagram, "LLM understands, Python decides", a pointer to plan.md Flow), 3–5 decisions
     citing B<n>/D<n>, safety & known limits naming the function that enforces each, eval score + production metrics +
     next week. §7 gets a 1-minute version at the top.
-  - plan.md **§9 Likely questions**: 8–10 questions a client or interviewer will ask about **this** build, each
+  - plan.md **§8 Likely questions**: 8–10 questions a client or interviewer will ask about **this** build, each
     answered in 1–2 lines naming its function (cover the list in the template: why an LLM, prompt injection, a case the
     guard misses, offline board vs live evals, concurrency/scale, cost + model, the next fix).
 - One commit per phase, its body listing every changed file, then the tag:
@@ -117,8 +117,8 @@ Nothing is copied into the project: no `.claude/skills/impeccable`, no `.claude/
 ✅ Phase N built · tests X passed · P<N>.R1–R<k> verified · committed as phase-N (local, not pushed)
 ⚠️ Not working yet: <each ⬜ scenario + the phase that makes it work; "nothing" when all ✅>
 🖥  App: http://localhost:<port>  (refresh the tab)
-📁 Files: <n> in src/, each in §5c · every function documented
-📐 Plan changed: <each §5c/§5d/requirement change, or "nothing">
+📁 Files: <n> in src/, each in Functions · every function documented
+📐 Plan changed: <each Files/Functions/Records/requirement change, or "nothing">
 📄 Changed files (git diff --name-status <plan | phase-(N-1)> phase-N), every one, A = added · M = changed · D = deleted:
    A src/tools.py
    M docs/plan.md

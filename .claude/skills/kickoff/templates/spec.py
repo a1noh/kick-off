@@ -57,7 +57,7 @@ def requirement_problems(req: dict, built: bool, rules: set[str]) -> list[str]:
     if not SOURCE.search(req["traces"]):
         problems.append(f"{rid}: 'Traces to:' must cite B<n>, raw.md:L<n>, data/<file> or user <date>")
     problems += [
-        f"{rid}: cites {b}, which docs/requirements.md doesn't define"
+        f"{rid}: cites {b}, which docs/spec.md doesn't define"
         for b in re.findall(r"\bB\d+\b", req["traces"])
         if rules and b not in rules
     ]
@@ -77,8 +77,8 @@ def requirement_problems(req: dict, built: bool, rules: set[str]) -> list[str]:
 
 
 def rule_ids() -> set[str]:
-    """The business-rule ids B1..Bn defined in docs/requirements.md (empty when there is no such file)."""
-    path = ROOT / "docs" / "requirements.md"
+    """The business-rule ids B1..Bn defined in docs/spec.md (empty when there is no such file)."""
+    path = ROOT / "docs" / "spec.md"
     return set(re.findall(r"^\s*- \*\*(B\d+)\*\*", path.read_text(), re.M)) if path.exists() else set()
 
 
@@ -90,7 +90,7 @@ def product_files() -> list[Path]:
 
 
 def file_problems() -> list[str]:
-    """Plan §5c shows every file the build writes and what passes through each function (in: / out: shapes)."""
+    """plan.md Files + Functions show every file the build writes and what passes through each function (in: / out: shapes)."""
     if not progress.plan_text():
         return []
     table, problems = progress.file_table(), []
@@ -98,13 +98,13 @@ def file_problems() -> list[str]:
     for path in [*product_files(), *ROOT.glob("tests/*.py")]:
         rel = str(path.relative_to(ROOT))
         if not covered(rel):
-            problems.append(f"{rel}: missing from the §5c file table (every file the build writes is listed)")
+            problems.append(f"{rel}: missing from plan.md Files (every file the build writes is listed)")
     for row, phase in table.items():
         if progress.ticked(phase) and not (ROOT / row).exists():
-            problems.append(f"§5c file table: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
+            problems.append(f"plan.md Files: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
     for rel, entries in progress.interfaces().items():
         problems += [
-            f"{rel}: §5c {e['name']}() needs an '- in:' and an '- out:' shape line"
+            f"{rel}: plan.md Functions: {e['name']}() needs an '- in:' and an '- out:' shape line"
             for e in entries
             if not (e["in"] and e["out"])
         ]
@@ -112,7 +112,7 @@ def file_problems() -> list[str]:
 
 
 def code_problems() -> tuple[list[str], list[str]]:
-    """Coding standards: (failures, warnings) for docstrings, the §5c file list, §5c signatures and sizes."""
+    """Coding standards: (failures, warnings) for docstrings, plan.md Functions (file list, signatures) and sizes."""
     listed, fails, warns = progress.interfaces(), [], []
     for path in product_files():
         rel = str(path.relative_to(ROOT))
@@ -120,7 +120,7 @@ def code_problems() -> tuple[list[str], list[str]]:
         if not ast.get_docstring(tree):
             fails.append(f"{rel}: starts with no docstring (what it does + where it sits in the S1 flow)")
         if rel not in listed:
-            fails.append(f"{rel}: not listed in plan.md §5c (every file has a job named there)")
+            fails.append(f"{rel}: has no section in plan.md Functions (every file has a job named there)")
         lines = len(path.read_text().splitlines())
         if lines > MAX_FILE:
             warns.append(f"{rel}: {lines} lines (aim for ~{MAX_FILE})")
@@ -133,14 +133,14 @@ def code_problems() -> tuple[list[str], list[str]]:
                         f"{rel}: {node.name}() is {node.end_lineno - node.lineno + 1} lines (aim for ~{MAX_FUNCTION})"
                     )
         for problem in signature_problems(tree, listed.get(rel, [])):
-            # A listed function a later phase adds is only a warning until every phase is ticked.
+            # A planned function a later phase adds is only a warning until every phase is ticked.
             planned = problem.endswith("listed but not defined") and not all(d for d, _ in progress.phases().values())
-            (warns if planned else fails).append(f"{rel}: §5c {problem}")
+            (warns if planned else fails).append(f"{rel}: plan.md Functions: {problem}")
     return fails, warns
 
 
 def signature_problems(tree: ast.Module, entries: list[dict]) -> list[str]:
-    """§5c lines that don't match the code: a missing function, other parameters, or a different docstring line 1."""
+    """plan.md Functions lines that don't match the code: a missing function, other parameters, or a different docstring line 1."""
     problems = []
     for entry in entries:
         node = find(tree, entry["name"])
@@ -161,7 +161,7 @@ def signature_problems(tree: ast.Module, entries: list[dict]) -> list[str]:
             problems.append(f"{entry['name']}({', '.join(entry['params'])}) but the code takes ({', '.join(params)})")
         doc = (ast.get_docstring(node) or "").splitlines()
         if doc and plain(doc[0]) != plain(entry["summary"]):
-            problems.append(f"{entry['name']}: docstring line 1 {doc[0]!r} must match §5c {entry['summary']!r}")
+            problems.append(f"{entry['name']}: docstring line 1 {doc[0]!r} must match plan.md {entry['summary']!r}")
     return problems
 
 
@@ -198,7 +198,7 @@ def doc_problems() -> list[str]:
         for diagram in re.findall(r"```mermaid\n(.*?)```", text, re.S):
             problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
-    checked = [("docs/talk.md", talk, progress.ticked(1)), ("plan.md §5e", progress.section("5e"), progress.ticked(2))]
+    checked = [("docs/talk.md", talk, progress.ticked(1)), ("plan.md Flow", progress.section("Flow"), progress.ticked(2))]
     for where, text, live in checked:
         lines = [line for line in text.splitlines() if live and not line.lstrip().startswith("_")]
         for call in {c for line in lines for c in CALL.findall(line)}:

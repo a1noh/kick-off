@@ -19,7 +19,7 @@ def main() -> int:
     project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd()).resolve()
     if path and Path(path).resolve() == project / "notes" / "raw.md":
         print(
-            "notes/raw.md is the user's raw notes and is read-only. Put structure in docs/requirements.md or docs/plan.md.",
+            "notes/raw.md is the user's raw notes and is read-only. Put structure in docs/spec.md or docs/plan.md.",
             file=sys.stderr,
         )
         return 2

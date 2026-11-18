@@ -1,6 +1,6 @@
 <!-- WORKED EXAMPLE (refill-request agent). Shows how templates/architecture.md looks when filled in. Do not copy its labels. -->
 
-## 5. Architecture
+## 2. Architecture
 > Open the preview to see the diagram: **⇧⌘V** (or the preview icon at the top right of this tab).
 
 ```mermaid
@@ -42,7 +42,7 @@ flowchart LR
 ```
 In short, the model only **extracts** (intent, name, DOB, drug). Python makes every decision and writes every reply from templates filled with tool results.
 
-### 5b. Agent loop: who decides what
+### Agent loop: who decides what
 The same 4 stages as a typical agent, but the LLM owns **only step ①**. Purple = LLM · green = Python.
 
 ```mermaid

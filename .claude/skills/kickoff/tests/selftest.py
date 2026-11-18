@@ -27,12 +27,14 @@ PLAN = """# Plan: probe
 
 **Status:** {status}
 
-## 5c. Code: every file it will write
+## 3. Files
 | File | Phase | Job | Takes in | Gives back |
 |---|---|---|---|---|
 | `src/agent.py` | 1 | brain | a message | the reply |
 | `ui/api.py` | 1 | door | — | the screen |
 | `tests/test_phase1.py` | 1 | proves P1.R1 | — | — |
+
+## 4. Functions
 ### `src/agent.py` · brain: replies
 - `reply(text: str) -> str` · Reply to one message · probe
   - in: `text` "hi"
@@ -42,12 +44,12 @@ PLAN = """# Plan: probe
   - in: nothing
   - out: "[tabs] door | …"
 
-## 5e. Sample flow (S1)
+## 6. Flow (S1)
 | # | Call | Returns |
 |---|---|---|
 | 1 | `reply("hi")` | "hello" |
 
-## 6. Phases
+## 7. Phases
 - [{tick}] Phase 1: probe
   - **On screen (before → after):** nothing → Board S1 ⬜→✅
   - **Try it:**
@@ -144,7 +146,7 @@ def setup(c: Path) -> None:
 
 def plan_rules(c: Path) -> None:
     """T6–T13: requirements are grounded, quoted and tested, behind the approval gate."""
-    write(c, "docs/requirements.md", "# Requirements: probe\n## Business rules\n- **B1** greet back · raw.md:L3\n")
+    write(c, "docs/spec.md", "# Spec: probe\n## Business rules\n- **B1** greet back · raw.md:L3\n")
     write(c, "src/agent.py", AGENT)
     write(c, "ui/api.py", API)
     write(c, "tests/test_phase1.py", TEST.format(want="hello"))
@@ -155,7 +157,7 @@ def plan_rules(c: Path) -> None:
     plan(c, acceptance="it works")
     rejects(c, "T8 acceptance without a quoted value rejected", "quotes")
     plan(c, traces="B9 · raw.md:L3")
-    rejects(c, "T9 a business rule requirements.md doesn't define is rejected", "B9")
+    rejects(c, "T9 a business rule spec.md doesn't define is rejected", "B9")
     plan(c, tick="x", test="test_r1_missing")
     rejects(c, "T10 ticked phase whose test doesn't exist rejected", "does not exist")
     write(c, "tests/test_phase1.py", TEST.format(want="hello").replace("plan.md P1.R1", "greets"))
@@ -177,17 +179,17 @@ def code_rules(c: Path) -> None:
             AGENT.replace('    """Reply to one message."""\n', ""),
             "has no docstring",
         ),
-        "T16 §5c parameters that differ from the code rejected": (
+        "T16 plan.md Functions parameters that differ from the code rejected": (
             "src/agent.py",
             AGENT.replace("text: str", "message: str"),
             "takes",
         ),
-        "T17 §5c line that differs from docstring line 1 rejected": (
+        "T17 plan.md Functions line that differs from docstring line 1 rejected": (
             "src/agent.py",
             AGENT.replace("Reply to one message.", "Answer."),
             "must match",
         ),
-        "T18 a file not listed in §5c rejected": ("src/extra.py", '"""Extra."""\n', "not listed"),
+        "T18 a file with no section in plan.md Functions rejected": ("src/extra.py", '"""Extra."""\n', "has no section"),
     }
     for name, (rel, text, needle) in cases.items():
         write(c, rel, text)
@@ -198,7 +200,7 @@ def code_rules(c: Path) -> None:
 
 
 def planned_functions(c: Path) -> None:
-    """T18b: a §5c function a later phase adds warns while phases are open, fails once all are ticked."""
+    """T18b: a planned function a later phase adds warns while phases are open, fails once all are ticked."""
     extra = "- `greet(name: str) -> str` · Greet someone · a later phase\n  - in: `name` \"Dev\"\n  - out: \"hi Dev\"\n### `ui/api.py`"
     text = PLAN.format(**GOOD).replace("\n### `ui/api.py`", "\n" + extra, 1)
     write(c, "docs/plan.md", text)
@@ -206,20 +208,20 @@ def planned_functions(c: Path) -> None:
     write(c, "docs/plan.md", text.replace("- [ ] Phase 2: next", "- [x] Phase 2: next").replace("- [ ] Phase 1", "- [x] Phase 1"))
     done_run = check(c)
     plan(c, tick="x")
-    expect("T18b a planned §5c function warns while phases are open, fails once all are ticked",
+    expect("T18b a planned function warns while phases are open, fails once all are ticked",
            open_run.returncode == 0 and "WARN" in open_run.stdout and done_run.returncode == 1 and "greet" in done_run.stdout,
            open_run.stdout + done_run.stdout)
 
 
 def file_rules(c: Path) -> None:
-    """T18c–T18e: §5c lists every file the build writes, with in/out shapes, and ticked phases' files exist."""
+    """T18c–T18e: plan.md Files + Functions list every file the build writes, with in/out shapes, and ticked phases' files exist."""
     plan(c, tick="x")
     text = (c / "docs/plan.md").read_text()
     write(c, "docs/plan.md", text.replace('  - in: `text` "hi"\n', ""))
-    rejects(c, "T18c a §5c function without its in: shape rejected", "needs an '- in:'")
+    rejects(c, "T18c a function without its in: shape rejected", "needs an '- in:'")
     write(c, "docs/plan.md", text)
     write(c, "scripts/demo.py", '"""Demo."""\n')
-    rejects(c, "T18d a code file missing from the §5c file table rejected", "missing from the §5c file table")
+    rejects(c, "T18d a code file missing from plan.md Files rejected", "missing from plan.md Files")
     (c / "scripts/demo.py").unlink()
     write(c, "docs/plan.md", text.replace("| `tests/test_phase1.py` | 1 |", "| `tests/test_phase1.py` | 1 |\n| `src/later.py` | 1 | x | x | x |"))
     rejects(c, "T18e a ticked phase's planned file that doesn't exist rejected", "doesn't exist")
@@ -289,11 +291,11 @@ def verify_and_hooks(c: Path) -> None:
 
 
 def parser(c: Path) -> None:
-    """T28: progress.py reads the plan's Status, requirements, §5c and §5e."""
+    """T28: progress.py reads the plan's Status, requirements, Functions and Flow."""
     code = "import progress as p; print(p.status(), p.requirements(1)[0]['id'], p.interfaces()['src/agent.py'][0]['params'], p.flow())"
     out = sh(f'.venv/bin/python -c "{code}"', c).stdout.strip()
     expect(
-        "T28 progress parses Status, requirements, §5c params and §5e",
+        "T28 progress parses Status, requirements, Functions params and Flow",
         out == "approved 2026-01-01 P1.R1 ['text'] [('reply(\"hi\")', 'hello')]",
         out,
     )
@@ -329,7 +331,7 @@ def kit_files(c: Path, tmp: Path) -> None:
     write(c, "src/leak.py", 'KEY = "' + "AIza" + "B" * 35 + '"\n')
     key_leak = sh("git add src/leak.py && git commit -q -m leak", c)
     sh("git reset -q src/leak.py && rm -f src/leak.py", c)
-    clean = sh("git add docs/requirements.md && git commit -q -m fine", c)
+    clean = sh("git add docs/spec.md && git commit -q -m fine", c)
     expect(
         "T31 pre-commit blocks .env and API keys, allows clean commits",
         env_leak.returncode != 0 and key_leak.returncode != 0 and clean.returncode == 0,

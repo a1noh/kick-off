@@ -27,16 +27,16 @@ pasted repairs.csv with its messy rows.
 Next (automatic): /discovery turns these notes into a plan.""",
     "2": """\
 🎓 Demo 2/3 · The plan (/discovery)
-What happened: docs/requirements.md holds Dev's business rules (B1…, each traced to a notes line) and the
-decisions on what the notes left open (D1…). docs/plan.md (Status: draft) is the code-level plan: §5c names every
-function before it's written, §5e shows scenario 1 step by step, and each phase lists its requirements + tests.
-The demo answered the open questions with the recommended option: search requirements.md for "demo run".
-Look at: requirements.md, then plan.md §5c + §5e (⇧⌘V shows the diagrams).
+What happened: docs/spec.md holds Dev's business rules (B1…, each traced to a notes line) and the
+decisions on what the notes left open (D1…). docs/plan.md (Status: draft) is the code-level plan: Functions names every
+function before it's written, Flow shows scenario 1 step by step, and each phase lists its requirements + tests.
+The demo answered the open questions with the recommended option: search spec.md for "demo run".
+Look at: spec.md, then plan.md Functions + Flow (⇧⌘V shows the diagrams).
 Your turn: approve the plan (the question below). Nothing is built until you do.""",
     "3": """\
 🎓 Demo 3/3 · The app shell (/build phase 1)
 What happened: /build wrote phase 1's tests from its requirements in plan.md, then the code in src/ and ui/ (every
-file named in §5c, every function documented), and proved it: the kit's spec.py verify 1 rendered the real screen.
+file named in Functions, every function documented), and proved it: the kit's spec.py verify 1 rendered the real screen.
 git diff plan phase-1 --stat shows exactly what phase 1 added (committed locally, never pushed).
 Look at: the app (URL above). Both tabs, every panel ⬜, the Scenario board all ⬜, the chat answers 🚧. That honest
 "nothing works yet" screen is the starting point every real build has too.

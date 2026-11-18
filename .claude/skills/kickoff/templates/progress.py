@@ -84,15 +84,16 @@ def requirements(n: int) -> list[dict]:
 
 
 def section(title: str) -> str:
-    """The body of the plan's `## <title>` section, e.g. section('5c') ('' if missing)."""
-    found = re.search(rf"^## {re.escape(title)}\b[^\n]*\n(.*?)(?=^## |\Z)", plan_text(), re.M | re.S)
+    """The body of the plan section whose heading names it, e.g. section('Files') for `## 3. Files` ('' if missing)."""
+    pattern = rf"^## (?:\d+[a-z]?\.\s*)?{re.escape(title)}\b[^\n]*\n(.*?)(?=^## |\Z)"
+    found = re.search(pattern, plan_text(), re.M | re.S)
     return found[1] if found else ""
 
 
 def interfaces() -> dict[str, list[dict]]:
-    """Plan §5c: file -> its functions, each {'name', 'params', 'summary', 'in', 'out'} (summary = docstring line 1)."""
+    """Plan "Functions": file -> its functions, each {'name', 'params', 'summary', 'in', 'out'} (summary = docstring line 1)."""
     files: dict[str, list[dict]] = {}
-    for block in re.split(r"^### ", section("5c"), flags=re.M)[1:]:
+    for block in re.split(r"^### ", section("Functions"), flags=re.M)[1:]:
         path = re.match(r"`([^`]+)`", block)
         if not path:
             continue
@@ -116,8 +117,8 @@ def interfaces() -> dict[str, list[dict]]:
 
 
 def file_table() -> dict[str, int]:
-    """Plan §5c's table of every file the build writes: path (a folder ends in '/') -> the phase that writes it."""
-    return {path: int(phase) for path, phase in re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(\d)\s*\|", section("5c"), re.M)}
+    """Plan "Files": the table of every file the build writes: path (a folder ends in '/') -> the phase that writes it."""
+    return {path: int(phase) for path, phase in re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(\d)\s*\|", section("Files"), re.M)}
 
 
 def params_of(signature: str) -> list[str]:
@@ -127,9 +128,9 @@ def params_of(signature: str) -> list[str]:
 
 
 def flow() -> list[tuple[str, object]]:
-    """Plan §5e: the S1 flow as (call, expected object), JSON in backticks parsed, "quoted" text kept as a string."""
+    """Plan "Flow": the S1 flow as (call, expected object), JSON in backticks parsed, "quoted" text kept as a string."""
     steps = []
-    for call, returns in re.findall(r"^\|\s*\d+\s*\|\s*`(.+?)`\s*\|\s*(.+?)\s*\|\s*$", section("5e"), re.M):
+    for call, returns in re.findall(r"^\|\s*\d+\s*\|\s*`(.+?)`\s*\|\s*(.+?)\s*\|\s*$", section("Flow"), re.M):
         code = re.fullmatch(r"`(.*)`", returns)
         steps.append((call, json.loads(code[1]) if code else returns.strip('"')))
     return steps

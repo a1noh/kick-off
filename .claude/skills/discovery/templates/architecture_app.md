@@ -1,4 +1,4 @@
-<!-- TEMPLATE for /discovery §5 + §5b when the kind is APP (no AI, or AI as one optional helper).
+<!-- TEMPLATE for plan.md §2 Architecture when the kind is APP (no AI, or AI as one optional helper).
 Copy it EXACTLY: same headings, node IDs, shapes, arrow labels, classDef names/colors, the ⇧⌘V line and the 4-row table.
 Replace every ‹slot› with this project's words (keep each label short: 2–3 lines max). Delete nothing, add no boxes.
 If the plan has one AI helper (e.g. "parse a free-text request into a booking"), keep node H and fill it in;
@@ -21,7 +21,7 @@ Always `flowchart LR`: the preview's pan/zoom fit pushes tall TD diagrams out of
 A CLEAR PATH, NO DEAD ENDS: every node has an arrow out, except end points ([""]) and stores [("")].
 spec.py check fails on a dead end. -->
 
-## 5. Architecture
+## 2. Architecture
 > Open the preview to see the diagram: **⇧⌘V** (or the preview icon at the top right of this tab).
 
 ```mermaid
@@ -63,7 +63,7 @@ flowchart LR
 ```
 In short, every rule is plain Python in `core.py` + `tools.py`; the screen only shows what the records say.
 
-### 5b. One request: who decides what
+### One request: who decides what
 Purple = AI (optional helper only) · green = Python.
 
 ```mermaid

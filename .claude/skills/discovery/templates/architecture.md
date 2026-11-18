@@ -1,4 +1,4 @@
-<!-- TEMPLATE for /discovery §5 + §5b. Works for ANY use case and shape (chat, batch, Q&A).
+<!-- TEMPLATE for plan.md §2 Architecture. Works for ANY use case and shape (chat, batch, Q&A).
 Copy it EXACTLY: same headings, node IDs, shapes, arrow labels, classDef names/colors, the ⇧⌘V line and the 4-row table.
 Replace every ‹slot› with this project's words (keep each label short: 2–3 lines max). Delete nothing, add no boxes.
 See templates/example_refill.md for a filled-in version.
@@ -20,7 +20,7 @@ Always `flowchart LR`: the preview's pan/zoom fit pushes tall TD diagrams out of
 A CLEAR PATH, NO DEAD ENDS: every node has an arrow out, except end points ([""]) and stores [("")].
 spec.py check fails on a dead end. -->
 
-## 5. Architecture
+## 2. Architecture
 > Open the preview to see the diagram: **⇧⌘V** (or the preview icon at the top right of this tab).
 
 ```mermaid
@@ -62,7 +62,7 @@ flowchart LR
 ```
 In short, the model only **extracts** (‹fields›). Python makes every decision and writes every reply from templates filled with tool results.
 
-### 5b. Agent loop: who decides what
+### Agent loop: who decides what
 The same 4 stages as a typical agent, but the LLM owns **only step ①**. Purple = LLM · green = Python.
 
 ```mermaid

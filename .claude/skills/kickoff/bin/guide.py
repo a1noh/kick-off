@@ -23,7 +23,7 @@ You interview → plan → build → present. The app comes first: every scenari
 
   1  Key    paste your Gemini key into .env → check: .venv/bin/python {KIT}/templates/check_llm.py
   2  0:00   interview with GUIDES → write it in notes/raw.md (Goal · Users · Inputs · Happy path · Danger · Edges · Scale)
-  3  0:10   /discovery → docs/requirements.md + docs/plan.md → read the functions + S1 flow, approve it
+  3  0:10   /discovery → docs/spec.md + docs/plan.md → read the functions + S1 flow, approve it
   4  0:15   /build ×4 → after each step do its "Try it" list in the app, then /build again
   5  1:40   code freeze → scripts/demo.py, then read docs/talk.md with the app open
 
