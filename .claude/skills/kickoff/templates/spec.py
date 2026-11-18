@@ -147,8 +147,8 @@ def code_problems() -> tuple[list[str], list[str]]:
         tree = ast.parse(path.read_text())
         if not ast.get_docstring(tree):
             fails.append(f"{rel}: starts with no docstring (what it does + where it sits in the S1 flow)")
-        if rel not in listed:
-            fails.append(f"{rel}: has no section in plan.md Functions (every file has a job named there)")
+        if rel.startswith(("src/", "evals/")) and rel not in listed:  # §4 explains the backend + evals; ui/ gets a §3 line
+            fails.append(f"{rel}: has no section in plan.md Functions (every backend and eval file is explained there)")
         lines = len(path.read_text().splitlines())
         if lines > MAX_FILE:
             warns.append(f"{rel}: {lines} lines (aim for ~{MAX_FILE})")

@@ -115,8 +115,11 @@ name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<
        each Python file in `src/`, `ui/`, `evals/`, `scripts/` and `tests/`, data files, and `ui/web/` (the kit's React
        template, one row). `spec.py check` fails on a code file that isn't in it, and on a ticked phase whose files
        don't exist yet.
-4. **Functions**: one `### \`<file>\` · <part>: <its one job>` per Python file (tests excepted), then one block per
-   function the rest of the code calls, exactly as the template shows (the kit parses it):
+4. **Functions**: the backend that builds the system, then the evals that prove it: one `### \`<file>\` · <part>:
+   <its one job>` per file in `src/` (the LLM call, the agent or core runtime, guardrails if any, rules, tools, data)
+   and in `evals/` (open it with what one case is and how it runs; the board's scenarios are spec S1–S3 + bonus, the
+   evals are spec §7), then one block per function the rest of the code calls, exactly as the template shows (the kit
+   parses it). `ui/api.py` and tests are not explained here: their one line in §3 Files is enough. Each block has:
    - a `#### \`signature -> return\`` heading;
    - one line: the docstring line 1, word for word, then `*Why:* <why>` (`spec.py check` compares the line and the
      parameter names with the code once the file exists);
@@ -130,7 +133,6 @@ name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<
      read; every value is data a person can read (an object shown by what it holds, never code like `Store("out")`);
      paths and placeholders in prose go in backticks, or markdown hides `<name>`. `spec.py check` enforces each rule:
      In keys = the parameters, the comment types = the signature, the Out label = the return type.
-   Include `ui/api.py` (`screen`, `chat`), `evals/scenarios.py` (`run_all`), `evals/run.py` and `scripts/demo.py`.
 5. **Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
 Every ```json block in plan.md (§4, §5, §6) is pretty-printed; `spec.py check` fails otherwise.
 6. **Flow (S1)**: spec S1 as a story, one user start to finish. First a `flowchart LR` whose arrows are **numbered

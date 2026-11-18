@@ -48,8 +48,10 @@ flowchart LR
 | `tests/test_phase1.py` | 1 | ‹proves P1.R*› | — | — |
 
 ## 4. Functions
-Every function the rest of the code calls, file by file: one `###` per Python file (tests excepted), one `####` per
-function. Each one reads top to bottom:
+The backend that builds the system, then the evals that prove it: one `###` per file in `src/` (the LLM call, the
+agent or core runtime, guardrails if any, the rules, tools and data) and in `evals/` (what a case is, how one runs,
+what the score means), one `####` per function the rest of the code calls. The screen glue (`ui/api.py`) and the
+tests get their one line in §3 Files only. Each function reads top to bottom:
 - its docstring line 1 word for word, then `*Why:*`;
 - **In** · the arguments, by name: a ```jsonc block (JSON with comments) whose keys are exactly the parameters, each
   with a comment `// <its type from the signature> · <what it is>`, and a comment on each nested field the
@@ -101,6 +103,31 @@ hides it. `spec.py check` enforces all of this.
 }
 ```
 ‹Optional: the other outcome, e.g. "wrong name → `null`".›
+
+### `evals/scenarios.py` · the Scenario board: spec S1–S3 and the bonus, played end to end
+A **scenario** is one demo story from spec.md §2 written as data. ‹Show one, real values:›
+```jsonc
+{
+  "id": "S1",  // the spec.md §2 scenario
+  "commands": [  // typed in order into a fresh ‹Agent / Desk›
+    "‹S1 input›"
+  ],
+  "lines": [  // what the user must see, in order
+    "‹the exact reply›"
+  ],
+  "checks": [  // must be true at the end
+    "‹a record was written›"
+  ]
+}
+```
+How one runs: a fresh ‹Agent / Desk› on an empty records folder → each command in order → a 🚧 line means `not_built`
+(checks not looked at) → otherwise every check: all true `pass` ✅, any false `fail` ❌.
+‹Then the `run_all()` block, as above.›
+
+### `evals/run.py` · the evals: every case in spec.md §7, one score
+An **eval case** is one row of spec.md §7: its input and the one line that must come back. ‹Show one, real values.›
+‹One sentence on board vs evals for this project: AI → the evals call the real model, the board stays offline.›
+‹Then the `main()` block: In, and Out = passed · total · one entry per case.›
 
 ## 5. Records
 Each record as typed JSON (where it lives, every field and its type). JSON is how a Python dictionary looks written
