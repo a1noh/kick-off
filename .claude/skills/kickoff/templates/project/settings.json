@@ -1,0 +1,43 @@
+{
+  "outputStyle": "Explanatory",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "K=\"$CLAUDE_PROJECT_DIR/.claude/skills/kickoff\"; [ -d \"$K\" ] || K=\"$HOME/.claude/skills/kickoff\"; exec \"$CLAUDE_PROJECT_DIR/.venv/bin/python\" \"$K/templates/hooks/guard_raw_notes.py\"",
+            "timeout": 10,
+            "statusMessage": "raw notes guard"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "K=\"$CLAUDE_PROJECT_DIR/.claude/skills/kickoff\"; [ -d \"$K\" ] || K=\"$HOME/.claude/skills/kickoff\"; exec \"$CLAUDE_PROJECT_DIR/.venv/bin/python\" \"$K/templates/hooks/after_edit.py\"",
+            "timeout": 30,
+            "statusMessage": "ruff"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "K=\"$CLAUDE_PROJECT_DIR/.claude/skills/kickoff\"; [ -d \"$K\" ] || K=\"$HOME/.claude/skills/kickoff\"; exec \"$K/templates/hooks/stop.sh\"",
+            "timeout": 180,
+            "statusMessage": "tests + kit rules"
+          }
+        ]
+      }
+    ]
+  }
+}
