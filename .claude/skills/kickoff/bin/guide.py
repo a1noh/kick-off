@@ -68,8 +68,8 @@ def board(root: Path) -> str:
 
 
 def app_url(root: Path) -> str:
-    """The running app's URL from .app.* / .streamlit.* pid files, or how to start it."""
-    for name in (".streamlit", ".app"):
+    """The running app's URL from the .app.pid / .app.port files, or how to start it."""
+    for name in (".app",):
         pid, port = root / f"{name}.pid", root / f"{name}.port"
         if pid.exists() and port.exists():
             try:

@@ -9,10 +9,32 @@ The kit's parsers read: the Status line, "Files", "Functions", "Flow", the phase
 ## 1. Overview
 ‹Kind + shape and why, in one line. LLM: "Gemini free tier via .env, extracts ‹fields› only" or "No AI: every step
 is plain Python." One line on the path a message takes. What it must do and why: docs/spec.md.›
-**UI:** react
 
 ## 2. Architecture
-‹From templates/architecture.md (agent) or architecture_app.md (app), slots filled: the diagram + "who decides what".›
+Drawn from this plan, not from a template: **one box per product file in §3 Files** (`src/…`, `ui/api.py`), the data
+stores it reads or writes, the user at each end, and one arrow per call, labeled with the data it carries (from §4).
+A guard, a queue or a stop box appears only when a spec.md rule needs one. `spec.py check` fails when a product file
+has no box, or a box names a file §3 doesn't list. SAFE MERMAID (CLAUDE.md): `flowchart LR`, quoted labels, solid
+labeled arrows, no dead ends.
+
+```mermaid
+flowchart LR
+  U(["‹the user›"])
+  API["ui/api.py<br/>‹door›"]
+  AG["src/agent.py<br/>‹brain: one job›"]
+  D[("‹data store›")]
+
+  U -- "‹what they send›" --> API
+  API -- "‹text›" --> AG
+  AG -- "‹what it reads›" --> D
+  AG -- "‹the reply›" --> U
+```
+
+### Who decides what
+| Step | Who | Why |
+|---|---|---|
+| ‹read the messy input› | ‹LLM / Python› | ‹…› |
+| ‹every rule in spec.md› | Python | ‹a prompt can be argued with; an `if` can't› |
 
 ## 3. Files
 **Every file the build writes**, by phase (CLAUDE.md "Coding standards": fewest files, each with one job).

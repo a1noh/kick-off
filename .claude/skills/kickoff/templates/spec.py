@@ -26,9 +26,9 @@ SOURCE = re.compile(r"\b[BD]\d+\b|raw\.md:L\d+|data/[\w.\-]+|plan\.md|spec\.md|u
 QUOTED = re.compile(r'"[^"]+"')
 FILE_LINE = re.compile(r"\b[\w/.\-]+\.(?:py|jsx?|md):\d+")
 CALL = re.compile(r"`([A-Za-z_][\w.]*)\(")
+PRODUCT_PATH = re.compile(r"\b((?:src/[\w/]+|ui/\w+)\.py)\b")
 SCAFFOLDING = re.compile(
-    r"^(scripts/(spec|render_docs|check_llm)\.py|ui/progress\.py|\.claude/hooks/|\.claude/skills/impeccable/"
-    r"|\.claude/agents/impeccable-|docs/specs/|BUILD_LOG\.md|PRODUCT\.md|CHEATSHEET\.md|docs/[^/]+\.html$)"
+    r"^(scripts/(spec|check_llm)\.py|ui/progress\.py|\.claude/hooks/|docs/specs/|BUILD_LOG\.md|CHEATSHEET\.md)"
 )
 MAX_FILE, MAX_FUNCTION = 150, 30
 VENV_PY = ROOT / ".venv" / "bin" / "python"
@@ -200,6 +200,7 @@ def doc_problems() -> list[str]:
             problems += json_problems(text)
         for diagram in re.findall(r"```mermaid\n(.*?)```", text, re.S):
             problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
+    problems += architecture_problems()
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
     checked = [("docs/talk.md", talk, progress.ticked(1)), ("plan.md Flow", progress.section("Flow"), progress.ticked(2))]
     for where, text, live in checked:
@@ -207,6 +208,22 @@ def doc_problems() -> list[str]:
         for call in {c for line in lines for c in CALL.findall(line)}:
             if call.split(".")[-1] not in names:
                 problems.append(f"{where}: `{call}()` is not defined in src/, ui/, evals/ or scripts/")
+    return problems
+
+
+def architecture_problems() -> list[str]:
+    """The architecture diagram matches the code plan: one box per product file in plan.md Files, and no other files."""
+    planned = {f for f in progress.file_table() if re.match(r"(src/.+|ui/[^/]+)\.py$", f)}
+    talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
+    diagrams = [("plan.md §2 Architecture", progress.section("Architecture"), bool(planned))]
+    diagrams.append(("docs/talk.md §3", talk, progress.ticked(4)))  # talk.md copies the diagram in phase 4
+    problems = []
+    for where, text, live in diagrams:
+        drawn = {f for block in re.findall(r"```mermaid\n(.*?)```", text, re.S) for f in PRODUCT_PATH.findall(block)}
+        if not live:
+            continue
+        problems += [f"{where}: no box for {f} (every product file in plan.md Files is drawn)" for f in sorted(planned - drawn)]
+        problems += [f"{where}: a box for {f}, which plan.md Files doesn't list" for f in sorted(drawn - planned)]
     return problems
 
 
@@ -269,39 +286,25 @@ def run_tests(ids: list[str]) -> dict[str, bool]:
 
 
 def render_screen() -> str:
-    """The app as the user sees it now (api.screen_text, or an AppTest of ui/app.py), rendered in the project's venv."""
+    """The app as the user sees it now (api.screen_text), rendered in the project's venv."""
     run = subprocess.run([PY, __file__, "_render"], cwd=ROOT, capture_output=True, text=True, env=ENV)
     out = run.stdout.split("<<<SCREEN>>>\n", 1)
-    return (
-        out[1].rstrip()
-        if len(out) == 2
-        else f"APP EXCEPTION: could not render the app\n{(run.stdout + run.stderr)[-800:]}"
-    )
+    if len(out) == 2:
+        return out[1].rstrip()
+    return f"APP EXCEPTION: could not render the app\n{(run.stdout + run.stderr)[-800:]}"
 
 
 def _render() -> str:
-    """Inside the venv: the screen text from ui/api.py (React) or an AppTest of ui/app.py (Streamlit)."""
+    """Inside the venv: the screen as text from ui/api.py, the same JSON the browser renders."""
     sys.path[:0] = [str(ROOT / "src"), str(ROOT / "ui"), str(ROOT)]
-    if (ROOT / "ui" / "api.py").exists():
-        try:
-            import api
+    if not (ROOT / "ui" / "api.py").exists():
+        return "APP EXCEPTION: no ui/api.py"
+    try:
+        import api
 
-            return api.screen_text()
-        except Exception as error:  # noqa: BLE001  (any crash is shown as the failure)
-            return f"APP EXCEPTION: {type(error).__name__}: {error}"
-    if not (ROOT / "ui" / "app.py").exists():
-        return "APP EXCEPTION: no ui/api.py or ui/app.py"
-    from streamlit.testing.v1 import AppTest
-
-    app = AppTest.from_file(str(ROOT / "ui" / "app.py"), default_timeout=60).run()
-    if app.exception:
-        return f"APP EXCEPTION: {app.exception[0].value}"
-    lines = ["[tabs] " + " | ".join(t.label for t in app.tabs), "[sidebar]", *[m.value for m in app.sidebar.markdown]]
-    lines += [f"[row] {e.label}" for e in app.sidebar.expander] + [
-        "[main]",
-        *[f"[info] {i.value}" for i in app.main.info],
-    ]
-    return "\n".join(lines)
+        return api.screen_text()
+    except Exception as error:  # noqa: BLE001  (any crash is shown as the failure)
+        return f"APP EXCEPTION: {type(error).__name__}: {error}"
 
 
 def screen_claims(n: int, screen: str) -> tuple[list[str], list[str]]:
@@ -323,7 +326,7 @@ def cmd_check() -> int:
     """Print every rule problem (and warning); exit 1 when any rule fails."""
     fails, warns = code_problems()
     problems = plan_problems() + fails + file_problems() + doc_problems() + repo_problems()
-    if progress.last_ticked() and any((ROOT / "ui" / f).exists() for f in ("api.py", "app.py")):
+    if progress.last_ticked() and (ROOT / "ui" / "api.py").exists():
         _, missing = screen_claims(progress.last_ticked(), render_screen())
         problems += [f"phase {progress.last_ticked()} Try it says {q} is on screen, but it isn't" for q in missing]
     for line in [*(f"FAIL {p}" for p in problems), *(f"WARN {w}" for w in warns)]:

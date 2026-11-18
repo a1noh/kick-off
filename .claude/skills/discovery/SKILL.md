@@ -33,13 +33,9 @@ in the folder first. Plan mode isn't needed: the plan file itself is the draft, 
   (UI first, 4 phases, board, dashboard) never changes.
 Say kind + shape and why in one line of the Goal.
 
-**Then the UI mode** (only the door + Owner dashboard change; the Python core is identical in both):
-- **`react`** (default): FastAPI `ui/api.py` (display only) + a Vite React (JSX) UI from the kit's `templates/react/`
-  (`../kickoff/` next to this skill), designed by the bundled **Impeccable** after phase 1 and in phase 4 (see `/build`).
-  Needs Node ≥ 18: check `node -v` (also try `bash -lc 'node -v'`, nvm may only be on the login shell's PATH).
-- **`streamlit`**: only when Node < 18 / missing (e.g. a cloud session without Node: say so in one line) or the
-  interviewer wants a Python-only app.
-Write it as one line in plan.md §1 Overview: `**UI:** streamlit` or `**UI:** react`.
+**The screen** is always the kit's React template on localhost (FastAPI `ui/api.py`, display only, + `ui/web/`); only
+the door and the Owner dashboard change per project. It needs Node ≥ 18 (`node -v`, or `bash -lc 'node -v'` for nvm):
+if it's missing, tell the user to install it before `/build`.
 
 From the interviewer's answers in raw.md, take **exactly 3**, in their words where possible:
 1. **Happy path**: their typical example
@@ -105,11 +101,14 @@ names, no function names, so the client or a new teammate can read it top to bot
 Copy `templates/plan.md` and keep its headings (the kit parses **Files**, **Functions**, **Flow** and the phases by
 name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<n>) and never restates it. Sections:
 1. **Overview**: kind + shape and why in one line; if it uses an LLM, name it (Gemini free tier via `.env`) and say it
-   extracts fields only, else "No AI: every step is plain Python"; the `**UI:** react` / `**UI:** streamlit` line.
-2. **Architecture** and **who decides what**: copy the template for the kind **exactly**: agent →
-   `templates/architecture.md`, app → `templates/architecture_app.md` (headings, node IDs, shapes, arrow labels,
-   `classDef` colors, the ⇧⌘V line, the 4-row table) and replace every `‹slot›` (`templates/example_refill.md` shows a
-   filled-in one). No extra boxes. Obey its **SAFE MERMAID** rule, including **a clear path, no dead ends**.
+   extracts fields only, else "No AI: every step is plain Python".
+2. **Architecture**, drawn for **this** project from its own §3 Files and §4 Functions, never from a fixed template:
+   write §3 and §4 first, then the diagram. One box per product file (`src/…`, `ui/api.py`) labeled with its job, the
+   data stores it reads or writes, the user at each end, and one arrow per call labeled with the data it carries. Add a
+   guard, a queue or a stop box **only** when a spec.md rule needs one (CLAUDE.md "Architecture": guard in when a rule
+   must hold even if the model is wrong; guard out only for text the code didn't build from trusted data). Then a short
+   "who decides what" table: which step the LLM does, and that every rule is Python. `spec.py check` fails when a
+   product file has no box or a box names a file §3 doesn't list. SAFE MERMAID (CLAUDE.md), **no dead ends**.
 3. **Files** (follow CLAUDE.md "Coding standards": fewest files, each with one job, ~8–10 product files). The user
    must see the whole build before approving it:
      - **A file table** `| File | Phase | Job | Takes in | Gives back |` listing **every** file the build will write:
@@ -136,7 +135,7 @@ Every ```json block in plan.md (§4, §5, §6) is pretty-printed; `spec.py check
 7. **Phases** as checkboxes, **exactly 4**. **UI first, then features:** phase 1 builds the whole screen with nothing
    working yet, and every later phase visibly turns something from broken (❌ / 🚧 / ⬜) into working (✅ / live). The user
    should never have to read a diff to know what a phase changed.
-   - `- [ ] Phase 1: the app shell (everything visible, nothing working yet)`: **`ui/app.py`** (UI react: **`ui/api.py`** +
+   - `- [ ] Phase 1: the app shell (everything visible, nothing working yet)`: **`ui/api.py`** +
      **`ui/web/`** from the kit's React templates, same screen) with the full layout from spec.md §3,
      both tabs (every panel; not-yet-live ones show `⬜ <panel>: arrives in phase N`), the **Scenario board**, a stub `src/agent.py`
      whose replies are honest fixed texts (`🚧 <feature> arrives in phase N`; never a fake success), and
@@ -157,7 +156,7 @@ Every ```json block in plan.md (§4, §5, §6) is pretty-printed; `spec.py check
      queue + audit panels go live (+ the owner action, if the plan has one); board S2, S3, bonus ⬜→✅.
    - `- [ ] Phase 4: evals + talk`: `evals/` runner (agent: against live Gemini; app: every case end to end through
      `core.py`, plus live Gemini for the helper cases if there is one), scorecard, Eval score panel live on the dashboard, polish,
-     `docs/talk.md` (for the client) filled in full, plan §9 Likely questions answered. UI react: phase 1 `Builds:` ends with "Impeccable polish on `ui/web/src`", phase 4 with "Impeccable critique + polish on `ui/web/src`".
+     `docs/talk.md` (for the client) filled in full, plan §8 Likely questions answered.
    - Put this line right under the `## 6. Phases` heading: "Every `On screen` and `Try it` line describes the app
      **after** that phase is built and ticked. Expected replies are in \"quotes\".
      Requirements cite B<n>/D<n>, raw.md:L<n>, data/<file> or `user <date>: \"<words>\"`; each names the test that

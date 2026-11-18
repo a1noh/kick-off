@@ -1,4 +1,4 @@
-"""Door API (React mode). Copy to the classroom as ui/api.py. Display only, like app.py in Streamlit mode:
+"""Door API. Copy to the classroom as ui/api.py. Display only:
 it turns progress + the Scenario board + the owner panels into ONE JSON screen, and passes chat to the agent.
 Every decision stays in agent.py (app kind: core.py) and tools.py.
 
@@ -81,7 +81,7 @@ def screen() -> dict:
 
 
 def screen_text() -> str:
-    """The screen as text, same format as the Streamlit AppTest render (scripts/spec.py verify writes it to verify.md)."""
+    """The screen as text, the format the kit's spec.py verify reads (scripts/spec.py verify writes it to verify.md)."""
     s = screen()
     sb = s["sidebar"]
     lines = ["[tabs] " + " | ".join(s["tabs"]), "[sidebar]", f"### {s['title']}", f"**Progress** {sb['progress']}"]

@@ -15,10 +15,7 @@ mkdir ~/interview-practice && cd ~/interview-practice && claude
 ```
 Needs: Claude Code, git, Python 3, and [uv](https://docs.astral.sh/uv/) (`/kickoff` offers to install it).
 
-**On your phone or claude.ai/code** (no install): on GitHub, click **Use this template** → create a repo → open it in
-claude.ai/code → `/kickoff`. The skills and hooks come with the repo. Limits there: you can't click the app in a
-browser (`spec.py verify N` prints the rendered screen claims instead), and for live AI steps set
-the environment variable `GEMINI_API_KEY` in the cloud environment settings and allow `generativelanguage.googleapis.com`.
+The app runs on localhost (React, Node ≥ 18); nothing is deployed.
 
 ## The flow
 | Time | Command | What happens |
@@ -34,11 +31,11 @@ the environment variable `GEMINI_API_KEY` in the cloud environment settings and 
 ```
 notes/raw.md   your interview notes (Claude reads, never edits)
 data/          the interviewer's files
-docs/          requirements.md (what) · plan.md (how: study it) · talk.md (for the client)
-src/           the product: agent.py or core.py, tools.py (gated), guards.py, data.py, llm.py
-ui/            the screen only: React (api.py + web/, default) or Streamlit app.py
+docs/          spec.md (what + why, plain English) · plan.md (how: every file + function, study it) · talk.md (for the client)
+src/           the product: only the files plan.md §3 lists (agent.py or core.py, plus what the spec needs)
+ui/            the screen only: api.py + web/ (the kit's React template)
 evals/ tests/ scripts/demo.py   scenarios + board, tests, the terminal demo
-(the kit's tools, hooks and Impeccable run from the kit: nothing of them is committed)
+(the kit's tools and hooks run from the kit: nothing of them is committed)
 ```
 
 ## Safety
@@ -48,5 +45,4 @@ evals/ tests/ scripts/demo.py   scenarios + board, tests, the terminal demo
 
 ## Working on the kit
 `./install.sh --link` symlinks the skills so edits here are live. Self-test: `python3 .claude/skills/kickoff/tests/selftest.py`
-(also runs in CI on every push). The UI is React by default (Node ≥ 18; Streamlit otherwise), designed by the bundled
-Impeccable skill (pinned, no hook, telemetry off, run from the kit) after phase 1 and in phase 4: see `.claude/skills/kickoff/CHEATSHEET.md`.
+(also runs in CI on every push). The playbook: `.claude/skills/kickoff/CHEATSHEET.md`.

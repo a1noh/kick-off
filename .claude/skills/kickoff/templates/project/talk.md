@@ -11,38 +11,8 @@ _The 3 scenarios in demo order, each as "type X → it does Y → the dashboard 
 
 ## 3. How it works
 **Key line: "The LLM understands, Python decides."** (app kind: "Every rule lives in one place, in plain Python.")
-The step-by-step path of scenario 1, with the real object at each step, is plan.md Flow (a test keeps it true).
-
-```mermaid
-flowchart LR
-  UI(["💬 ui/api.py + ui/web/ · DOOR<br/>chat + 📊 owner dashboard"])
-  GI{{"🛡️ src/guards.py · GUARD IN<br/>stop triggers, before the model"}}
-  AG["🧠 src/agent.py · BRAIN<br/>the loop (app kind: src/core.py)"]
-  LLM["🤖 src/llm.py<br/>Gemini: text → JSON fields"]
-  TO["✋ src/tools.py · HANDS<br/>every action, gated in code"]
-  DA[("💾 src/data.py · MEMORY<br/>data/ → out/ records")]
-  GO{{"🛡️ src/guards.py · GUARD OUT<br/>reply matches the records"}}
-  EV[("👀 evals/ + out/audit.jsonl · EYES<br/>scenario board, evals, log")]
-
-  UI -- "message" --> GI
-  GI -- "ok" --> AG
-  AG -- "understand" --> LLM
-  LLM -- "fields" --> AG
-  AG -- "decide + act" --> TO
-  TO -- "read / write" --> DA
-  TO -- "log" --> EV
-  AG -- "reply" --> GO
-  GO -- "shown" --> UI
-
-  classDef door fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
-  classDef guard fill:#fef3c7,stroke:#d97706,color:#78350f
-  classDef brain fill:#ede9fe,stroke:#7c3aed,color:#3b0764
-  classDef hands fill:#dcfce7,stroke:#16a34a,color:#14532d
-  classDef store fill:#f1f5f9,stroke:#475569,color:#0f172a
-  classDef todo fill:#f8fafc,stroke:#cbd5e1,color:#94a3b8
-  class UI,GI,AG,LLM,TO,DA,GO,EV todo
-```
-Grey = not built yet; `/build` colors each file in the phase that builds it. View: ⇧⌘V in VS Code, or `docs/talk.html`.
+_Phase 4 copies the finished architecture diagram from plan.md §2 here (the checker then holds it to the same files),
+and points at plan.md §6 Flow for scenario 1 step by step._
 
 ## 4. Decisions we made together
 _3–5 lines, "Chose X over Y because Z", each citing its business rule or decision (spec.md B<n>)._

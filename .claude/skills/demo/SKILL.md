@@ -21,7 +21,7 @@ nothing (that's `/build`).
 ## 2. Discovery: follow `/discovery`, with one demo override
 Read `../discovery/SKILL.md` and follow it fully (§0–§5), from these notes alone (never copy a plan from another folder):
 - Its **open questions**: pick the **recommended** answer yourself and record it as a decision
-  `D<n> … · decided with user <today> (demo run: recommended answer)`. The UI mode is the default (React with Node ≥ 18).
+  `D<n> … · decided with user <today> (demo run: recommended answer)`.
 - **The approval question is NOT overridden.** Show `python3 "$KIT_HOME/bin/demo.py" box 2` exactly, then ask
   "Approve plan.md (function list + S1 flow)?" as `/discovery` §5 says, and wait for the user's answer.
   - **Approve** → Status → approved, commit (body = the changed files) + tag `plan`, local, never pushed.

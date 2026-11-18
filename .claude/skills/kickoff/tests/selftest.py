@@ -27,6 +27,18 @@ PLAN = """# Plan: probe
 
 **Status:** {status}
 
+## 2. Architecture
+```mermaid
+flowchart LR
+  U(["user"])
+  API["ui/api.py<br/>door"]
+  AG["src/agent.py<br/>brain"]
+
+  U -- "text" --> API
+  API -- "text" --> AG
+  AG -- "reply" --> U
+```
+
 ## 3. Files
 | File | Phase | Job | Takes in | Gives back |
 |---|---|---|---|---|
@@ -294,7 +306,7 @@ def doc_rules(c: Path) -> None:
 
 
 def verify_and_hooks(c: Path) -> None:
-    """T23–T27: verify prints (no files), screen claims, the Stop hook, the Streamlit path."""
+    """T23–T27: verify prints (no files), screen claims, the Stop hook, a crashing screen, the architecture match."""
     before = set((c / "docs").rglob("*"))
     write(c, "tests/test_phase1.py", TEST.format(want="bye"))
     bad = sh(f".venv/bin/python {SPEC} verify 1", c)
@@ -328,16 +340,16 @@ def verify_and_hooks(c: Path) -> None:
     write(c, "ui/api.py", API.replace('    return "', '    raise RuntimeError("boom")\n    return "'))
     out = sh(f".venv/bin/python {SPEC} _render", c).stdout
     expect("T26 a crashing ui/api.py shows as APP EXCEPTION", "APP EXCEPTION" in out and "boom" in out, out)
-    (c / "ui/api.py").unlink()
-    write(
-        c,
-        "ui/app.py",
-        'import streamlit as st\nst.sidebar.markdown("✅ P1: streamlit probe")\nst.tabs(["door", "📊 Owner dashboard"])\n',
-    )
-    out = sh(f".venv/bin/python {SPEC} _render", c).stdout
-    expect("T27 Streamlit mode renders with AppTest", "✅ P1: streamlit probe" in out and "door" in out, out[-300:])
-    (c / "ui/app.py").unlink()
     write(c, "ui/api.py", API)
+    text = (c / "docs/plan.md").read_text()
+    write(c, "docs/plan.md", text.replace('  AG["src/agent.py<br/>brain"]\n', '  AG["src/brain.py<br/>brain"]\n'))
+    run = check(c)
+    expect(
+        "T27 the architecture matches plan.md Files: a missing box and a box for an unlisted file are both rejected",
+        run.returncode == 1 and "no box for src/agent.py" in run.stdout and "a box for src/brain.py" in run.stdout,
+        run.stdout,
+    )
+    write(c, "docs/plan.md", text)
 
 
 def parser(c: Path) -> None:
@@ -396,16 +408,11 @@ def kit_files(c: Path, tmp: Path) -> None:
         env_leak.stderr + key_leak.stderr + clean.stderr,
     )
 
-    body = re.search(r"```mermaid\n(.*?)```", (c / "docs/talk.md").read_text(), re.S)[1]
-    files = ("ui/api.py", "src/guards.py", "src/agent.py", "src/llm.py", "src/tools.py", "src/data.py", "evals/")
-    safe = body.startswith("flowchart LR") and not re.search(r"-\.|<-->|<(?!br/>)[a-z]+>|flowchart TD", body)
-    sh(f".venv/bin/python {KIT}/templates/render_docs.py", c)
-    page = (c / "docs/talk.html").read_text() if (c / "docs/talk.html").exists() else ""
-    ignored = sh("git check-ignore -q docs/talk.html", c).returncode == 0
+    talk = (c / "docs/talk.md").read_text()
     expect(
-        "T32 talk template: file names, safe mermaid; talk.html renders and is git-ignored",
-        all(f in body for f in files) and safe and "mermaid@11.12.2" in page and ignored,
-        f"safe={safe} ignored={ignored}",
+        "T32 talk template has no fixed diagram (phase 4 copies the plan's), and no kit file is left behind",
+        "```mermaid" not in talk and not (KIT / "templates/render_docs.py").exists()
+        and not list(KIT.parent.glob("discovery/templates/architecture*.md")) and not (KIT / "vendor").exists(),
     )
 
     kit_py = [
@@ -442,11 +449,9 @@ def kit_files(c: Path, tmp: Path) -> None:
     versions = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {})}
     skills = KIT.parent
     expect(
-        "T34 React templates complete + pinned, Impeccable runs from the kit, /rehearse gone",
+        "T34 React templates complete + pinned, /rehearse gone",
         all((react / n).exists() for n in need)
         and not any(v[:1] in "^~" for v in versions.values())
-        and all((KIT / "vendor/impeccable" / f).exists() for f in ("skill/SKILL.md", "LICENSE", "PINNED"))
-        and "vendor/impeccable" in (skills / "build" / "SKILL.md").read_text()
         and not (skills / "rehearse").exists()
         and (KIT / "CHEATSHEET.md").exists(),
     )

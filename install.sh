@@ -3,7 +3,6 @@
 #   ./install.sh              copy the skills (re-run after `git pull` to update)
 #   ./install.sh --link       symlink instead: edits in this repo are live (for working on the kit)
 #   ./install.sh --uninstall  remove them
-# Phone / claude.ai/code: no install needed. Make a repo from this template; its .claude/skills/ come with the clone.
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC="$REPO/.claude/skills"

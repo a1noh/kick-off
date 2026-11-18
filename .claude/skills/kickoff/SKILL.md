@@ -1,6 +1,6 @@
 ---
 name: kickoff
-description: Create a 2-hour build "classroom" for an AI agent or a plain app (scheduler, dashboard, workflow) in the current folder - UI first (phase 1 is the full app shell with an Owner dashboard and every scenario ⬜ on a Scenario board), then an approved code-level plan and 4 /build phases (traced + tested + verified) turn it ✅. Writes only CLAUDE.md, notes/raw.md, docs/talk.md, .claude/settings.json (hooks that run from the kit: ruff, raw-notes guard, tests + kit rules), .gitignore, pyproject.toml, a src/ + ui/ layout, a Python 3.12 env and git (+ a secrets pre-commit hook); every kit tool stays in the kit. Then prints a fixed short welcome. Inside an existing classroom it prints "where you are". Works from ~/.claude/skills or a repo's .claude/skills (template repo, phone). Next: /demo (learn on a sample) or /discovery. Use when the user types /kickoff or asks to set up a timed build.
+description: Create a 2-hour build "classroom" for an AI agent or a plain app (scheduler, dashboard, workflow) in the current folder - UI first (phase 1 is the full app shell with an Owner dashboard and every scenario ⬜ on a Scenario board), then an approved code-level plan and 4 /build phases (traced + tested + verified) turn it ✅. Writes only CLAUDE.md, notes/raw.md, docs/talk.md, .claude/settings.json (hooks that run from the kit: ruff, raw-notes guard, tests + kit rules), .gitignore, pyproject.toml, a src/ + ui/ layout, a Python 3.12 env and git (+ a secrets pre-commit hook); every kit tool stays in the kit. Then prints a fixed short welcome. Inside an existing classroom it prints "where you are". Works from ~/.claude/skills or a repo's .claude/skills. Next: /demo (learn on a sample) or /discovery. Use when the user types /kickoff or asks to set up a timed build.
 ---
 
 # /kickoff: set up the classroom, then say where we are (same words every time)
@@ -8,8 +8,7 @@ description: Create a 2-hour build "classroom" for an AI agent or a plain app (s
 Arguments given: `$ARGUMENTS`
 
 **KIT_HOME** = this skill's base directory (shown above as "Base directory for this skill"). It works the same whether
-the kit sits in `~/.claude/skills/kickoff` (installed with `install.sh`) or in a repo's `.claude/skills/kickoff`
-(made from the GitHub template, e.g. on the phone). Export it in every command below: `export KIT_HOME="<that path>"`.
+the kit sits in `~/.claude/skills/kickoff` (installed with `install.sh`) or in a repo's `.claude/skills/kickoff`. Export it in every command below: `export KIT_HOME="<that path>"`.
 
 **Consistency rule:** what the user reads at the start comes from `$KIT_HOME/bin/guide.py`, printed **exactly**.
 Don't add an intro, a summary, tips or your own version of the guide. The long playbook is the kit's `CHEATSHEET.md` (guide.py prints its path).
@@ -28,7 +27,7 @@ any arguments are brief/data files to copy into `data/`.
    If kit files are present (`install.sh` + `.claude/skills/kickoff/`), ask once: "This folder holds the kit itself.
    Set up a practice classroom here? (Yes for a repo made from the template; No for the kit's own repo.)"
 2. `uv`: `command -v uv` or `~/.local/bin/uv`. Missing → ask the user, then `curl -LsSf https://astral.sh/uv/install.sh | sh`;
-   if that can't connect (cloud sessions only reach package registries), `python3 -m pip install --user uv`.
+   if that can't connect, `python3 -m pip install --user uv`.
 3. Run the **setup block** below exactly as written, with `KIT_HOME` exported. **Do not change any file contents.**
 4. Run the **verify block**. All six checks must print OK. If one fails, fix the cause and re-run; never skip it.
 5. If the arguments name brief/data files, copy them into `DEST/data/`.
@@ -40,15 +39,15 @@ any arguments are brief/data files to copy into `data/`.
    after it, except one line if a step above failed or was skipped.
 
 ## Setup block
-The project gets only its own files (copied from `templates/project/`). Hooks, `spec.py`, `progress.py`,
-`render_docs.py` and `check_llm.py` run from the kit: `.claude/settings.json` finds the kit at run time (the repo's
+The project gets only its own files (copied from `templates/project/`). Hooks, `spec.py`, `progress.py` and
+`check_llm.py` run from the kit: `.claude/settings.json` finds the kit at run time (the repo's
 `.claude/skills/kickoff`, else `~/.claude/skills/kickoff`), and the venv's `classroom.pth` (git-ignored) adds `templates/`.
 ```bash
 DEST="$PWD"   # current folder
 set -e
 if [ -z "${KIT_HOME:-}" ]; then for d in "$PWD/.claude/skills/kickoff" "$HOME/.claude/skills/kickoff"; do [ -d "$d/templates" ] && KIT_HOME="$d" && break; done; fi
 KIT="${KIT_HOME:-}/templates"; P="$KIT/project"
-for f in spec.py progress.py render_docs.py check_llm.py pre-commit hooks/stop.sh hooks/after_edit.py hooks/guard_raw_notes.py \
+for f in spec.py progress.py check_llm.py pre-commit hooks/stop.sh hooks/after_edit.py hooks/guard_raw_notes.py \
   project/CLAUDE.md project/talk.md project/raw.md project/settings.json project/gitignore project/pyproject.toml; do
   [ -f "$KIT/$f" ] || { echo "MISSING kit file $KIT/$f"; exit 1; }
 done
@@ -62,8 +61,8 @@ cp "$P/talk.md" docs/talk.md
 [ -f .env ] || printf '%s\n' "# Paste your free Gemini API key after the = (get one at https://aistudio.google.com/apikey). Never commit this file." \
   "GEMINI_API_KEY=" "GEMINI_MODEL=gemini-flash-lite-latest" > .env
 UV="$(command -v uv || echo "$HOME/.local/bin/uv")"
-"$UV" venv -q -p 3.12 .venv || "$UV" venv -q .venv   # 2nd try: the system Python (cloud sessions may not download 3.12)
-"$UV" pip install -q --python .venv/bin/python streamlit==1.40.0 pytest==8.3.3 ruff==0.8.4 python-dotenv==1.0.1
+"$UV" venv -q -p 3.12 .venv || "$UV" venv -q .venv   # 2nd try: the system Python
+"$UV" pip install -q --python .venv/bin/python pytest==8.3.3 ruff==0.8.4 python-dotenv==1.0.1 requests==2.32.3
 SITE="$(.venv/bin/python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
 printf '%s\n' "$DEST/src" "$DEST/ui" "$DEST" "$KIT" > "$SITE/classroom.pth"   # flat imports + the kit's progress.py
 git init -q 2>/dev/null || true
@@ -89,7 +88,7 @@ T="$(mktemp -d)"; mkdir -p "$T/docs"
 printf -- '**Status:** approved 2026-01-01\n## 6. Phases\n- [x] Phase 1: probe\n  - **Requirements:**\n    - **P1.R1** · probe\n      - Traces to: my gut\n      - Acceptance: works\n      - Test: tests/test_p1.py::test_r1\n' > "$T/docs/plan.md"
 (cd "$T" && "$DEST/.venv/bin/python" "$KIT/spec.py" check >/dev/null); [ $? -eq 1 ] && .venv/bin/python "$KIT/spec.py" check >/dev/null && echo "OK 5/6 spec checker rejects an ungrounded requirement" || echo "FAIL spec checker"
 rm -rf "$T"
-! git ls-files | grep -Eq 'spec\.py|progress\.py|render_docs|check_llm|\.claude/hooks|BUILD_LOG|CHEATSHEET|docs/specs' && .venv/bin/python -c "import progress" && echo "OK 6/6 no kit scaffolding in the repo; progress imports from the kit" || echo "FAIL kit scaffolding"
-NODE_MAJOR="$(node -v 2>/dev/null | sed 's/^v\([0-9]*\).*/\1/')"; [ "${NODE_MAJOR:-0}" -ge 18 ] && echo "NOTE node $(node -v): default React UI ready" || echo "NOTE node ${NODE_MAJOR:-missing}: the default React UI needs Node >= 18, so /discovery will use Streamlit"
+! git ls-files | grep -Eq 'spec\.py|progress\.py|check_llm|\.claude/hooks|BUILD_LOG|CHEATSHEET|docs/specs' && .venv/bin/python -c "import progress" && echo "OK 6/6 no kit scaffolding in the repo; progress imports from the kit" || echo "FAIL kit scaffolding"
+NODE_MAJOR="$(node -v 2>/dev/null | sed 's/^v\([0-9]*\).*/\1/')"; [ "${NODE_MAJOR:-0}" -ge 18 ] && echo "NOTE node $(node -v): React UI ready" || echo "NOTE node ${NODE_MAJOR:-missing}: the React UI needs Node >= 18: install it before /build"
 rm -f zz_probe.py tests/test_zz_probe.py && rm -rf .pytest_cache .ruff_cache tests/__pycache__
 ```

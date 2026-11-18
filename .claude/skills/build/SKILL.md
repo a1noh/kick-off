@@ -1,6 +1,6 @@
 ---
 name: build
-description: Build the next unticked phase of an APPROVED docs/plan.md in a /kickoff classroom - refuses a draft plan; reads the phase's requirements (P<n>.R<k>, each traced, quoted, with a named test) and Files/Functions/Records/Flow from plan.md, writes the tests first, then the code (following CLAUDE.md's Coding standards), then verifies (pytest + the kit's spec.py verify N renders the real screen, spec.py check enforces plan + standards). UI first (React via ui/api.py + ui/web/ by default, Streamlit otherwise; phase 1 = full app shell, board all ⬜, honest 🚧 stubs), each phase visibly turns features ✅. Keeps the app running, adds a Build-story entry, commits + tags locally (never pushes), hands over a "Try it" checklist and the diff stat, stops. One phase per call. Use when the user types /build.
+description: Build the next unticked phase of an APPROVED docs/plan.md in a /kickoff classroom - refuses a draft plan; reads the phase's requirements (P<n>.R<k>, each traced, quoted, with a named test) and Files/Functions/Records/Flow from plan.md, writes the tests first, then the code (following CLAUDE.md's Coding standards), then verifies (pytest + the kit's spec.py verify N renders the real screen, spec.py check enforces plan + standards). UI first (React via ui/api.py + ui/web/ on localhost; phase 1 = full app shell, board all ⬜, honest 🚧 stubs), each phase visibly turns features ✅. Keeps the app running, adds a Build-story entry, commits + tags locally (never pushes), hands over a "Try it" checklist and every changed file, stops. One phase per call. Use when the user types /build.
 ---
 
 # /build: approved plan → tests → code → verify → the user tries it
@@ -49,12 +49,11 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
   - A stub `src/agent.py` (app: `src/core.py`) with the final Functions interface; every reply is `🚧 <feature> arrives in
     phase N.` and never claims success or shows data. No `llm.py` / `data.py` yet.
   - Required tests: `test_stub_replies_never_show_green` and `tests/test_screen.py::test_screen_matches_plan_and_board`.
-  - **UI react** (plan.md §1 `**UI:** react`; otherwise build `ui/app.py` the same way in Streamlit):
+  - **The screen** (the kit's React template):
     `cp $KIT/react/api_template.py ui/api.py; mkdir -p ui/web; cp -R $KIT/react/{package.json,vite.config.js,index.html,src} ui/web/; cp $KIT/react/test_screen_api.py tests/test_screen.py`,
     then `uv pip install --python .venv/bin/python fastapi==0.115.6 uvicorn==0.32.1 httpx==0.28.1` and
-    `(cd ui/web && npm install --no-audit --no-fund && npm run build)`. Fill `ui/api.py`'s TITLE, TABS, PANELS, WIDE,
-    SHOWS (spec.md §3 table) and ACTIONS (spec.md §3 one-click actions, shown in the chat header). The guide sidebar comes with the
-    template: don't rewrite it. `npm test` must pass. Then **Impeccable polish** (§3b) before verifying.
+    `(cd ui/web && npm install --no-audit --no-fund && npm run build)`. Fill `ui/api.py`'s TITLE, TABS, PANELS, WIDE
+    and SHOWS (spec.md §3 table). The guide sidebar comes with the template: don't rewrite it. `npm test` must pass.
 - **Phase 2** also writes `tests/test_flow.py`: run S1 offline (fixed extractor) step by step and assert each step's
   object equals its row in `progress.flow()` (plan.md Flow), so the study doc can't drift from the code.
 - **Later phases** replace stubs and turn placeholders live. **Never remove a panel or a board row.** An owner action
@@ -73,36 +72,17 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 6. The app is running. **React:** rebuild if `ui/web/` changed (`cd ui/web && npm run build`). If `.app.pid` is alive,
    restart it (uvicorn doesn't reload Python). Else take the first free port from 8501 to 8510 (`lsof -ti tcp:$P` empty),
    run `.venv/bin/uvicorn api:app --app-dir ui --port $P > out/app.log 2>&1 &`, save `echo $! > .app.pid; echo $P > .app.port`,
-   check `curl -s localhost:$P/api/screen` returns JSON, `open http://localhost:$P`. **Streamlit:** the same with
-   `.venv/bin/streamlit run ui/app.py --server.headless true --server.port $P --server.runOnSave true > out/streamlit.log 2>&1 &`,
-   `.streamlit.pid` / `.streamlit.port`, and `curl -s localhost:$P/_stcore/health` says `ok`.
-
-## 3b. UI react only: Impeccable (bundled in the kit, pinned, run from the kit)
-Runs twice: **phase 1** (`polish`, after the shell's tests pass, before `verify 1`) and **phase 4** (`critique`, then
-`polish`). The kit carries a pinned copy at `IMP=$KIT/../vendor/impeccable/skill` (see `PINNED` + Apache-2.0 `LICENSE`).
-Nothing is copied into the project: no `.claude/skills/impeccable`, no `.claude/agents/`, no `PRODUCT.md`.
-1. In the project folder: `DO_NOT_TRACK=1 sh "$IMP/scripts/impeccable" context --target ui/web/src` (first run
-   downloads its engine, verified against the bundled checksums; its `.impeccable/` folder is git-ignored). If it fails
-   (offline, cloud network), use the skill's "Launcher unavailable" path and say its one line.
-2. Product context comes from spec.md §1–§3 (users, purpose; "the guide sidebar shows the build on purpose"; quoted
-   texts render exactly; the UI only displays `ui/api.py`). Read `$IMP/reference/craft-floor.md` before any edit; mode =
-   **Operate**: the kit's shell is an established surface, so extend and polish it.
-3. Phase 1: follow `$IMP/reference/polish.md`. Phase 4: `$IMP/reference/critique.md` first, running its two assessments
-   as `general-purpose` subagents (give each the files and the reference text, not your conclusions); show the user
-   the score + top 3 issues, then `polish`. Then `DO_NOT_TRACK=1 sh "$IMP/scripts/impeccable" detect --json ui/web/src`
-   once and fix what it flags (or name the deliberate exception).
-4. Scope: **only `ui/web/src/**`**. Every quoted plan text, every panel and the board stay as they are (ask before
-   changing copy). `git diff --stat` proves the scope. Re-check: `npm run build && npm test`, pytest, `verify N`.
+   check `curl -s localhost:$P/api/screen` returns JSON, `open http://localhost:$P`.
 
 ## 4. Talk entry, then commit (local only)
 - Append to `docs/talk.md` §7 Build story: `**Phase N · <name>** · Was broken: … · Fixed by: `function()` … · Why it
   matters: … · Say it: "…"`. Name functions, never `file:line` (`spec.py check` rejects it: line numbers go stale).
-- **Diagram** (`docs/talk.md` §3): give every file this phase built its part's class (`door`, `guard`, `brain`, `hands`,
-  `store`) instead of `todo`; rename a node to the real file if it differs; add a node + a labeled arrow for a new file.
-  SAFE MERMAID (CLAUDE.md), including **no dead ends**.
+- A new product file this phase needs is added to plan.md §3 Files **and** to the §2 diagram first (`📐 Plan changed`):
+  `spec.py check` fails when a product file has no box.
 - **Phase 4 only**, from what was actually built:
   - `docs/talk.md` §1–§6, for the client: the problem in their words (spec.md), the 3 scenarios as "type X →
-    it does Y", how it works (the diagram, "LLM understands, Python decides", a pointer to plan.md Flow), 3–5 decisions
+    it does Y", how it works (plan.md §2's diagram copied as is, "LLM understands, Python decides", a pointer to plan.md
+    §6 Flow), 3–5 decisions
     citing B<n>/D<n>, safety & known limits naming the function that enforces each, eval score + production metrics +
     next week. §7 gets a 1-minute version at the top.
   - plan.md **§8 Likely questions**: 8–10 questions a client or interviewer will ask about **this** build, each

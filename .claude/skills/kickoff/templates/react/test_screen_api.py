@@ -1,4 +1,4 @@
-"""React mode screen contract (copy to tests/test_screen.py). Same rules as the Streamlit AppTest version, read live
+"""The screen contract (copy to tests/test_screen.py): the screen JSON matches plan.md and the Scenario board, read live
 from plan.md + run_all, so it stays true in every phase. Offline: no network, no browser."""
 
 from fastapi.testclient import TestClient

@@ -1,5 +1,5 @@
 /* Kickoff app shell. Operate surface: restrained graphite neutrals + one ink-blue accent for actions, the current step
-   and focus. A project's Impeccable pass may re-theme the tokens; the structure stays. Light/dark follow the system. */
+   and focus. A project may re-theme the tokens; the structure stays. Light/dark follow the system. */
 :root {
   color-scheme: light dark;
   --bg: #f6f7f9;

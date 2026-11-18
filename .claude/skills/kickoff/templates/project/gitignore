@@ -4,12 +4,8 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 out/
-.streamlit.pid
-.streamlit.port
 .app.pid
 .app.port
 ui/web/node_modules/
 ui/web/dist/
-docs/*.html
-.impeccable/
 .claude/settings.local.json

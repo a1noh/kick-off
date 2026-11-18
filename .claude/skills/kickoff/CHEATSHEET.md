@@ -3,27 +3,22 @@
 Lives in the kit only (`<kit>/CHEATSHEET.md`); `/kickoff` prints its path.
 
 ## Pre-flight (the day before)
-- [ ] Kit self-test: `python3 <kit>/tests/selftest.py` → all passed (`<kit>` = `~/.claude/skills/kickoff` after `install.sh`,
-      or `.claude/skills/kickoff` in a repo made from the template)
+- [ ] Kit self-test: `python3 <kit>/tests/selftest.py` → all passed (`<kit>` = `~/.claude/skills/kickoff` after `install.sh`)
 - [ ] Learn the flow once: empty folder → `claude` → `/kickoff` → `/demo` (sample interview, up to the approved plan)
 - [ ] VS Code + the Claude Code extension · `claude` runs in VS Code's terminal (`/ide` connects it)
-- [ ] Free Gemini key from https://aistudio.google.com/apikey works (paste it into `.env` right after `/kickoff`;
-      on claude.ai/code set it as the environment variable `GEMINI_API_KEY` and allow `generativelanguage.googleapis.com`)
-- [ ] Node ≥ 18 for the default React UI (`node -v`; nvm: `nvm install 20 && nvm alias default 20`; or `brew install node@20`).
-      Without it `/discovery` falls back to Streamlit. Fill the npm cache once:
+- [ ] Free Gemini key from https://aistudio.google.com/apikey works (paste it into `.env` right after `/kickoff`)
+- [ ] Node ≥ 18 for the React UI on localhost (`node -v`; nvm: `nvm install 20 && nvm alias default 20`; or `brew install node@20`).
+      Fill the npm cache once:
       `cp -R <kit>/templates/react /tmp/rw && cd /tmp/rw && npm install && npm run build && npm test`
-- [ ] Impeccable (the UI designer) is bundled in the kit, pinned (`<kit>/vendor/impeccable/PINNED`), no hook, and runs
-      from the kit: `/build` polishes after phase 1 and critiques + polishes in phase 4. Nothing lands in the project.
-- [ ] Other machine: `git clone <your kit repo> && ./install.sh` · phone: GitHub "Use this template" → open the new repo in claude.ai/code
+- [ ] Other machine: `git clone <your kit repo> && ./install.sh`
 
 ## Minute 0
 1. Empty folder → `claude` → `/kickoff` (prints the short welcome) → `/hooks` lists 3 (ruff, tests + kit rules, notes guard)
-2. Shift+Tab: **default** (approve each edit) or **accept edits** (faster). `/discovery` ends by asking you to approve plan.md: read Functions (the functions) and Flow (the S1 flow) first.
+2. Shift+Tab: **default** (approve each edit) or **accept edits** (faster). `/discovery` ends by asking you to approve plan.md: read §3 Files, §4 Functions and §6 Flow first.
 3. Keep on screen: `notes/raw.md` · the app (from phase 1; `/build` prints its URL) · Source Control `⌃⇧G` → Graph
    (every step commits and tags itself: `kickoff` → `plan` → `phase-1` … `phase-4`)
 
-**Can't see a diagram?** `.venv/bin/python <kit>/templates/render_docs.py` writes `docs/talk.html` (git-ignored), or view
-the `.md` on GitHub, which draws mermaid itself.
+**Can't see a diagram?** ⇧⌘V in VS Code (`/kickoff` installs the mermaid preview), or view the `.md` on GitHub.
 
 ## Words you'll see
 **the app** = 2 tabs: the user's door (chat, upload, Q&A, form) + the **📊 Owner dashboard** · **Scenario board** = the
