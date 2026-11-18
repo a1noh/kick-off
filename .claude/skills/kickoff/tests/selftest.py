@@ -274,14 +274,14 @@ def main() -> int:
     repo = KIT.parents[2]
     if (repo / "install.sh").exists():
         home = tmp / "home"
-        names = ("kickoff", "discovery", "build", "rehearse", "demo")
+        names = ("kickoff", "discovery", "build", "demo")
         inst = sh(f"HOME={home} bash {repo}/install.sh", tmp)
         copied = all((home / ".claude/skills" / s / "SKILL.md").exists() for s in names)
         sh(f"HOME={home} bash {repo}/install.sh --link", tmp)
         linked = all((home / ".claude/skills" / s).is_symlink() for s in names)
         sh(f"HOME={home} bash {repo}/install.sh --uninstall", tmp)
         gone = not any((home / ".claude/skills" / s).exists() for s in names)
-        expect("T26 install.sh copies, links and uninstalls the 5 skills", copied and linked and gone, inst.stdout + inst.stderr)
+        expect("T26 install.sh copies, links and uninstalls the 4 skills", copied and linked and gone, inst.stdout + inst.stderr)
     else:
         expect("T26 install.sh (skipped: running from an installed copy, not the repo)", True)
 

@@ -9,7 +9,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC="$REPO/.claude/skills"
 DEST="$HOME/.claude/skills"
 BACKUP="$HOME/.claude/skills-backup"   # outside skills/, so old copies are never loaded as duplicate skills
-SKILLS=(kickoff discovery build rehearse demo)
+SKILLS=(kickoff discovery build demo)
 MODE="${1:---copy}"
 
 case "$MODE" in --copy | --link | --uninstall) ;; *) echo "usage: ./install.sh [--link | --uninstall]" >&2; exit 2 ;; esac

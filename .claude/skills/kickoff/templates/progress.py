@@ -67,6 +67,6 @@ def built() -> str:
 
 
 def next_command() -> str:
-    """`/build` while a phase is unticked, then `/rehearse`."""
+    """`/build` while a phase is unticked, then `All built`."""
     p = phases()
-    return "/rehearse" if p and all(done for done, _ in p.values()) else "/build"
+    return "All built" if p and all(done for done, _ in p.values()) else "/build"

@@ -39,7 +39,7 @@ What happened: /build wrote docs/specs/phase-1/spec.md first, then tests, then t
 it: docs/specs/phase-1/verify.md is the real screen, written by a script, never by hand.
 Look at: the app (URL above). Both tabs, every panel ⬜, the Scenario board all ⬜, the chat answers 🚧. That honest
 "nothing works yet" screen is the starting point every real build has too.
-Your turn: /build → phase 2 makes scenario 1 work (paste your Gemini key into .env first). Then 3, 4 and /rehearse.
+Your turn: /build → phase 2 makes scenario 1 work (paste your Gemini key into .env first). Then 3 and 4.
 A real one: make an empty folder → claude → /kickoff.""",
 }
 

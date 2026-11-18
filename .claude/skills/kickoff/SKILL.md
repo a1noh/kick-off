@@ -34,7 +34,7 @@ any arguments are brief/data files to copy into `data/`.
 3. Run the **setup block** below exactly as written, with `KIT_HOME` exported. **Do not change any file contents.**
 4. Run the **verify block**. All six checks must print OK. If one fails, fix the cause and re-run; never skip it.
 5. If the arguments name brief/data files, copy them into `DEST/data/`.
-6. Check that `discovery`, `build`, `rehearse` and `demo` sit next to this skill (`$KIT_HOME/../<name>/SKILL.md`). If not, warn.
+6. Check that `discovery`, `build` and `demo` sit next to this skill (`$KIT_HOME/../<name>/SKILL.md`). If not, warn.
 7. Only if the `code` command exists: if VS Code isn't open on this folder, `code "$DEST"`; then `code -r "$DEST/.env"`
    so the user can paste the Gemini key (never read `.env` yourself). If `code --list-extensions` lacks
    `bierner.markdown-mermaid`, install it.

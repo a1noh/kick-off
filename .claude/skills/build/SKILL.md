@@ -20,7 +20,7 @@ import Agent`) thanks to the venv's `classroom.pth`. Older classrooms with files
 
 ## 0. Check
 - `docs/plan.md` must exist with phase checkboxes. If not, say "run /discovery first" and stop.
-- Take the **first unchecked phase** (`- [ ] Phase N: …`). If all are checked, say "All built → `/rehearse`" and stop.
+- Take the **first unchecked phase** (`- [ ] Phase N: …`). If all are checked, say "All built. Before you present: `.venv/bin/python scripts/demo.py`, then read docs/talk.md top to bottom with the app open." and stop.
 - Say in one line which phase you're building, quoting its `On screen (before → after)` line.
 - Classroom from an older kit (no `scripts/spec.py` or `docs/specs/_template/spec.md`)? Say so and ask the user
   to re-run `/kickoff` in this folder (it upgrades in place), then continue.
@@ -152,7 +152,7 @@ Try it (in the app):
 
 🎤 Say it: "<the Build-story sentence>"
 
-Looks right? → `/build` for Phase N+1: <name>      (last phase: → `/rehearse`)
+Looks right? → `/build` for Phase N+1: <name>      (last phase: Before you present: `.venv/bin/python scripts/demo.py`, then read docs/talk.md top to bottom with the app open.)
 Something off? → tell me what you saw. I add it to the spec as a new R, fix it as "phase N fix" and re-tag.
 🔍 Code worth a look (optional): `file.py:LINE` <the one decision>
 ```

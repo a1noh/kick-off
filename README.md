@@ -27,7 +27,7 @@ the environment variable `GEMINI_API_KEY` in the cloud environment settings and 
 | 0:00–0:10 | you | interview with GUIDES (Goal · Users · Inputs · Danger · Edges · Scale) → `notes/raw.md` |
 | 0:10 | `/discovery` | notes → `docs/plan.md`: 3 demo scenarios, rules traced to your notes, 4 phases with "Try it" lines |
 | 0:15–1:30 | `/build` ×4 | per phase: spec → tests → code → verify → the app updates → commit + tag → your "Try it" list |
-| 1:40 | `/rehearse` | code freeze, run the scenarios, practice the talk, mock interview questions |
+| 1:40 | you | code freeze: `.venv/bin/python scripts/demo.py`, then read `docs/talk.md` top to bottom with the app open |
 
 ## What a practice folder looks like
 ```

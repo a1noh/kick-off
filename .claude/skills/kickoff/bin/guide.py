@@ -22,12 +22,12 @@ You interview → plan → build → present. The app comes first: every scenari
   2  0:00   interview with GUIDES → write it in notes/raw.md (Goal · Users · Inputs · Happy path · Danger · Edges · Scale)
   3  0:10   /discovery (plan mode) → docs/plan.md → read it, approve it
   4  0:15   /build ×4 → after each step do its "Try it" list in the app, then /build again
-  5  1:40   code freeze → /rehearse
+  5  1:40   code freeze → scripts/demo.py, then read docs/talk.md with the app open
 
 New here? /demo fills in a sample interview and runs steps 2–4 up to phase 1, explaining each one.
 Lost? /kickoff shows where you are. Everything else: CHEATSHEET.md"""
 
-CLOCK = {"discovery": "0:10–0:15", 1: "0:15–0:25", 2: "0:25–0:50", 3: "0:50–1:15", 4: "1:15–1:30", "rehearse": "1:40–1:55"}
+CLOCK = {"discovery": "0:10–0:15", 1: "0:15–0:25", 2: "0:25–0:50", 3: "0:50–1:15", 4: "1:15–1:30", "present": "1:40–1:55"}
 PHASE = re.compile(r"^- \[( |x)\] Phase (\d+): (.*)$", re.M)
 
 
@@ -105,7 +105,7 @@ def status(root: Path) -> str:
     phases = {int(n): (x == "x", name) for x, n, name in PHASE.findall(plan)}
     notes = notes_written(root)
     if phases and all(d for d, _ in phases.values()):
-        nxt, clock = "/rehearse (code freeze)", CLOCK["rehearse"]
+        nxt, clock = "code freeze: .venv/bin/python scripts/demo.py, then read docs/talk.md", CLOCK["present"]
     elif phases:  # the plan decides once it exists
         n = min(k for k, (d, _) in phases.items() if not d)
         nxt, clock = f"/build → Phase {n}: {phases[n][1]}", CLOCK.get(n, "")
