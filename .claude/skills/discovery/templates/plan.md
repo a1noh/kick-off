@@ -52,7 +52,8 @@ Every function the rest of the code calls, file by file: one `###` per Python fi
 function. Under it: its docstring line 1 word for word, then `*Why:*`; then **In**, the real arguments as one JSON object
 (`{"<param>": <real value>, …}`), and **Out**, the real value it returns. Both are pretty-printed ```json blocks
 (```text for plain text). Anything the call doesn't read is replaced by `"…": "<what was left out>"`, so you see exactly
-what goes in. §5 names the record shapes.
+what goes in. Every value is **data a person can read**: an object is shown by what it holds (a Store → `{"folder": "out",
+"moves.jsonl": []}`, a path → `"out"`), never as code like `Store("out")`; `spec.py check` rejects code and `\"` in values. §5 names the record shapes.
 
 ### `src/agent.py` · brain: ‹one job›
 
@@ -91,7 +92,9 @@ what goes in. §5 names the record shapes.
 ‹Optional: the other outcome, e.g. "wrong name → `null`".›
 
 ## 5. Records
-Each record as typed JSON (where it lives, every field and its type).
+Each record as typed JSON (where it lives, every field and its type). JSON is how a Python dictionary looks written
+down (`null` = `None`, `true` = `True`). `.jsonl` ("JSON Lines") is a text file with one JSON object per line; lines are
+only ever added, never changed.
 ### ‹record› (`out/‹name›.jsonl`)
 ```json
 {"‹field›": "str", "‹field›": "int", "at": "str (ISO time)"}

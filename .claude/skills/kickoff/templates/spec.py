@@ -26,6 +26,7 @@ SOURCE = re.compile(r"\b[BD]\d+\b|raw\.md:L\d+|data/[\w.\-]+|plan\.md|spec\.md|u
 QUOTED = re.compile(r'"[^"]+"')
 FILE_LINE = re.compile(r"\b[\w/.\-]+\.(?:py|jsx?|md):\d+")
 CALL = re.compile(r"`([A-Za-z_][\w.]*)\(")
+CODE_IN_TEXT = re.compile(r"\b[A-Z]\w*\(")  # e.g. Store("out") or Path("out") written as text
 PRODUCT_PATH = re.compile(r"\b((?:src/[\w/]+|ui/\w+)\.py)\b")
 SCAFFOLDING = re.compile(
     r"^(scripts/(spec|check_llm)\.py|ui/progress\.py|\.claude/hooks/|docs/specs/|BUILD_LOG\.md|CHEATSHEET\.md)"
@@ -251,7 +252,21 @@ def json_problems(text: str) -> list[str]:
             continue
         if block != json.dumps(value, indent=2, ensure_ascii=False):
             problems.append(f"docs/plan.md: pretty-print this ```json block (one key per line, 2-space indent): {block[:50]!r}")
+        problems += [
+            f"docs/plan.md: {text!r} is code, not data: show what it holds (a Store → its files, a path → \"out\")"
+            for text in strings(value)
+            if '"' in text or CODE_IN_TEXT.search(text)
+        ]
     return problems
+
+
+def strings(value: object) -> list[str]:
+    """Every text value inside a JSON value (keys excluded), so each can be checked for readability."""
+    if isinstance(value, dict):
+        return [s for item in value.values() for s in strings(item)]
+    if isinstance(value, list):
+        return [s for item in value for s in strings(item)]
+    return [value] if isinstance(value, str) else []
 
 
 def dead_ends(diagram: str) -> list[str]:
