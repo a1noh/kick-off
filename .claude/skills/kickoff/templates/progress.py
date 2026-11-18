@@ -12,7 +12,7 @@ from pathlib import Path
 
 PHASE = re.compile(r"^- \[( |x)\] Phase (\d+): (.*)$", re.M)
 REQUIREMENT = re.compile(r"^\s+- \*\*P(\d+)\.R(\d+)\*\*[^\n]*\n((?:\s{6,}- [^\n]*\n?)*)", re.M)
-SIGNATURE = re.compile(r"^`([A-Za-z_][\w.]*)\((.*?)\)(?:\s*->\s*([^`]+))?`")  # a `#### `signature` · `file`` heading
+SIGNATURE = re.compile(r"^`([A-Za-z_][\w.]*)\((.*?)\)(?:\s*->\s*([^`]+))?`\s*$", re.M)  # the signature line inside a function's details
 
 
 def plan_text() -> str:
@@ -91,24 +91,28 @@ def section(title: str) -> str:
 
 
 def interfaces() -> dict[str, list[dict]]:
-    """Every `#### `signature` · `file`` block in "Functions" and "Evals": file -> its functions, each parsed."""
+    """Every function block in "Functions" and "Evals" (`### `file`` then `#### `name` — title`): file -> its functions."""
     files: dict[str, list[dict]] = {}
-    text = section("Functions") + section("Evals")
-    for chunk in re.split(r"^(?=#{2,4} )", text, flags=re.M):
-        head = re.match(r"#### (`[^`]+`)\s*·\s*`([^`]+)`", chunk)
-        entry = function_entry(chunk[len("#### ") :]) if head else None
-        if entry:
-            files.setdefault(head[2], []).append(entry)
+    current = ""
+    for chunk in re.split(r"^(?=#{2,4} )", section("Functions") + section("Evals"), flags=re.M):
+        heading = re.match(r"### `([^`]+)`", chunk)
+        if heading:
+            current = heading[1]
+            continue
+        entry = function_entry(chunk) if chunk.startswith("#### `") else None
+        if entry and current:
+            files.setdefault(current, []).append(entry)
     return files
 
 
 def function_entry(block: str) -> dict | None:
-    """One `#### `signature`` block: name, parameter types, return type, summary line, Does steps, In and Out (or None)."""
-    found = SIGNATURE.match(block)
-    if not found:
+    """One `#### `name` — title` block: its signature (first line in the details), summary line, Does, In and Out."""
+    name = re.match(r"#### `([\w.]+)`", block)
+    found = name and SIGNATURE.search(block)
+    if not found or found[1] != name[1]:
         return None
     lines = [line.strip() for line in block.splitlines()[1:] if line.strip()]
-    summary = re.split(r"\s*\*Why:\*", lines[0])[0] if lines else ""
+    summary = lines[0] if lines and not lines[0].startswith("<") else ""
     types = params_typed(found[2])
     return {
         "name": found[1],

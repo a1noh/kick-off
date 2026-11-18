@@ -58,7 +58,9 @@ flowchart LR
 The implementation spec: every function the rest of the code calls, grouped by file in `src/` (split by kind of work:
 the model call, the orchestration, the decisions, the reads and writes). **At first glance** each function is one
 heading and one plain sentence; the detail sits in a dropdown (`<details>`, click to open in VS Code or GitHub):
-- `#### \`signature -> return\` · \`file\``, then its docstring line 1 word for word and `*Why:*`;
+- one `### \`<file>\` — <its one job>` per file, then per function `#### \`<name>\` — <short title or question>` and
+  one visible sentence: its docstring line 1, word for word. Everything else sits in the dropdown, starting with the full
+  signature on its own line and **Why**;
 - **Does**: what it does, in order, as numbered steps in plain words; every path, with what it returns and its rule.
   This is what the code is built from: no Python here;
 - **In** · the arguments, by name (```jsonc): each `// <type from the signature> · <what it is>`, the fields it uses
@@ -69,12 +71,16 @@ heading and one plain sentence; the detail sits in a dropdown (`<details>`, clic
 Values are real and pretty-printed (2-space indent, comments after two spaces), shown by what they hold (never code),
 with placeholders in prose in backticks. `ui/api.py` and tests are not explained here: their §2 line is enough.
 
-### `src/tools.py` · ‹acts: one job›
+### `src/tools.py` — ‹acts: one job›
 
-#### `‹tool›(‹param›: dict) -> dict | None` · `src/tools.py`
-‹docstring line 1›. *Why:* ‹why it works this way›.
+#### `‹tool›` — ‹what it does, as a short title or question›
+‹docstring line 1: one plain sentence, what it takes and gives back›.
 
-<details><summary>Does · In · Out</summary>
+<details><summary>Details: signature, why, steps, in, out</summary>
+
+`‹tool›(‹param›: dict) -> dict | None`
+
+**Why** ‹why it works this way, citing its rule›.
 
 **Does**
 1. ‹If …, returns `null` (B1).›

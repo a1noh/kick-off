@@ -48,12 +48,16 @@ flowchart LR
 
 ## 4. Functions
 
-### `src/agent.py` · brain: replies
+### `src/agent.py` — brain: replies
 
-#### `reply(text: str) -> str` · `src/agent.py`
-Reply to one message. *Why:* probe.
+#### `reply` — answer a message
+Reply to one message.
 
-<details><summary>Does · In · Out</summary>
+<details><summary>Details: signature, why, steps, in, out</summary>
+
+`reply(text: str) -> str`
+
+**Why** probe.
 
 **Does**
 1. Returns "hello" for any message.
@@ -72,10 +76,12 @@ hello
 
 </details>
 
-### `ui/api.py` · door
+### `ui/api.py` — door
 
-#### `screen_text() -> str` · `ui/api.py`
-The screen as text. *Why:* probe.
+#### `screen_text` — the screen as text
+The screen as text.
+
+`screen_text() -> str`
 
 **Does**
 1. Returns the screen as lines of text.
@@ -247,10 +253,10 @@ def code_rules(c: Path) -> None:
 def planned_functions(c: Path) -> None:
     """T18b: a planned function a later phase adds warns while phases are open, fails once all are ticked."""
     extra = (
-        "#### `greet(name: str) -> str` · `src/agent.py`\nGreet someone. *Why:* a later phase.\n\n**Does**\n1. Says hi.\n\n"
+        "#### `greet` — say hi\nGreet someone.\n\n`greet(name: str) -> str`\n\n**Does**\n1. Says hi.\n\n"
         '**In** · the arguments, by name\n```jsonc\n{\n  "name": "Dev"  // str · who to greet\n}\n```\n\n**Out** · `str`\n```text\nhi Dev\n```\n\n'
     )
-    text = PLAN.format(**GOOD).replace("### `ui/api.py` · door\n", extra + "### `ui/api.py` · door\n", 1)
+    text = PLAN.format(**GOOD).replace("### `ui/api.py` — door\n", extra + "### `ui/api.py` — door\n", 1)
     write(c, "docs/plan.md", text)
     open_run = check(c)
     write(
@@ -279,7 +285,7 @@ def file_rules(c: Path) -> None:
     rejects(c, "T18c a function without its In block rejected", "needs an **In**")
     write(c, "docs/plan.md", text.replace('"text": "hi"  // str · the message', '"text": "hi"  // int · the message', 1))
     rejects(c, "T18g an In comment whose type differs from the signature rejected", "needs the comment `// str")
-    write(c, "docs/plan.md", text.replace("Reply to one message. *Why:* probe.", "Reply to one message. *Why:* reads out/<name>.jsonl.", 1))
+    write(c, "docs/plan.md", text.replace("**Why** probe.", "**Why** reads out/<name>.jsonl.", 1))
     rejects(c, "T18h a bare <tag> that markdown would hide rejected", "outside backticks")
     write(c, "docs/plan.md", text.replace("**Does**\n1. Returns \"hello\" for any message.\n\n", "", 1))
     rejects(c, "T18f a function without its Does steps rejected", "needs a **Does** list")
