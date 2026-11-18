@@ -113,7 +113,8 @@ completely; a person must also be able to read it once and understand the code.
    a ticked phase whose files don't exist. Under it, "How it's checked" in 3 bullets: tests, the board, the evals.
 3. **How it works**: **one simple diagram** drawn for this project, never from a fixed template: one box per product
    file (`src/…`, `ui/api.py`) labeled with its job, the data stores it reads or writes, the user at each end, and
-   arrows that say what they carry. A guard, a queue or a stop box only when a spec.md rule needs one (CLAUDE.md
+   arrows that say what they carry. The arrows one request follows (the S1 path) start with `1 `, `2 `, `3 `, … in the
+   order they happen, once each; background arrows (loading data, saving, the owner's view) stay unnumbered. A guard, a queue or a stop box only when a spec.md rule needs one (CLAUDE.md
    "Architecture"). SAFE MERMAID (CLAUDE.md), no dead ends. Then a short "who decides what" table. `spec.py check`
    fails when a product file has no box or a box names a file §2 doesn't list.
 4. **Functions**, the implementation spec, grouped by `src/` file: one `### \`<file>\` — <its one job>` per file, then

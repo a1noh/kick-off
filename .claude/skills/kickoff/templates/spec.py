@@ -215,6 +215,7 @@ def doc_problems() -> list[str]:
         for diagram in re.findall(r"```mermaid\n(.*?)```", text, re.S):
             problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
     problems += architecture_problems()
+    problems += arrow_number_problems()
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
     checked = [("docs/talk.md", talk, progress.ticked(1)), ("plan.md How it works", progress.section("How it works"), progress.ticked(2))]
     for where, text, live in checked:
@@ -239,6 +240,15 @@ def architecture_problems() -> list[str]:
         problems += [f"{where}: no box for {f} (every product file in plan.md Files is drawn)" for f in sorted(planned - drawn)]
         problems += [f"{where}: a box for {f}, which plan.md Files doesn't list" for f in sorted(drawn - planned)]
     return problems
+
+
+def arrow_number_problems() -> list[str]:
+    """The How-it-works diagram numbers the arrows of one request's path 1, 2, 3, … once each, in the order drawn."""
+    diagrams = re.findall(r"```mermaid\n(.*?)```", progress.section("How it works"), re.S)
+    numbers = [int(n) for n in re.findall(r'-- "(\d+) ', diagrams[0] if diagrams else "")]
+    if numbers and numbers != list(range(1, len(numbers) + 1)):
+        return [f"plan.md How it works: number the request's arrows 1, 2, 3, … once each, in order (found {numbers})"]
+    return []
 
 
 def json_problems(text: str) -> list[str]:

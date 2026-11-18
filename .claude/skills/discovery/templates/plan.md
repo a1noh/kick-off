@@ -29,7 +29,8 @@ is plain Python." One line on the path a request takes. What it must do and why:
 
 ## 3. How it works
 One simple diagram: **one box per product file in §2** (`src/…`, `ui/api.py`) labeled with its job, the data stores it
-reads or writes, and the user at each end. Each arrow says what it carries. A guard, a queue or a stop box appears only
+reads or writes, and the user at each end. Each arrow says what it carries, and the arrows one request follows are
+numbered 1, 2, 3, … in order; background arrows (loading, saving, the owner's view) stay unnumbered. A guard, a queue or a stop box appears only
 when a spec.md rule needs one. `spec.py check` fails when a product file has no box. SAFE MERMAID (CLAUDE.md).
 
 ```mermaid
@@ -40,13 +41,13 @@ flowchart LR
   TO["src/tools.py<br/>‹acts: one job›"]
   D[("out/‹records›.jsonl")]
 
-  U -- "‹what they send›" --> API
-  API -- "‹text›" --> AG
-  AG -- "‹what the tool needs›" --> TO
+  U -- "1 ‹what they send›" --> API
+  API -- "2 ‹text›" --> AG
+  AG -- "3 ‹what the tool needs›" --> TO
+  TO -- "4 ‹result›" --> AG
+  AG -- "5 ‹the reply›" --> API
+  API -- "6 ‹the reply›" --> U
   TO -- "‹saves›" --> D
-  TO -- "‹result›" --> AG
-  AG -- "‹the reply›" --> API
-  API -- "‹the reply›" --> U
 ```
 
 | Step | Who decides | Why |

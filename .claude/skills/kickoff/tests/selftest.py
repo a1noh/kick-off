@@ -41,9 +41,9 @@ flowchart LR
   API["ui/api.py<br/>door"]
   AG["src/agent.py<br/>brain"]
 
-  U -- "hi" --> API
-  API -- "hi" --> AG
-  AG -- "hello" --> U
+  U -- "1 hi" --> API
+  API -- "2 hi" --> AG
+  AG -- "3 hello" --> U
 ```
 
 ## 4. Functions
@@ -289,6 +289,8 @@ def file_rules(c: Path) -> None:
     rejects(c, "T18h a bare <tag> that markdown would hide rejected", "outside backticks")
     write(c, "docs/plan.md", text.replace("**Does**\n1. Returns \"hello\" for any message.\n\n", "", 1))
     rejects(c, "T18f a function without its Does steps rejected", "needs a **Does** list")
+    write(c, "docs/plan.md", text.replace('API -- "2 hi" --> AG', 'API -- "5 hi" --> AG'))
+    rejects(c, "T18j the diagram's request arrows must be numbered 1, 2, 3, … in order", "number the request's arrows")
     write(c, "docs/plan.md", text)
     write(c, "scripts/demo.py", '"""Demo."""\n')
     rejects(c, "T18d a code file missing from plan.md Files rejected", "missing from plan.md Files")
