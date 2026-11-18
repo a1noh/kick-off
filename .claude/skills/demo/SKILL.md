@@ -1,6 +1,6 @@
 ---
 name: demo
-description: Learn the kickoff process on a built-in sample interview (bike repair chat by default; `/demo maintenance` for a property-maintenance triage batch; `/demo laptops` for an IT laptop-request workflow, no AI; `python3 <kit>/bin/demo.py briefs` lists them). Run it right after /kickoff in an empty folder - it writes the sample into notes/raw.md, runs /discovery (answering its open questions with the recommended option) to produce docs/spec.md and docs/plan.md, and STOPS at the plan approval question so the user reads and approves the plan. It builds nothing: /build takes it from there. Shows a short fixed "what just happened" box after each step. Needs no Gemini key. Use when the user types /demo.
+description: Learn the kickoff process on a built-in sample interview (bike repair chat by default; `/demo maintenance` for a property-maintenance triage batch; `/demo laptops` for an IT laptop-request workflow, no AI; `/demo handbook` for an HR handbook Q&A agent; `python3 <kit>/bin/demo.py briefs` lists them). Run it right after /kickoff in an empty folder - it writes the sample into notes/raw.md, runs /discovery (answering its open questions with the recommended option) to produce docs/spec.md and docs/plan.md, and STOPS at the plan approval question so the user reads and approves the plan. It builds nothing: /build takes it from there. Shows a short fixed "what just happened" box after each step. Needs no Gemini key. Use when the user types /demo.
 ---
 
 # /demo: watch discovery once, on a sample, up to the approved plan
