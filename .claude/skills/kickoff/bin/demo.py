@@ -27,16 +27,17 @@ pasted repairs.csv with its messy rows.
 Next (automatic): /discovery turns these notes into a plan.""",
     "2": """\
 🎓 Demo 2/3 · The plan (/discovery)
-What happened: docs/plan.md now holds the 3 demo scenarios in Dev's words, every rule traced to a notes line
-(raw.md:L…), the data gotchas, 2 diagrams and 4 phases with exact "Try it" lines.
-In a real interview: run it in plan mode, read §2 (scenarios) and §2b (the app sketch), answer its questions, approve.
-The demo answered its own questions with the recommended option: search the plan for "confirmed by demo run".
-Look at: docs/plan.md (⇧⌘V shows the diagrams) · git log shows the "plan" tag.
-Next (automatic): /build phase 1, the whole screen with nothing working yet.""",
+What happened: docs/requirements.md holds Dev's business rules (B1…, each traced to a notes line) and the
+decisions on what the notes left open (D1…). docs/plan.md (Status: draft) is the code-level plan: §5c names every
+function before it's written, §5e shows scenario 1 step by step, and each phase lists its requirements + tests.
+The demo answered the open questions with the recommended option: search requirements.md for "demo run".
+Look at: requirements.md, then plan.md §5c + §5e (⇧⌘V shows the diagrams).
+Your turn: approve the plan (the question below). Nothing is built until you do.""",
     "3": """\
 🎓 Demo 3/3 · The app shell (/build phase 1)
-What happened: /build wrote docs/specs/phase-1/spec.md first, then tests, then the code in src/ and ui/, and proved
-it: docs/specs/phase-1/verify.md is the real screen, written by a script, never by hand.
+What happened: /build wrote phase 1's tests from its requirements in plan.md, then the code in src/ and ui/ (every
+file named in §5c, every function documented), and proved it: the kit's spec.py verify 1 rendered the real screen.
+git diff plan phase-1 --stat shows exactly what phase 1 added (committed locally, never pushed).
 Look at: the app (URL above). Both tabs, every panel ⬜, the Scenario board all ⬜, the chat answers 🚧. That honest
 "nothing works yet" screen is the starting point every real build has too.
 Your turn: /build → phase 2 makes scenario 1 work (paste your Gemini key into .env first). Then 3 and 4.
@@ -45,8 +46,9 @@ A real one: make an empty folder → claude → /kickoff.""",
 
 
 def seed(root: Path) -> int:
+    """Fill the still-empty notes/raw.md with the sample brief; exit code 1 when it isn't an empty classroom."""
     notes = root / "notes" / "raw.md"
-    if not (root / ".claude" / "hooks" / "guard_raw_notes.py").exists() or not notes.exists():
+    if not (root / ".claude" / "settings.json").exists() or not notes.exists():
         print("NOT A CLASSROOM: run /kickoff first (in an empty folder), then /demo.")
         return 1
     text = notes.read_text()
@@ -56,7 +58,6 @@ def seed(root: Path) -> int:
         return 1
     brief = BRIEF.read_text()
     notes.write_text(head + sep + "\n" + brief)
-    (root / ".kickoff-demo").write_text("This classroom runs the built-in /demo (sample brief: kickoff/demo/brief.md).\n")
     print(f"SEEDED: notes/raw.md now holds the sample interview ({len(brief.splitlines())} lines, bike repair shop).")
     return 0
 
