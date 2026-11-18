@@ -104,6 +104,11 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
    M docs/plan.md
    …  (ui/web/ template files as one line: "A ui/web/ (15 files, kit React template)")
    See any file's change: git diff <plan | phase-(N-1)> phase-N -- <file> · or VS Code Source Control → Graph
+<the output of `.venv/bin/python $KIT/spec.py changes N`, exactly:>
+🧩 Added in phase N (code vs. <plan | phase-(N-1)>)   every function now in the code that wasn't (+) or changed (~),
+   src/rules.py   + why_not_approve — can this manager approve it?        with its title from plan.md
+   See the code: git diff <plan | phase-(N-1)> phase-N -- src/ ui/*.py evals/
+🔜 Coming in phase N+1: <name>   its On screen line, then every plan function still to write
 
 👀 What changed on screen:  <the plan's "before → after" line>
 📊 Scenario board:          S1 ⬜→✅ · S2 ⬜ · S3 ⬜ · bonus ⬜      (real results)
@@ -120,7 +125,8 @@ Looks right? → `/build` for Phase N+1: <name>
 Something off? → tell me what you saw. I add it as a requirement, fix it as "phase N fix" and re-tag.
 ```
 - Try it items come from plan.md. Item 1 is always S1. From phase 3 on, at least one is a refusal or handoff.
-- All numbers are real (the last pytest run, the verify output, the real changed-file list from git). If anything is red, line 1 is
+- All numbers are real (the last pytest run, the verify output, the real changed-file list from git). The 🧩 / 🔜
+  lines are pasted from `spec.py changes N` as printed, never written by hand. If anything is red, line 1 is
   `❌ …: <what>`, and the phase is not ticked or tagged.
 - **The user reports a mismatch:** add a requirement (`Traces to: user <date>: "<their report>"`) and its test, then
   fix, re-verify, `git add -A && git commit -q -m "phase N fix: <what>" && git tag -f phase-N` (local, never pushed), and

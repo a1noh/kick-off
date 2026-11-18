@@ -393,6 +393,19 @@ def parser(c: Path) -> None:
     expect("T28 progress parses Status, requirements and function blocks (Does, In, Out)", out == want, out)
 
 
+def changes(c: Path) -> None:
+    """T28b: spec.py changes N lists the functions a phase added (vs. the previous tag), and only those."""
+    sh("git add -A && git commit -qm base && git tag -f plan", c)
+    write(c, "src/agent.py", AGENT + '\n\ndef extra() -> str:\n    """An extra function."""\n    return "x"\n')
+    sh("git add -A && git commit -qm p1 && git tag -f phase-1", c)
+    out = sh(f".venv/bin/python {SPEC} changes 1", c).stdout
+    added = out.split("🔜")[0]
+    expect("T28b spec.py changes N lists what the phase added, not what was already there",
+           "+ extra" in added and "reply" not in added and "🔜" in out, out)
+    write(c, "src/agent.py", AGENT)
+    sh("git add -A && git commit -qm restore", c)
+
+
 def kit_files(c: Path, tmp: Path) -> None:
     """T29–T36: the welcome, /demo, the secrets guard, the talk template, the kit's own code, React, the installer."""
     first, second = (
@@ -431,7 +444,7 @@ def kit_files(c: Path, tmp: Path) -> None:
     write(c, "src/leak.py", 'KEY = "' + "AIza" + "B" * 35 + '"\n')
     key_leak = sh("git add src/leak.py && git commit -q -m leak", c)
     sh("git reset -q src/leak.py && rm -f src/leak.py", c)
-    clean = sh("git add docs/spec.md && git commit -q -m fine", c)
+    clean = sh("git add docs/spec.md && git commit -q --allow-empty -m fine", c)
     expect(
         "T31 pre-commit blocks .env and API keys, allows clean commits",
         env_leak.returncode != 0 and key_leak.returncode != 0 and clean.returncode == 0,
@@ -530,6 +543,7 @@ def main() -> int:
     doc_rules(c)
     verify_and_hooks(c)
     parser(c)
+    changes(c)
     kit_files(c, tmp)
     passed = sum(ok for _, ok, _ in results)
     print(f"\n{passed}/{len(results)} passed")

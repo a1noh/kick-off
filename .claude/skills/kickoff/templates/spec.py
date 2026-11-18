@@ -2,6 +2,7 @@
 
   .venv/bin/python <kit>/templates/spec.py check      plan + code + docs obey the rules (the Stop hook runs it)
   .venv/bin/python <kit>/templates/spec.py verify N   run phase N's requirement tests + Try-it screen claims, print them
+  .venv/bin/python <kit>/templates/spec.py changes N  what phase N added to the code (in the plan's words), what's coming
 
 The rules are written once, in the project's CLAUDE.md ("Plan-driven" and "Coding standards"); this file enforces them.
 """
@@ -369,6 +370,60 @@ def screen_claims(n: int, screen: str) -> tuple[list[str], list[str]]:
     return rows, missing
 
 
+def functions_in(source: str) -> dict[str, str]:
+    """Every function and method in a Python source, by name ('Class.method' for methods) -> its source text."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return {}
+    found = {}
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            found[node.name] = ast.get_source_segment(source, node) or ""
+        elif isinstance(node, ast.ClassDef):
+            found[node.name] = ast.get_source_segment(source, node) or ""
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    found[f"{node.name}.{item.name}"] = ast.get_source_segment(source, item) or ""
+    return found
+
+
+def cmd_changes(n: int) -> int:
+    """Print what phase n added to the code (vs. the previous tag), in the plan's words, and what the plan still has to come."""
+    before_tag = "plan" if n == 1 else f"phase-{n - 1}"
+    titles = {e["name"]: e.get("title", "") for entries in progress.interfaces().values() for e in entries}
+    print(f"🧩 Added in phase {n} (code vs. {before_tag})")
+    any_change = False
+    for path in product_files():
+        rel = str(path.relative_to(ROOT))
+        old = subprocess.run(["git", "show", f"{before_tag}:{rel}"], cwd=ROOT, capture_output=True, text=True)
+        before, after = functions_in(old.stdout if old.returncode == 0 else ""), functions_in(path.read_text())
+        lines = [f"+ {name}" for name in after if name not in before]
+        lines += [f"~ {name}" for name in after if name in before and before[name] != after[name]]
+        if not lines:
+            continue
+        any_change = True
+        for i, line in enumerate(lines):
+            name = line[2:]
+            label = f"{line} — {titles[name]}" if titles.get(name) else line
+            print(f"   {rel if i == 0 else '':<22} {label}")
+    print("   (no function changes)" if not any_change else f"   See the code: git diff {before_tag} phase-{n} -- src/ ui/*.py evals/")
+    written = {name for path in product_files() for name in functions_in(path.read_text())}
+    coming = [(path, e) for path, entries in progress.interfaces().items() for e in entries if e["name"] not in written]
+    upcoming = [k for k, (done, _) in sorted(progress.phases().items()) if not done]
+    if upcoming:
+        nxt = upcoming[0]
+        screen = re.search(r"On screen \(before → after\):\*\*\s*(.*)", progress.phase_block(nxt))
+        print(f"🔜 Coming in phase {nxt}: {progress.phases()[nxt][1]}")
+        if screen:
+            print(f"   On screen: {screen[1].strip()}")
+    else:
+        print("🔜 Coming: nothing, every phase is built")
+    for path, entry in coming:
+        print(f"   still to write: {path} · {entry['name']} — {entry.get('title', '')}")
+    return 0
+
+
 def cmd_check() -> int:
     """Print every rule problem (and warning); exit 1 when any rule fails."""
     fails, warns = code_problems()
@@ -412,6 +467,8 @@ if __name__ == "__main__":
     if args[:1] == ["_render"]:
         print("<<<SCREEN>>>\n" + _render())
         sys.exit(0)
+    if args[:1] == ["changes"] and len(args) == 2 and args[1].isdigit():
+        sys.exit(cmd_changes(int(args[1])))
     if args[:1] == ["verify"] and len(args) == 2 and args[1].isdigit():
         sys.exit(cmd_verify(int(args[1])))
     sys.exit(__doc__)

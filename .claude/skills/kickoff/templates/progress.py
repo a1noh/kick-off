@@ -120,6 +120,7 @@ def function_entry(block: str) -> dict | None:
         "types": types,
         "returns": (found[3] or "").strip(),
         "summary": summary,
+        "title": (re.match(r"#### `[\w.]+`\s*—\s*(.+)", block) or [None, ""])[1].strip(),
         "does": re.findall(r"^\d+\. (.+)$", re.split(r"\*\*In\*\*|</details>", block.split("**Does**", 1)[1])[0], re.M)
         if "**Does**" in block
         else [],

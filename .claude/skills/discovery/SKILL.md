@@ -56,7 +56,10 @@ workflow = a record + the action + its new state.
 - **The interviewer names a stack**: React / a web frontend → `**UI:** react` (if Node ≥ 18). Anything else (a database,
   another framework, an API) → keep the POC as is and add a line to spec.md Out of scope + talk §6: "In production this would be
   <their stack>; the logic in core/tools ports as is."
-- **The brief changes mid-build** → the user re-runs `/discovery`; keep built phases ticked, re-plan only the unchecked ones.
+- **A new feature mid-build** → the user adds it to the bottom of `notes/raw.md` and re-runs `/discovery`: keep built
+  phases ticked and unchanged, fold the feature into the unticked phases; when every phase is already ticked, add it as
+  **Phase 5** (6, …) with the same four parts. `**Status:** draft` again, list what changed, ask for approval. (A small
+  tweak doesn't need this: the user tells `/build`, which records it as a requirement from their words.)
 
 ## 3a. Write `docs/spec.md` first: the whole discovery in plain English
 Copy `templates/spec.md` (this skill's base directory) and keep its headings. It is the WHAT and WHY: no code, no file
@@ -143,7 +146,7 @@ completely; a person must also be able to read it once and understand the code.
    lines the user must see, its checks; an eval case from spec §7: its input and the one line that must come back),
    then "how one runs" in a few steps, then its function blocks as in §4. Say in one sentence why the board (always
    offline) and the evals (the real model, in an AI project) are separate.
-7. **Phases** as checkboxes, **exactly 4**. **UI first, then features:** phase 1 builds the whole screen with nothing
+7. **Phases** as checkboxes, **exactly 4** on the first run (a later feature adds Phase 5, 6, …). **UI first, then features:** phase 1 builds the whole screen with nothing
    working yet, and every later phase visibly turns something from broken (❌ / 🚧 / ⬜) into working (✅ / live). The user
    should never have to read a diff to know what a phase changed.
    - `- [ ] Phase 1: the app shell (everything visible, nothing working yet)`: **`ui/api.py`** +

@@ -10,6 +10,8 @@ phase visibly turns something ✅. After each phase the user **tries it in the a
 |---|---|---|
 | `/discovery` | 0:10–0:15, after the interview; re-run after new notes | notes + data → `docs/spec.md` + `docs/plan.md` (**Status: draft**) → the user approves it |
 | `/build` | 0:15–1:30, once per phase (×4) | next unticked phase of the approved plan → tests → code → `spec.py verify N` → app running → commit + tag → **Try it** list → stop |
+A new feature mid-build: add it to the bottom of `notes/raw.md`, run `/discovery` again (it lands in the phases not built
+yet, or as Phase 5), approve. A small tweak: just tell `/build`.
 Before presenting (1:40, code freeze): `.venv/bin/python scripts/demo.py`, then read `docs/talk.md` top to bottom with the app open.
 
 ## Docs: each has one job (nothing else is written)
@@ -34,6 +36,7 @@ Always there: `src/agent.py` (agent kind: the loop) or `src/core.py` (app kind: 
 `KIT` = `.claude/skills/kickoff/templates` if it exists, else `~/.claude/skills/kickoff/templates`. Run them from the project folder:
 - `.venv/bin/python $KIT/spec.py check`: plan + code obey the rules below (the Stop hook runs it with the tests).
 - `.venv/bin/python $KIT/spec.py verify N`: runs phase N's tests and its Try-it screen claims, prints the result.
+- `.venv/bin/python $KIT/spec.py changes N`: what phase N added to the code, in the plan's words, and what's coming next.
 - `.venv/bin/python $KIT/check_llm.py` (Gemini key) · `progress` (imported by the UI).
 Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the raw-notes guard, tests + `spec.py check` on stop.
 
