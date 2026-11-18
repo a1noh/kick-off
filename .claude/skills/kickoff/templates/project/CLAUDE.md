@@ -17,7 +17,7 @@ Before presenting (1:40, code freeze): `.venv/bin/python scripts/demo.py`, then 
 |---|---|---|
 | `notes/raw.md` | the user's raw interview notes. **Never edit it** (a hook blocks it) | the user |
 | `docs/requirements.md` | **what the client needs**: business rules B1..Bn (each traced to `raw.md:L<n>` or "decided with user <date>"), decisions on the ambiguous points, success criteria, out of scope. No code | `/discovery` (+ scope changes) |
-| `docs/plan.md` | **how it's built, the study file**: Status, scenarios, the app sketch, gotchas, architecture, §5c Interfaces, §5d Records, §5e the S1 flow, 4 phases with requirements P<n>.R<k>, evals, §9 Likely questions | `/discovery`; `/build` ticks phases |
+| `docs/plan.md` | **how it's built, the study file**: Status, scenarios, the app sketch, gotchas, architecture, §5c every file it writes + each function's in/out shapes, §5d Records, §5e the S1 flow, 4 phases with requirements P<n>.R<k>, evals, §9 Likely questions | `/discovery`; `/build` ticks phases |
 | `docs/talk.md` | **for the client and viewers**: the problem, the demo, how it works, decisions, safety, results, the build story. Cites functions by name (never `file:line`) | `/build` (§7 every phase, the rest in phase 4) |
 `docs/talk.html` (browser view, git-ignored) comes from the kit's `render_docs.py` on demand. Git history is the build log.
 
@@ -66,9 +66,9 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 ## After every phase (`/build` does this)
 1. Tests pass (`.venv/bin/python -m pytest -q tests`); `scripts/demo.py` runs (from phase 2).
 2. Tick the phase, then `spec.py verify N` → `VERIFY OK` and `spec.py check` → `SPEC OK`. The app is running.
-3. Append the phase's Build-story entry to `docs/talk.md` §7, then `git add -A && git commit -m "phase N: <name>" && git tag -f phase-N`.
-   Commits stay local: **never push**. `git diff phase-<N-1> phase-N` shows what the phase changed.
-4. Hand over what changed on screen, the board before → after, the **Try it** list and the diff stat, then **STOP**.
+3. Append the phase's Build-story entry to `docs/talk.md` §7, then one commit for the phase (its body lists every changed
+   file) and `git tag -f phase-N`. Commits stay local: **never push**. `git diff phase-<N-1> phase-N` shows the change.
+4. Hand over what changed on screen, the board before → after, the **Try it** list and **every changed file**, then **STOP**.
 
 ## Kinds and shapes (picked by `/discovery`)
 - **Agent** (the core job needs free text): **chat**, **batch** (a file of items, each classified/extracted, then routed) or **Q&A**.
@@ -107,7 +107,7 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 - One way to do each thing across the codebase (e.g. every reply comes from one place).
 
 **Enforced by `spec.py check`** (every phase): it fails when a file in `src/` or `ui/*.py` has no top docstring, a function
-or method has no docstring, a file isn't in §5c, a §5c signature or line 1 doesn't match the code, a doc cites `file:line`
+or method has no docstring, a file isn't in the §5c file table, a §5c function has no `in:`/`out:` shape, a §5c signature or line 1 doesn't match the code, a doc cites `file:line`
 or a function that doesn't exist, or kit scaffolding is committed. It warns past ~150 lines per file or ~30 per function.
 Explain as you go: one short ★ Insight per file, on *why*.
 

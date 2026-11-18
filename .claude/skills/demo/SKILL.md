@@ -26,7 +26,7 @@ Read `../discovery/SKILL.md` and follow it fully (§0–§5), with this override
 ## 3. Phase 1: follow `/build`, with demo overrides
 Read `../build/SKILL.md` and follow it for **phase 1 only**: tests → code → (React: Impeccable polish, §3b) → verify
 (`VERIFY OK`, `SPEC OK`) → app running → Build-story entry → commit + tag `phase-1` (local, never pushed). Any question →
-the recommended answer, recorded as above. Skip the long §5 handover, but show its `📁 Files` and `🔀 Diff` lines.
+the recommended answer, recorded as above. Skip the long §5 handover, but show its `📁 Files` and `📄 Changed files` lines.
 
 ## 4. Close
 Print the app URL (`/build` §3 step 6; none in a cloud session → say "run `.venv/bin/python $KIT/spec.py verify 1` to

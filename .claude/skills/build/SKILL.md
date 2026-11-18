@@ -108,7 +108,9 @@ Nothing is copied into the project: no `.claude/skills/impeccable`, no `.claude/
   - plan.md **§9 Likely questions**: 8–10 questions a client or interviewer will ask about **this** build, each
     answered in 1–2 lines naming its function (cover the list in the template: why an LLM, prompt injection, a case the
     guard misses, offline board vs live evals, concurrency/scale, cost + model, the next fix).
-- `git add -A && git commit -q -m "phase N: <name>" && git tag -f phase-N`. **Never push.**
+- One commit per phase, its body listing every changed file, then the tag:
+  `git add -A && { echo "phase N: <name>"; echo; git diff --cached --name-status; } | git commit -q -F - && git tag -f phase-N`.
+  **Never push**: commits stay local so every phase can be diffed (`git diff <plan | phase-(N-1)> phase-N`).
 
 ## 5. Hand over, then **STOP**
 ```
@@ -117,8 +119,11 @@ Nothing is copied into the project: no `.claude/skills/impeccable`, no `.claude/
 🖥  App: http://localhost:<port>  (refresh the tab)
 📁 Files: <n> in src/, each in §5c · every function documented
 📐 Plan changed: <each §5c/§5d/requirement change, or "nothing">
-🔀 Diff: git diff <plan | phase-(N-1)> phase-N --stat
-   <the real --stat lines>
+📄 Changed files (git diff --name-status <plan | phase-(N-1)> phase-N), every one, A = added · M = changed · D = deleted:
+   A src/tools.py
+   M docs/plan.md
+   …  (ui/web/ template files as one line: "A ui/web/ (15 files, kit React template)")
+   See any file's change: git diff <plan | phase-(N-1)> phase-N -- <file> · or VS Code Source Control → Graph
 
 👀 What changed on screen:  <the plan's "before → after" line>
 📊 Scenario board:          S1 ⬜→✅ · S2 ⬜ · S3 ⬜ · bonus ⬜      (real results)
@@ -135,7 +140,8 @@ Looks right? → `/build` for Phase N+1: <name>
 Something off? → tell me what you saw. I add it as a requirement, fix it as "phase N fix" and re-tag.
 ```
 - Try it items come from plan.md. Item 1 is always S1. From phase 3 on, at least one is a refusal or handoff.
-- All numbers are real (the last pytest run, the verify output, the real diff stat). If anything is red, line 1 is
+- All numbers are real (the last pytest run, the verify output, the real changed-file list from git). If anything is red, line 1 is
   `❌ …: <what>`, and the phase is not ticked or tagged.
 - **The user reports a mismatch:** add a requirement (`Traces to: user <date>: "<their report>"`) and its test, then
-  fix, re-verify, `git commit -am "phase N fix: <what>" && git tag -f phase-N` (local, never pushed).
+  fix, re-verify, `git add -A && git commit -q -m "phase N fix: <what>" && git tag -f phase-N` (local, never pushed), and
+  list that fix's changed files the same way.

@@ -83,8 +83,32 @@ def rule_ids() -> set[str]:
 
 
 def product_files() -> list[Path]:
-    """Every Python file of the product that the coding standards cover: src/**/*.py and ui/*.py."""
-    return sorted([*ROOT.glob("src/**/*.py"), *ROOT.glob("ui/*.py")])
+    """Every Python file the coding standards cover: src/**, ui/*.py, evals/*.py and scripts/*.py."""
+    return sorted(
+        [*ROOT.glob("src/**/*.py"), *ROOT.glob("ui/*.py"), *ROOT.glob("evals/*.py"), *ROOT.glob("scripts/*.py")]
+    )
+
+
+def file_problems() -> list[str]:
+    """Plan §5c shows every file the build writes and what passes through each function (in: / out: shapes)."""
+    if not progress.plan_text():
+        return []
+    table, problems = progress.file_table(), []
+    covered = lambda rel: any(rel == row or (row.endswith("/") and rel.startswith(row)) for row in table)  # noqa: E731
+    for path in [*product_files(), *ROOT.glob("tests/*.py")]:
+        rel = str(path.relative_to(ROOT))
+        if not covered(rel):
+            problems.append(f"{rel}: missing from the §5c file table (every file the build writes is listed)")
+    for row, phase in table.items():
+        if progress.ticked(phase) and not (ROOT / row).exists():
+            problems.append(f"§5c file table: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
+    for rel, entries in progress.interfaces().items():
+        problems += [
+            f"{rel}: §5c {e['name']}() needs an '- in:' and an '- out:' shape line"
+            for e in entries
+            if not (e["in"] and e["out"])
+        ]
+    return problems
 
 
 def code_problems() -> tuple[list[str], list[str]]:
@@ -281,7 +305,7 @@ def screen_claims(n: int, screen: str) -> tuple[list[str], list[str]]:
 def cmd_check() -> int:
     """Print every rule problem (and warning); exit 1 when any rule fails."""
     fails, warns = code_problems()
-    problems = plan_problems() + fails + doc_problems() + repo_problems()
+    problems = plan_problems() + fails + file_problems() + doc_problems() + repo_problems()
     if progress.last_ticked() and any((ROOT / "ui" / f).exists() for f in ("api.py", "app.py")):
         _, missing = screen_claims(progress.last_ticked(), render_screen())
         problems += [f"phase {progress.last_ticked()} Try it says {q} is on screen, but it isn't" for q in missing]

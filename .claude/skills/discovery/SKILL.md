@@ -106,12 +106,20 @@ Copy `templates/plan.md` and keep its headings. It starts `**Status:** draft`. T
    `templates/architecture.md`, app → `templates/architecture_app.md` (headings, node IDs, shapes, arrow labels,
    `classDef` colors, the ⇧⌘V line, the 4-row table) and replace every `‹slot›` (`templates/example_refill.md` shows a
    filled-in one). No extra boxes. Obey its **SAFE MERMAID** rule, including **a clear path, no dead ends**.
-   - **§5c Interfaces** (follow CLAUDE.md "Coding standards": fewest files, each with one job, ~8–10 product files):
-     one `### \`<file>\` · <part>: <its one job>` per file, then one line per **public** function:
-     `` - `Agent.reply(text: str) -> str` · One message in, one checked reply out · guards run around the model ``.
-     The middle part is the function's docstring line 1, word for word (`spec.py check` compares them once the file
-     exists, and the parameter names too). Leave private helpers out. Every product file in `src/` and `ui/*.py` must
-     appear here, including `ui/api.py` (`screen`, `chat`) and the stub in phase 1.
+   - **§5c Code: every file it will write, and what passes between them** (follow CLAUDE.md "Coding standards":
+     fewest files, each with one job, ~8–10 product files). The user must see the whole build before approving it:
+     - **A file table** `| File | Phase | Job | Takes in | Gives back |` listing **every** file the build will write:
+       each Python file in `src/`, `ui/`, `evals/`, `scripts/` and `tests/`, data files, and `ui/web/` (the kit's React
+       template, one row). `spec.py check` fails on a code file that isn't in it, and on a ticked phase whose files
+       don't exist yet.
+     - Then one `### \`<file>\` · <part>: <its one job>` per Python file (tests excepted), and one entry per function
+       the rest of the code calls: the signature line
+       `` - `Agent.reply(text: str) -> str` · One message in, one checked reply out · guards run around the model ``
+       followed by two shape lines, indented: `  - in: \`text\` "is my bike ready? T-100 Nguyen"` (each argument with a
+       real example value) and `  - out: "Your blue Trek is ready. …"` (the real JSON or text that comes back; name the §5d
+       record when it is one). The middle part of the signature line is the function's docstring line 1, word for word
+       (`spec.py check` compares it and the parameter names once the file exists, and fails on a missing `in:`/`out:`).
+       Include `ui/api.py` (`screen`, `chat`), `evals/scenarios.py` (`run_all`), `evals/run.py` and `scripts/demo.py`.
    - **§5d Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
    - **§5e Sample flow (S1)**: the call chain for S1 as a table `# · Call · Returns`: each call in backticks with its
      real arguments, each return as JSON in backticks (or the exact reply in "quotes" on the last row). Use only public
@@ -188,12 +196,12 @@ until it prints `SPEC OK`.
   into requirements.md as a decision (`D<n> … · decided with user <date>`) and update the rules and plan that use it.
 - On a re-run: list in 3–5 bullets what changed in requirements.md and plan.md, and why (which new raw.md lines).
 - Show the road ahead as 4 one-liners (board state after each + `Try it` count), and the §5c file list with its function
-  count ("📁 8 files, 17 functions"), so the user knows what they are approving.
+  count ("📁 14 files, 17 functions, each with its in/out shapes"), so the user knows what they are approving.
 - Then ask with AskUserQuestion: **"Approve plan.md (function list + S1 flow)?"** with options "Approve" (recommended)
   and "Change something".
   - **Approve** → replace the Status line with `**Status:** approved <today>`, then
-    `git add -A && git commit -q -m "discovery: plan + data" && git tag -f plan` (re-run: message
-    `discovery: re-run (<what changed>)`; the tag moves). Show `git show --stat --oneline HEAD`. Commits stay local: never push.
+    `git add -A && { echo "discovery: plan + data"; echo; git diff --cached --name-status; } | git commit -q -F - && git tag -f plan`
+    (re-run: subject `discovery: re-run (<what changed>)`; the tag moves). Show `git show --name-status --oneline HEAD`. Commits stay local: never push.
     Next step: `/build`.
   - **Change something** → make the change in requirements.md / plan.md, keep `**Status:** draft`, run §4 again and ask again.
 - **Stop.** `/build` refuses to start while the plan is a draft.

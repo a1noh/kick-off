@@ -27,11 +27,20 @@ PLAN = """# Plan: probe
 
 **Status:** {status}
 
-## 5c. Interfaces
+## 5c. Code: every file it will write
+| File | Phase | Job | Takes in | Gives back |
+|---|---|---|---|---|
+| `src/agent.py` | 1 | brain | a message | the reply |
+| `ui/api.py` | 1 | door | — | the screen |
+| `tests/test_phase1.py` | 1 | proves P1.R1 | — | — |
 ### `src/agent.py` · brain: replies
 - `reply(text: str) -> str` · Reply to one message · probe
+  - in: `text` "hi"
+  - out: "hello"
 ### `ui/api.py` · door: the screen
 - `screen_text() -> str` · The screen as text · probe
+  - in: nothing
+  - out: "[tabs] door | …"
 
 ## 5e. Sample flow (S1)
 | # | Call | Returns |
@@ -190,7 +199,7 @@ def code_rules(c: Path) -> None:
 
 def planned_functions(c: Path) -> None:
     """T18b: a §5c function a later phase adds warns while phases are open, fails once all are ticked."""
-    extra = "- `greet(name: str) -> str` · Greet someone · a later phase\n### `ui/api.py`"
+    extra = "- `greet(name: str) -> str` · Greet someone · a later phase\n  - in: `name` \"Dev\"\n  - out: \"hi Dev\"\n### `ui/api.py`"
     text = PLAN.format(**GOOD).replace("\n### `ui/api.py`", "\n" + extra, 1)
     write(c, "docs/plan.md", text)
     open_run = check(c)
@@ -200,6 +209,21 @@ def planned_functions(c: Path) -> None:
     expect("T18b a planned §5c function warns while phases are open, fails once all are ticked",
            open_run.returncode == 0 and "WARN" in open_run.stdout and done_run.returncode == 1 and "greet" in done_run.stdout,
            open_run.stdout + done_run.stdout)
+
+
+def file_rules(c: Path) -> None:
+    """T18c–T18e: §5c lists every file the build writes, with in/out shapes, and ticked phases' files exist."""
+    plan(c, tick="x")
+    text = (c / "docs/plan.md").read_text()
+    write(c, "docs/plan.md", text.replace('  - in: `text` "hi"\n', ""))
+    rejects(c, "T18c a §5c function without its in: shape rejected", "needs an '- in:'")
+    write(c, "docs/plan.md", text)
+    write(c, "scripts/demo.py", '"""Demo."""\n')
+    rejects(c, "T18d a code file missing from the §5c file table rejected", "missing from the §5c file table")
+    (c / "scripts/demo.py").unlink()
+    write(c, "docs/plan.md", text.replace("| `tests/test_phase1.py` | 1 |", "| `tests/test_phase1.py` | 1 |\n| `src/later.py` | 1 | x | x | x |"))
+    rejects(c, "T18e a ticked phase's planned file that doesn't exist rejected", "doesn't exist")
+    write(c, "docs/plan.md", text)
 
 
 def doc_rules(c: Path) -> None:
@@ -407,6 +431,7 @@ def main() -> int:
     plan_rules(c)
     code_rules(c)
     planned_functions(c)
+    file_rules(c)
     doc_rules(c)
     verify_and_hooks(c)
     parser(c)

@@ -34,13 +34,29 @@ In docs/requirements.md (B1..Bn, decisions D1..Dn). This plan cites them; it nev
 ## 5. Architecture
 ‹From templates/architecture.md (agent) or architecture_app.md (app), slots filled. §5 + §5b.›
 
-## 5c. Interfaces
-One `###` per file (Coding standards in CLAUDE.md: fewest files, each with one job). One line per public function:
-`` `signature -> return` · <its docstring line 1, word for word> · <why it works this way> ``. Private helpers are left out.
+## 5c. Code: every file it will write, and what passes between them
+**Every file the build writes**, by phase (Coding standards in CLAUDE.md: fewest files, each with one job).
+`spec.py check` fails on a code file that isn't in this table, and on a ticked phase whose files don't exist.
+| File | Phase | Job | Takes in | Gives back |
+|---|---|---|---|---|
+| `src/agent.py` | 1 | ‹brain: one chat› | ‹a message (str)› | ‹the reply (str)› |
+| `ui/api.py` | 1 | ‹door: the screen as JSON + the chat› | ‹HTTP: {"session", "text"}› | ‹{"reply"}; the screen JSON› |
+| `ui/web/` | 1 | kit React template, copied as is | `/api/screen` JSON | the page |
+| `evals/scenarios.py` | 1 | ‹the 3 scenarios + bonus as data with checks› | ‹an extractor, an Agent factory› | ‹board rows› |
+| `tests/test_phase1.py` | 1 | ‹proves P1.R*› | — | — |
+| `‹src/tools.py›` | 2 | ‹hands› | ‹…› | ‹…› |
+
+Then one `###` per Python file, one entry per function the rest of the code calls. Each entry is the signature line
+`` `signature -> return` · <its docstring line 1, word for word> · <why> `` and two shape lines: **`in:`** each argument
+with a real example value, **`out:`** what comes back, as real JSON (name the §5d record when it is one).
 ### `src/agent.py` · brain: ‹one job›
 - `Agent.reply(text: str) -> str` · ‹One message in, one checked reply out› · ‹guards run around the model›
+  - in: `text` "‹S1 input›"
+  - out: "‹the exact reply›"
 ### `src/tools.py` · hands: ‹one job›
 - `‹name›(‹params›) -> ‹type›` · ‹docstring line 1› · ‹why›
+  - in: `‹param›` ‹example value›
+  - out: ‹example JSON / §5d record›
 
 ## 5d. Records
 Each record as typed JSON (where it lives, every field and its type).

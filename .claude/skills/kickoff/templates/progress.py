@@ -90,17 +90,34 @@ def section(title: str) -> str:
 
 
 def interfaces() -> dict[str, list[dict]]:
-    """Plan §5c: file -> its public functions, each {'name', 'params', 'summary'} (summary = docstring line 1)."""
+    """Plan §5c: file -> its functions, each {'name', 'params', 'summary', 'in', 'out'} (summary = docstring line 1)."""
     files: dict[str, list[dict]] = {}
     for block in re.split(r"^### ", section("5c"), flags=re.M)[1:]:
         path = re.match(r"`([^`]+)`", block)
         if not path:
             continue
-        files[path[1]] = [
-            {"name": name, "params": params_of(params), "summary": summary}
-            for name, params, summary in SIGNATURE.findall(block)
-        ]
+        files[path[1]] = []
+        for entry in re.split(r"^(?=- `)", block, flags=re.M)[1:]:
+            found = SIGNATURE.match(entry)
+            if not found:
+                continue
+            shape_in = re.search(r"^\s+- in:\s*(.+)$", entry, re.M)
+            shape_out = re.search(r"^\s+- out:\s*(.+)$", entry, re.M)
+            files[path[1]].append(
+                {
+                    "name": found[1],
+                    "params": params_of(found[2]),
+                    "summary": found[3],
+                    "in": shape_in[1].strip() if shape_in else "",
+                    "out": shape_out[1].strip() if shape_out else "",
+                }
+            )
     return files
+
+
+def file_table() -> dict[str, int]:
+    """Plan §5c's table of every file the build writes: path (a folder ends in '/') -> the phase that writes it."""
+    return {path: int(phase) for path, phase in re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(\d)\s*\|", section("5c"), re.M)}
 
 
 def params_of(signature: str) -> list[str]:
