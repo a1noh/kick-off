@@ -14,7 +14,7 @@ Lives in the kit only (`<kit>/CHEATSHEET.md`); `/kickoff` prints its path.
 
 ## Minute 0
 1. Empty folder → `claude` → `/kickoff` (prints the short welcome) → `/hooks` lists 3 (ruff, tests + kit rules, notes guard)
-2. Shift+Tab: **default** (approve each edit) or **accept edits** (faster). `/discovery` ends by asking you to approve plan.md: read §2 Files and §3 How it works first.
+2. Shift+Tab: **default** (approve each edit) or **accept edits** (faster). `/discovery` ends by asking you to approve plan.md: read §2 Files, §3 How it works and §4 Functions first.
 3. Keep on screen: `notes/raw.md` · the app (from phase 1; `/build` prints its URL) · Source Control `⌃⇧G` → Graph
    (every step commits and tags itself: `kickoff` → `plan` → `phase-1` … `phase-4`)
 
@@ -38,7 +38,7 @@ arrives in step N · **guards / gates** = safety checks in plain Python · **src
 ## Timeline
 | Time | Do | You |
 |---|---|---|
-| 0:00–0:15 | Ask GUIDES → notes/raw.md → `/discovery` | Read spec.md, then approve plan.md: the files (§2), S1 step by step with each function (§3), 4 phases |
+| 0:00–0:15 | Ask GUIDES → notes/raw.md → `/discovery` | Read spec.md, then approve plan.md: the files (§2), the diagram (§3), every function (§4), 4 phases |
 | 0:15–0:25 | `/build` phase 1: the whole app shell, every scenario ⬜ | Click around both tabs: this is everything you'll build |
 | 0:25–0:50 | `/build` phase 2: scenario 1 ✅ | Do the **Try it** list; watch S1 turn green + the dashboard fill |
 | 0:50–1:15 | `/build` phase 3: safety + scenarios 2–3 ✅ | Do the **Try it** list; queue + audit go live |

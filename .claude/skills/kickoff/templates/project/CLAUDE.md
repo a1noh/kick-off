@@ -17,7 +17,7 @@ Before presenting (1:40, code freeze): `.venv/bin/python scripts/demo.py`, then 
 |---|---|---|
 | `notes/raw.md` | the user's raw interview notes. **Never edit it** (a hook blocks it) | the user |
 | `docs/spec.md` | **the whole discovery in plain English (what + why)**: problem + success, the demo scenarios S1–S3, what the app shows, business rules B1..Bn (each traced to `raw.md:L<n>` or "decided with user <date>"), decisions D1..Dn, messy data G1..Gn, eval cases E1..En, out of scope. No code | `/discovery` (+ scope changes) |
-| `docs/plan.md` | **the technical file (how), the one to study, told as one flow**: Status, §1 Overview, §2 Files (every file the build writes), §3 How it works (one diagram + spec S1 step by step, each function explained where it's used, with its In and Out), §4 Records, §5 Evals (how it's checked), §6 Phases with requirements P<n>.R<k>, §7 Likely questions. Cites spec.md, never restates it | `/discovery`; `/build` ticks phases |
+| `docs/plan.md` | **the implementation spec (how), the one to study**: Status, §1 Overview, §2 Files (every file the build writes), §3 How it works (one diagram + who decides what), §4 Functions (each function: what it Does in order, its In and Out), §5 Records, §6 Evals (how it's checked), §7 Phases with requirements P<n>.R<k>, §8 Likely questions. The code is built from it. Cites spec.md, never restates it | `/discovery`; `/build` ticks phases |
 | `docs/talk.md` | **for the client and viewers**: the problem, the demo, how it works, decisions, safety, results, the build story. Cites functions by name (never `file:line`) | `/build` (§7 every phase, the rest in phase 4) |
 View the diagrams with ⇧⌘V in VS Code. Git history is the build log.
 
@@ -103,7 +103,7 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 - No clever indirection (mixins, registries, dynamic dispatch, metaprogramming) unless plan.md says why.
 
 **Readable as plain English**
-- Every file starts with a 3–5 line docstring: what it does, and where it sits in the S1 flow (plan.md §3).
+- Every file starts with a 3–5 line docstring: what it does, and where it sits in the system (plan.md §3).
 - Every function has a docstring, private helpers included. Line 1, plain English: what it does, what it takes and
   returns. Optional line 2: why it works this way. A public function's line 1 is word for word its plan.md function block's line.
 - Inline comments explain *why* (a business rule, a gotcha like G3, a safety choice), never *what*.
@@ -112,8 +112,8 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 - One way to do each thing across the codebase (e.g. every reply comes from one place).
 
 **Enforced by `spec.py check`** (every phase): it fails when a Python file in `src/`, `ui/`, `evals/` or `scripts/` has no top docstring, a function
-or method has no docstring, a file isn't in §2 Files, a `src/` file has no function explained in §3 or an `evals/` file none in §5 Evals, or no box in the §2 diagram, a function block or a §3 step has no
-In or Out block, the §3 diagram's arrows aren't numbered 1.1, 1.2, … to match its steps, a signature or docstring line 1 doesn't match the code, a JSON block isn't pretty-printed, a doc cites
+or method has no docstring, a file isn't in §2 Files, a `src/` file has no function in §4 or an `evals/` file none in §6, or no box in the §3 diagram, a function block has no
+**Does**, In or Out, a signature or docstring line 1 doesn't match the code, a JSON block isn't pretty-printed, a doc cites
 `file:line` or a function that doesn't exist, or kit scaffolding is committed. It warns past ~150 lines per file or ~30 per function.
 Explain as you go: one short ★ Insight per file, on *why*.
 

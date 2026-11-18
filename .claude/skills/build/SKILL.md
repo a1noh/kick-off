@@ -27,9 +27,10 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 
 ## 1. Read the phase, change the plan only on purpose
 - The phase's **Requirements** (P<n>.R<k>) are the spec: each has `Traces to`, `Acceptance` (exact "quoted" value) and `Test`.
-- The code must match plan.md: **§2 Files**, every `####` function block in **§3 How it works** and **§5 Evals** (signature,
-  docstring line 1, In, Out) and **§4 Records**. §3 is also the S1 flow.
-- Need a signature, file or record the plan doesn't have, or a different one? **Edit plan.md first** (§2 Files, a §3 function block, §4 Records, plus a
+- The code must match plan.md: **§2 Files**, every `####` function block in **§4 Functions** and **§6 Evals** (signature,
+  docstring line 1, **Does**, In, Out) and **§5 Records**. Each function's **Does** steps are its logic, in order: build
+  exactly those paths, no more.
+- Need a signature, file or record the plan doesn't have, or a different one? **Edit plan.md first** (§2 Files, a §4 function block, §5 Records, plus a
   requirement if behavior changes), keep it minimal, and list it in the handover as `📐 Plan changed: …`.
 - A scope change the user asks for → a new requirement with `Traces to: user <date>: "<their words>"` (no re-approval).
 - Run `.venv/bin/python $KIT/spec.py check` before coding: the only failures allowed now are this phase's missing tests.
@@ -39,7 +40,7 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
   Assert the **quoted** value exactly. **Tests stay true in later phases:** read the plan's ticks instead of hard-coding
   "still broken" (e.g. "panel shows ⬜ iff its phase isn't ticked", "a 🚧 reply names an unticked phase").
 - Then the code: only what the requirements ask for, in the files plan.md §2 names, following CLAUDE.md **Coding standards**
-  (file docstring with its place in the S1 flow, a docstring on every function, line 1 = its plan.md function block's line).
+  (file docstring with its place in the system, a docstring on every function, line 1 = its plan.md function block's line).
 - **Phase 1 = the app shell, nothing else:**
   - Tab 1 = the user's door. Tab 2 = **📊 Owner dashboard** (KPIs, domain view, queue, audit, eval score), read-only.
     Panels not live yet show `⬜ <panel>: arrives in phase N`.
@@ -55,9 +56,6 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
     then `uv pip install --python .venv/bin/python fastapi==0.115.6 uvicorn==0.32.1 httpx==0.28.1` and
     `(cd ui/web && npm install --no-audit --no-fund && npm run build)`. Fill `ui/api.py`'s TITLE, TABS, PANELS, WIDE
     and SHOWS (spec.md §3 table). The guide sidebar comes with the template: don't rewrite it. `npm test` must pass.
-- **Phase 2** also writes `tests/test_flow.py`: run S1 offline (fixed extractor) step by step, making each step's call
-  with the values in its **In**, and assert `progress.matches(result, step["out"])` for every step in `progress.flow()`
-  (`"…"` in the plan stands for parts left out), so the study doc can't drift from the code.
 - **Later phases** replace stubs and turn placeholders live. **Never remove a panel or a board row.** An owner action
   calls a gated function in `src/tools.py` and is audited. From phase 2, keep `scripts/demo.py` running.
 - One short ★ Insight per file: *why*, not what.
@@ -79,15 +77,15 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 ## 4. Talk entry, then commit (local only)
 - Append to `docs/talk.md` §7 Build story: `**Phase N · <name>** · Was broken: … · Fixed by: `function()` … · Why it
   matters: … · Say it: "…"`. Name functions, never `file:line` (`spec.py check` rejects it: line numbers go stale).
-- A new product file this phase needs is added to plan.md §2 Files **and** to the §3 diagram first (`📐 Plan changed`):
+- A new product file this phase needs is added to plan.md §2 Files **and** to the §3 diagram first, with its §4 function blocks (`📐 Plan changed`):
   `spec.py check` fails when a product file has no box.
 - **Phase 4 only**, from what was actually built:
   - `docs/talk.md` §1–§6, for the client: the problem in their words (spec.md), the 3 scenarios as "type X →
     it does Y", how it works (plan.md §3's diagram copied as is, "LLM understands, Python decides", a pointer to plan.md
-    §3 for S1 step by step), 3–5 decisions
+    §4 for each function), 3–5 decisions
     citing B<n>/D<n>, safety & known limits naming the function that enforces each, eval score + production metrics +
     next week. §7 gets a 1-minute version at the top.
-  - plan.md **§7 Likely questions**: 8–10 questions a client or interviewer will ask about **this** build, each
+  - plan.md **§8 Likely questions**: 8–10 questions a client or interviewer will ask about **this** build, each
     answered in 1–2 lines naming its function (cover the list in the template: why an LLM, prompt injection, a case the
     guard misses, offline board vs live evals, concurrency/scale, cost + model, the next fix).
 - One commit per phase, its body listing every changed file, then the tag:
@@ -99,7 +97,7 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 ✅ Phase N built · tests X passed · P<N>.R1–R<k> verified · committed as phase-N (local, not pushed)
 ⚠️ Not working yet: <each ⬜ scenario + the phase that makes it work; "nothing" when all ✅>
 🖥  App: http://localhost:<port>  (refresh the tab)
-📁 Files: <n> in src/, each explained in plan.md §3 · every function documented
+📁 Files: <n> in src/, each explained in plan.md §4 · every function documented
 📐 Plan changed: <each file, function, record or requirement change, or "nothing">
 📄 Changed files (git diff --name-status <plan | phase-(N-1)> phase-N), every one, A = added · M = changed · D = deleted:
    A src/tools.py

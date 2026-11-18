@@ -91,9 +91,9 @@ def section(title: str) -> str:
 
 
 def interfaces() -> dict[str, list[dict]]:
-    """Every `#### `signature` · `file`` block in "How it works" and "Evals": file -> its functions, each parsed."""
+    """Every `#### `signature` · `file`` block in "Functions" and "Evals": file -> its functions, each parsed."""
     files: dict[str, list[dict]] = {}
-    text = section("How it works") + section("Evals")
+    text = section("Functions") + section("Evals")
     for chunk in re.split(r"^(?=#{2,4} )", text, flags=re.M):
         head = re.match(r"#### (`[^`]+`)\s*·\s*`([^`]+)`", chunk)
         entry = function_entry(chunk[len("#### ") :]) if head else None
@@ -103,7 +103,7 @@ def interfaces() -> dict[str, list[dict]]:
 
 
 def function_entry(block: str) -> dict | None:
-    """One `#### `signature`` block: name, parameter types, return type, summary line, In and Out (None if malformed)."""
+    """One `#### `signature`` block: name, parameter types, return type, summary line, Does steps, In and Out (or None)."""
     found = SIGNATURE.match(block)
     if not found:
         return None
@@ -116,6 +116,7 @@ def function_entry(block: str) -> dict | None:
         "types": types,
         "returns": (found[3] or "").strip(),
         "summary": summary,
+        "does": re.findall(r"^\d+\. (.+)$", block.split("**Does**", 1)[1].split("**In**", 1)[0], re.M) if "**Does**" in block else [],
         **in_and_out(block),
     }
 
@@ -152,26 +153,6 @@ def without_comments(block: str) -> tuple[str, dict[str, str]]:
     return "\n".join(lines), notes
 
 
-def matches(actual: object, shown: object) -> bool:
-    """True when the real object agrees with what the plan shows; a "…" value or key stands for parts left out."""
-    if shown == "…":
-        return True
-    if isinstance(shown, dict):
-        return isinstance(actual, dict) and all(
-            key == "…" or (key in actual and matches(actual[key], value)) for key, value in shown.items()
-        )
-    if isinstance(shown, list):
-        listed = [item for item in shown if item != "…"]
-        return isinstance(actual, list) and all(matches(a, b) for a, b in zip(actual, listed)) and len(actual) >= len(listed)
-    return actual == shown
-
-
-def glance() -> list[tuple[str, str]]:
-    """Plan "How it works": the code-at-a-glance table as (function, file) rows, in the order they're listed."""
-    rows = re.findall(r"^\|[^|\n]*\|\s*`([\w.]+)`\s*\|\s*`?([\w/.]+\.py)`?\s*\|", section("How it works"), re.M)
-    return [(name, path) for name, path in rows]
-
-
 def file_table() -> dict[str, int]:
     """Plan "Files": the table of every file the build writes: path (a folder ends in '/') -> the phase that writes it."""
     return {path: int(phase) for path, phase in re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(\d)\s*\|", section("Files"), re.M)}
@@ -191,22 +172,6 @@ def params_typed(signature: str) -> dict[str, str]:
 def params_of(signature: str) -> list[str]:
     """Parameter names from a signature's inside, e.g. 'text: str, n: int = 2' -> ['text', 'n'] (self dropped)."""
     return list(params_typed(signature))
-
-
-def flow() -> list[dict]:
-    """Plan "How it works": each `### Step <n> · <title>` as {'n', 'call', 'in', 'out'}, its In and Out blocks parsed."""
-    steps = []
-    for n, step in re.findall(r"^### Step (\d+) · (.*?)(?=^### |^## |\Z)", section("How it works"), re.M | re.S):
-        call = re.search(r"`([A-Za-z_][\w.]*\([^`]*\))`", step)
-        if call:
-            steps.append({"n": int(n), "call": call[1], **in_and_out(step)})
-    return steps
-
-
-def flow_arrows() -> list[tuple[int, int]]:
-    """The (step, sub-step) numbers on the How-it-works diagram's arrows, e.g. "1.2 …" -> (1, 2), in the order they're drawn."""
-    diagrams = re.findall(r"```mermaid\n(.*?)```", section("How it works"), re.S)
-    return [(int(step), int(sub)) for step, sub in re.findall(r'-- "(\d+)\.(\d+) ', diagrams[0] if diagrams else "")]
 
 
 def scenario_phases() -> dict[str, int]:

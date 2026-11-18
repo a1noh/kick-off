@@ -1,6 +1,6 @@
 ---
 name: discovery
-description: Turn the user's raw interview notes (notes/raw.md) and data/ into docs/spec.md (the whole discovery in plain English: scenarios, the app, business rules, decisions, messy data, eval cases) and a technical docs/plan.md (Status: draft; every file, every function with its in/out shapes, records, the S1 flow, requirements per phase) that the user approves before any code, for a 2-hour build of an AI agent (chat / batch / Q&A) or a plain app (tool / dashboard / workflow, optional AI helper) - picks the kind and shape, copes with thin notes (sample data, exact questions to ask), 3 demo scenarios from the interviewer, rules traced to the notes, data gotchas, architecture + agent-loop diagrams, 4 phases (phase 1 = the full app shell with every scenario ❌ on a Scenario board, then each phase turns features ✅; each with an "On screen (before → after)" line and a "Try it" checklist incl. one 🚧 still-broken item), eval cases, likely questions. Ends by asking the user to approve the plan. Works for any use case. Re-runnable after each new round of notes. Use when the user types /discovery inside a /kickoff classroom.
+description: Turn the user's raw interview notes (notes/raw.md) and data/ into docs/spec.md (the whole discovery in plain English: scenarios, the app, business rules, decisions, messy data, eval cases) and a technical docs/plan.md, the implementation spec (Status: draft; every file, one diagram, every function with what it does in order and its In/Out, records, evals, requirements per phase) that the user approves before any code, for a 2-hour build of an AI agent (chat / batch / Q&A) or a plain app (tool / dashboard / workflow, optional AI helper) - picks the kind and shape, copes with thin notes (sample data, exact questions to ask), 3 demo scenarios from the interviewer, rules traced to the notes, data gotchas, architecture + agent-loop diagrams, 4 phases (phase 1 = the full app shell with every scenario ❌ on a Scenario board, then each phase turns features ✅; each with an "On screen (before → after)" line and a "Try it" checklist incl. one 🚧 still-broken item), eval cases, likely questions. Ends by asking the user to approve the plan. Works for any use case. Re-runnable after each new round of notes. Use when the user types /discovery inside a /kickoff classroom.
 ---
 
 # /discovery: raw notes → spec.md (plain English) + plan.md (technical) → the user approves the plan
@@ -97,55 +97,48 @@ names, no function names, so the client or a new teammate can read it top to bot
 8. **Out of scope** (+ the free-LLM-tier gap for personal, financial or health data).
 9. **Open questions**.
 
-## 3b. Write `docs/plan.md`: the technical file, told as one flow (HOW it's built, the study file)
-Copy `templates/plan.md` and keep its headings (the kit parses **Files**, **How it works**, **Evals** and the phases
-by name). It starts `**Status:** draft`. Under it, the one-line "How to read this (5 minutes)" guide. It cites spec.md (S1, B<n>, D<n>, G<n>, E<n>) and never restates it. The idea:
-the reader follows **one flow**, scenario 1, and meets each function where it is used; nothing is explained twice.
+## 3b. Write `docs/plan.md`: the implementation spec (HOW it's built, the study file)
+Copy `templates/plan.md` and keep its headings (the kit parses **Files**, **How it works**, **Functions**, **Evals**
+and the phases by name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<n>) and never
+restates it. The LLM that runs `/build` writes the code **from this file**, so every function must be specified
+completely; a person must also be able to read it once and understand the code.
 1. **Overview**: kind + shape and why in one line; if it uses an LLM, name it (Gemini free tier via `.env`) and say it
    extracts fields only, else "No AI: every step is plain Python"; one line on the path a request takes.
 2. **Files** (follow CLAUDE.md "Coding standards": fewest files, each with one job, ~8–10 product files): a table
    `| File | Phase | Job | Takes in | Gives back |` listing **every** file the build will write (each Python file in
-   `src/`, `ui/`, `evals/`, `scripts/` and `tests/`, data files, `ui/web/` as one row). `spec.py check` fails on a code
-   file that isn't in it, and on a ticked phase whose files don't exist. Under it, "How it's checked" in 3 bullets:
-   tests, the Scenario board, the evals.
-3. **How it works: spec S1, start to finish.** Write §2 first, then:
-   - **The code at a glance** first: a table `| Step | Function | File | What it does | Example: In → Out |` with one
-     row per explained function (backend and evals), in the order S1 uses them, then the others (Step `—`). "What it
-     does" is its docstring line 1, shortened; "Example" is one line of real values in backticks, the S1 call's key
-     arguments → what comes back (`("L-301", "Maya Lee")` → `null`), trimmed with `…`; the full JSON is in the Step. With §1 and
-     the diagram, this table is meant to give a good rough idea of the whole code in one read. `spec.py check` fails
-     when an explained function has no row, has two, or a row names a function or file that isn't explained below.
-   - **One diagram** drawn for this project, never from a fixed template: one box per product file (`src/…`,
-     `ui/api.py`) labeled with its job, the data stores it reads or writes, the user at each end. Each arrow carries
-     the data it passes and a number `step.sub-step`, once each, in the order things happen (1.1, 1.2, then 2.1, …).
-     A guard, a queue or a stop box only when a spec.md rule needs one (CLAUDE.md "Architecture": guard in when a rule
-     must hold even if the model is wrong; guard out only for text the code didn't build from trusted data). SAFE
-     MERMAID (CLAUDE.md), no dead ends. Then a short "who decides what" table.
-   - **One `### Step <n> · <what happens, in plain words>` per hop of S1**: a line with the call in backticks (real
-     arguments) and the file it runs in, and why (citing its rule). The **first time** a function appears, explain it
-     right there in a `#### \`signature -> return\` · \`file\`` block:
-     - its docstring line 1, word for word, then `*Why:* <why it works this way>` (`spec.py check` compares the line
-       and the parameter names with the code once the file exists);
-     - `**In** · the arguments, by name` and a ```jsonc block: keys are exactly the parameters, each with a comment
-       `  // <type from the signature> · <what it is>`, plus a comment on each nested field the function uses, saying
-       why it matters and citing its rule (`"price": 2600  // compared with the budget left (B2)`);
-     - `**Out** · \`<the return type>\`` and a ```jsonc block with the real value, important fields commented
-       (```text for plain text), plus one line for the other outcome when there is one ("wrong name → `null`").
-     A function used again in a later step shows only its call line, **In** and **Out**.
-   - **`### Other functions (not on S1's path)`**: the rest of the backend in `src/` (what S2, S3 or the dashboard
-     need), in the same `####` format, grouped by file. Every `src/` file has at least one `####` block (`spec.py
-     check` fails otherwise); `ui/api.py` and tests are not explained: their §2 line is enough.
-   - Everywhere: values real and pretty-printed (2-space indent, comments after two spaces); `"…": "<what was left
-     out>"` for parts a call doesn't read; every value is data a person can read (an object shown by what it holds,
-     never code like `Store("out")`, no escaped `\"`); placeholders in prose in backticks, or markdown hides `<name>`.
-     Phase 2's `tests/test_flow.py` makes each step's call with its In and checks `progress.matches(result, out)`.
-4. **Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
-5. **Evals**, so a newcomer learns how the checks work: one `### \`evals/<file>\`` per evals file. Open each with
+   `src/`, `ui/`, `evals/`, `scripts/` and `tests/`, data files, `ui/web/` as one row). Split `src/` by kind of work:
+   the model call (`llm.py`, the only network file), the orchestration (`agent.py` or `core.py`: reads the input,
+   calls the others, builds the reply, decides nothing itself), the decisions (`rules.py` / guards: pure functions),
+   the reads and writes (`data.py` / `tools.py`). `spec.py check` fails on a code file that isn't in the table, and on
+   a ticked phase whose files don't exist. Under it, "How it's checked" in 3 bullets: tests, the board, the evals.
+3. **How it works**: **one simple diagram** drawn for this project, never from a fixed template: one box per product
+   file (`src/…`, `ui/api.py`) labeled with its job, the data stores it reads or writes, the user at each end, and
+   arrows that say what they carry. A guard, a queue or a stop box only when a spec.md rule needs one (CLAUDE.md
+   "Architecture"). SAFE MERMAID (CLAUDE.md), no dead ends. Then a short "who decides what" table. `spec.py check`
+   fails when a product file has no box or a box names a file §2 doesn't list.
+4. **Functions**, the implementation spec, grouped by `src/` file: one `### \`<file>\` · <its one job>` per file, then
+   one `#### \`signature -> return\` · \`file\`` block per function the rest of the code calls, exactly as the
+   template shows (the kit parses it). Each block, compact and complete:
+   - its docstring line 1, word for word, then `*Why:* <why it works this way>` (`spec.py check` compares the line and
+     the parameter names with the code once the file exists);
+   - **Does**: numbered steps in plain words, in order: every path (each check, what it returns, its rule; what it
+     saves; what it calls). This is what the code is built from, and what the tests check. No Python in the plan;
+   - `**In** · the arguments, by name` and a ```jsonc block: keys are exactly the parameters, each with a comment
+     `  // <type from the signature> · <what it is>`; the nested fields it uses commented with why they matter and
+     their rule; fields it doesn't use become `"…": "<what was left out>"`, but **identifier fields always stay**
+     (`id`, names, keys like the team) so the reader can tell which record it is;
+   - `**Out** · \`<the return type>\`` and a ```jsonc block with one real example, important fields commented
+     (```text for plain text); the other results are already in **Does**.
+   Everywhere: values real and pretty-printed (2-space indent, comments after two spaces), every value data a person
+   can read (an object shown by what it holds, never code like `Store("out")`, no escaped `\"`), placeholders in prose
+   in backticks or markdown hides `<name>`. `ui/api.py` and tests are not explained: their §2 line is enough.
+5. **Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
+6. **Evals**, so a newcomer learns how the checks work: one `### \`evals/<file>\`` per evals file. Open each with
    what one item is, shown as commented JSON with real values (a scenario from spec S1–S3 + bonus: its commands, the
    lines the user must see, its checks; an eval case from spec §7: its input and the one line that must come back),
-   then "how one runs" in a few steps, then its `#### \`signature\` · \`file\`` function blocks. Say in one sentence
-   why the board (always offline) and the evals (the real model, in an AI project) are separate.
-6. **Phases** as checkboxes, **exactly 4**. **UI first, then features:** phase 1 builds the whole screen with nothing
+   then "how one runs" in a few steps, then its function blocks as in §4. Say in one sentence why the board (always
+   offline) and the evals (the real model, in an AI project) are separate.
+7. **Phases** as checkboxes, **exactly 4**. **UI first, then features:** phase 1 builds the whole screen with nothing
    working yet, and every later phase visibly turns something from broken (❌ / 🚧 / ⬜) into working (✅ / live). The user
    should never have to read a diff to know what a phase changed.
    - `- [ ] Phase 1: the app shell (everything visible, nothing working yet)`: **`ui/api.py`** +
@@ -163,13 +156,13 @@ the reader follows **one flow**, scenario 1, and meets each function where it is
        never hit the network);
      - **app:** the real `core.py` (one request end to end; rules in plain Python), plus `llm.py` only if the plan has
        the optional helper (same rules as above, and the app still works when the helper is off);
-     `scripts/demo.py` running S1, `tests/test_flow.py` (checks every step of plan.md §3 How it works), tests. S1's record goes live on the Owner dashboard (e.g. the refund ledger + KPIs); board S1 ⬜→✅.
+     `scripts/demo.py` running S1, tests. S1's record goes live on the Owner dashboard (e.g. the refund ledger + KPIs); board S1 ⬜→✅.
    - `- [ ] Phase 3: safety + scenarios 2–3`: `guards.py` in/out (agent: stop triggers + output checks; app: input
      validation + "result matches the records"), queue with reasons, audit log JSONL; the dashboard's
      queue + audit panels go live (+ the owner action, if the plan has one); board S2, S3, bonus ⬜→✅.
    - `- [ ] Phase 4: evals + talk`: `evals/` runner (agent: against live Gemini; app: every case end to end through
      `core.py`, plus live Gemini for the helper cases if there is one), scorecard, Eval score panel live on the dashboard, polish,
-     `docs/talk.md` (for the client) filled in full, plan §7 Likely questions answered.
+     `docs/talk.md` (for the client) filled in full, plan §8 Likely questions answered.
    - Put this line right under the `## 6. Phases` heading: "Every `On screen` and `Try it` line describes the app
      **after** that phase is built and ticked. Expected replies are in \"quotes\".
      Requirements cite B<n>/D<n>, raw.md:L<n>, data/<file> or `user <date>: \"<words>\"`; each names the test that
@@ -201,7 +194,7 @@ the reader follows **one flow**, scenario 1, and meets each function where it is
              - Test: tests/test_phase2.py::test_r1_ready_bike
        ```
        Each test's docstring cites it (`"""plan.md P2.R1: …"""`). Tests stay true in later phases (they read the ticks).
-7. **Likely questions**: the heading and its guide line only; `/build` phase 4 fills the answers from what was built.
+8. **Likely questions**: the heading and its guide line only; `/build` phase 4 fills the answers from what was built.
 
 ## 4. Check it
 Run `.venv/bin/python $KIT/spec.py check`. Every requirement must be grounded and quoted (tests may not exist yet: they
@@ -215,7 +208,7 @@ until it prints `SPEC OK`.
 - On a re-run: list in 3–5 bullets what changed in spec.md and plan.md, and why (which new raw.md lines).
 - Show the road ahead as 4 one-liners (board state after each + `Try it` count), and §2 Files with the number of functions §3 explains, with its function
   count ("📁 14 files, 17 functions, each with its in/out shapes"), so the user knows what they are approving.
-- Then ask with AskUserQuestion: **"Approve plan.md (function list + S1 flow)?"** with options "Approve" (recommended)
+- Then ask with AskUserQuestion: **"Approve plan.md (the files, the diagram and every function)?"** with options "Approve" (recommended)
   and "Change something".
   - **Approve** → replace the Status line with `**Status:** approved <today>`, then
     `git add -A && { echo "discovery: plan + data"; echo; git diff --cached --name-status; } | git commit -q -F - && git tag -f plan`

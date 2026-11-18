@@ -33,7 +33,7 @@ business rules (B1…, each traced to a notes line), the decisions on what the n
 what "good" looks like. docs/plan.md (Status: draft) is the technical file: every file the build will write, every
 function with what goes in and what comes out, and scenario 1 step by step.
 The demo answered the open questions with the recommended option: search spec.md for "demo run".
-Your turn: read plan.md §2 Files and §3 How it works (⇧⌘V), then answer the approval question below.""",
+Your turn: read plan.md §2 Files, §3 How it works and §4 Functions (⇧⌘V), then answer the approval question below.""",
     "3": """\
 🎓 Demo 3/3 · The plan is approved
 What happened: plan.md now says **Status:** approved, and it's committed locally with the tag `plan`

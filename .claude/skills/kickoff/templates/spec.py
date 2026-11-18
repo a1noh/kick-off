@@ -106,7 +106,6 @@ def file_problems() -> list[str]:
             problems.append(f"plan.md Files: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
     for rel, entries in progress.interfaces().items():
         problems += [f"{rel}: plan.md {p}" for e in entries for p in shape_problems(e)]
-    problems += flow_problems() + glance_problems()
     return problems
 
 
@@ -115,7 +114,7 @@ def shape_problems(entry: dict) -> list[str]:
     name = entry["name"]
     if entry["in"] == "" or entry["out"] == "":
         return [f"{name}() needs an **In** and an **Out** block (```jsonc, ```json or ```text)"]
-    problems = []
+    problems = [] if entry["does"] else [f"{name}() needs a **Does** list: what it does, in order, as numbered steps"]
     if isinstance(entry["in"], dict) and set(entry["in"]) - {"…"} != set(entry["params"]):
         problems.append(f"{name}(): In must name exactly its parameters {entry['params']}, not {list(entry['in'])}")
     for param, kind in entry["types"].items():
@@ -127,34 +126,6 @@ def shape_problems(entry: dict) -> list[str]:
     return problems
 
 
-def glance_problems() -> list[str]:
-    """The code-at-a-glance table lists every explained function once, with the file its block names."""
-    explained = {(e["name"], path) for path, entries in progress.interfaces().items() for e in entries}
-    if not explained:
-        return []
-    rows = progress.glance()
-    problems = [f"plan.md code at a glance: {n}() is listed more than once" for n in sorted({n for n, _ in rows if [r[0] for r in rows].count(n) > 1})]
-    problems += [f"plan.md code at a glance: no row for {n}() in {f}" for n, f in sorted(explained - set(rows))]
-    problems += [f"plan.md code at a glance: {n}() in {f} isn't explained below" for n, f in sorted(set(rows) - explained)]
-    return problems
-
-
-def flow_problems() -> list[str]:
-    """Plan "How it works": every step shows its In and Out, and the diagram's arrows are numbered 1.1, 1.2, … by step."""
-    steps = progress.flow()
-    if not steps:
-        return []
-    problems = [f"plan.md How it works: Step {s['n']} needs an **In** and an **Out** block" for s in steps if s["in"] == "" or s["out"] == ""]
-    arrows = progress.flow_arrows()
-    drawn, numbered = {step for step, _ in arrows}, {s["n"] for s in steps}
-    problems += [f"plan.md How it works: no arrow in the diagram is numbered {n}.1 for step {n}" for n in sorted(numbered - drawn)]
-    problems += [f"plan.md How it works: the diagram has arrows numbered {n}.x, but there is no step {n}" for n in sorted(drawn - numbered)]
-    expected = sorted(arrows)
-    if arrows != expected or len(set(arrows)) != len(arrows):
-        problems.append("plan.md How it works: number the arrows 1.1, 1.2, … 2.1, … once each, in the order they're drawn")
-    return problems
-
-
 def code_problems() -> tuple[list[str], list[str]]:
     """Coding standards: (failures, warnings) for docstrings, the functions plan.md explains (signatures) and sizes."""
     listed, fails, warns = progress.interfaces(), [], []
@@ -162,9 +133,9 @@ def code_problems() -> tuple[list[str], list[str]]:
         rel = str(path.relative_to(ROOT))
         tree = ast.parse(path.read_text())
         if not ast.get_docstring(tree):
-            fails.append(f"{rel}: starts with no docstring (what it does + where it sits in the S1 flow)")
+            fails.append(f"{rel}: starts with no docstring (what it does + where it sits in the system)")
         if rel.startswith(("src/", "evals/")) and rel not in listed:  # §3 explains the backend, §5 the evals; ui/ gets a §2 line
-            fails.append(f"{rel}: no function of it is explained in plan.md How it works (src/) or Evals (evals/)")
+            fails.append(f"{rel}: no function of it is explained in plan.md Functions (src/) or Evals (evals/)")
         lines = len(path.read_text().splitlines())
         if lines > MAX_FILE:
             warns.append(f"{rel}: {lines} lines (aim for ~{MAX_FILE})")

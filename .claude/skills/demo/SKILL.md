@@ -23,7 +23,7 @@ Read `../discovery/SKILL.md` and follow it fully (§0–§5), from these notes a
 - Its **open questions**: pick the **recommended** answer yourself and record it as a decision
   `D<n> … · decided with user <today> (demo run: recommended answer)`.
 - **The approval question is NOT overridden.** Show `python3 "$KIT_HOME/bin/demo.py" box 2` exactly, then ask
-  "Approve plan.md (function list + S1 flow)?" as `/discovery` §5 says, and wait for the user's answer.
+  "Approve plan.md (the files, the diagram and every function)?" as `/discovery` §5 says, and wait for the user's answer.
   - **Approve** → Status → approved, commit (body = the changed files) + tag `plan`, local, never pushed.
   - **Change something** → change it, keep the draft, ask again.
 
