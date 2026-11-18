@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import progress  # noqa: E402  (the kit's plan parser, next to this file)
 
 ROOT = Path.cwd()
-SOURCE = re.compile(r"\bB\d+\b|raw\.md:L\d+|data/[\w.\-]+|plan\.md|user \d{4}-\d{2}-\d{2}")
+SOURCE = re.compile(r"\b[BD]\d+\b|raw\.md:L\d+|data/[\w.\-]+|plan\.md|spec\.md|user \d{4}-\d{2}-\d{2}")
 QUOTED = re.compile(r'"[^"]+"')
 FILE_LINE = re.compile(r"\b[\w/.\-]+\.(?:py|jsx?|md):\d+")
 CALL = re.compile(r"`([A-Za-z_][\w.]*)\(")
@@ -55,7 +55,7 @@ def requirement_problems(req: dict, built: bool, rules: set[str]) -> list[str]:
     """Problems with one requirement: source, quoted acceptance, cited business rule, and its test once built."""
     rid, problems = req["id"], []
     if not SOURCE.search(req["traces"]):
-        problems.append(f"{rid}: 'Traces to:' must cite B<n>, raw.md:L<n>, data/<file> or user <date>")
+        problems.append(f"{rid}: 'Traces to:' must cite spec.md (B<n>, D<n>), raw.md:L<n>, data/<file> or user <date>")
     problems += [
         f"{rid}: cites {b}, which docs/spec.md doesn't define"
         for b in re.findall(r"\bB\d+\b", req["traces"])
