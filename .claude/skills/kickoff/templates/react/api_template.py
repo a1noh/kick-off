@@ -97,6 +97,8 @@ def screen_text() -> str:
 
 
 class Message(BaseModel):
+    """One chat message from the browser: its session id and text."""
+
     session: str
     text: str
 
@@ -106,6 +108,7 @@ app = FastAPI(title=TITLE)
 
 @app.get("/api/screen")
 def get_screen() -> dict:
+    """GET /api/screen: the whole screen as one JSON (see screen())."""
     return screen()
 
 
@@ -119,6 +122,7 @@ def new_chat() -> dict:
 
 @app.post("/api/chat")
 def chat(m: Message) -> dict:
+    """POST /api/chat: pass one message to this session's agent and return its reply."""
     agent = sessions.get(m.session)
     if agent is None:
         agent = sessions[m.session] = config["agent_factory"]()
