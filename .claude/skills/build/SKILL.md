@@ -54,8 +54,9 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
     then `uv pip install --python .venv/bin/python fastapi==0.115.6 uvicorn==0.32.1 httpx==0.28.1` and
     `(cd ui/web && npm install --no-audit --no-fund && npm run build)`. Fill `ui/api.py`'s TITLE, TABS, PANELS, WIDE
     and SHOWS (spec.md §3 table). The guide sidebar comes with the template: don't rewrite it. `npm test` must pass.
-- **Phase 2** also writes `tests/test_flow.py`: run S1 offline (fixed extractor) step by step and assert each step's
-  object equals its row in `progress.flow()` (plan.md Flow), so the study doc can't drift from the code.
+- **Phase 2** also writes `tests/test_flow.py`: run S1 offline (fixed extractor) step by step, making each step's call
+  with the values in its **In**, and assert `progress.matches(result, step["out"])` for every step in `progress.flow()`
+  (`"…"` in the plan stands for parts left out), so the study doc can't drift from the code.
 - **Later phases** replace stubs and turn placeholders live. **Never remove a panel or a board row.** An owner action
   calls a gated function in `src/tools.py` and is audited. From phase 2, keep `scripts/demo.py` running.
 - One short ★ Insight per file: *why*, not what.

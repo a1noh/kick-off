@@ -91,7 +91,7 @@ def product_files() -> list[Path]:
 
 
 def file_problems() -> list[str]:
-    """plan.md Files + Functions show every file the build writes and what passes through each function (in: / out: shapes)."""
+    """plan.md Files + Functions show every file the build writes and what goes in and out of each function."""
     if not progress.plan_text():
         return []
     table, problems = progress.file_table(), []
@@ -105,10 +105,23 @@ def file_problems() -> list[str]:
             problems.append(f"plan.md Files: {row} belongs to phase {phase}, which is ticked, but it doesn't exist")
     for rel, entries in progress.interfaces().items():
         problems += [
-            f"{rel}: plan.md Functions: {e['name']}() needs an In table (argument · example) and an **Out** block"
+            f"{rel}: plan.md Functions: {e['name']}() needs an **In** and an **Out** block (```json or ```text)"
             for e in entries
-            if not (e["in"] and e["out"])
+            if e["in"] == "" or e["out"] == ""
         ]
+    problems += flow_problems()
+    return problems
+
+
+def flow_problems() -> list[str]:
+    """Plan "Flow": every step shows its In and Out, and the diagram's arrows are numbered ①… like the steps."""
+    steps = progress.flow()
+    if not steps:
+        return []
+    problems = [f"plan.md Flow step {s['n']} needs an **In** and an **Out** block" for s in steps if s["in"] == "" or s["out"] == ""]
+    drawn, numbered = set(progress.flow_arrows()), {s["n"] for s in steps}
+    problems += [f"plan.md Flow: no arrow in the diagram is numbered for step {n}" for n in sorted(numbered - drawn)]
+    problems += [f"plan.md Flow: the diagram has an arrow numbered {n}, but there is no step {n}" for n in sorted(drawn - numbered)]
     return problems
 
 

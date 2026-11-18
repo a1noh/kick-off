@@ -52,9 +52,12 @@ flowchart LR
 #### `reply(text: str) -> str`
 Reply to one message. *Why:* probe.
 
-| In | Example |
-|---|---|
-| `text` | `"hi"` |
+**In**
+```json
+{{
+  "text": "hi"
+}}
+```
 
 **Out**
 ```text
@@ -66,9 +69,10 @@ hello
 #### `screen_text() -> str`
 The screen as text. *Why:* probe.
 
-| In | Example |
-|---|---|
-| nothing | — |
+**In**
+```json
+{{}}
+```
 
 **Out**
 ```text
@@ -76,8 +80,26 @@ The screen as text. *Why:* probe.
 ```
 
 ## 6. Flow (S1)
+```mermaid
+flowchart LR
+  U(["user"])
+  AG["src/agent.py<br/>reply()"]
+
+  U -- "① hi" --> AG
+  AG -- "① hello" --> U
+```
+
 ### 1 · the reply
 `reply("hi")` in `src/agent.py`.
+
+**In**
+```json
+{{
+  "text": "hi"
+}}
+```
+
+**Out**
 ```text
 hello
 ```
@@ -238,7 +260,10 @@ def code_rules(c: Path) -> None:
 
 def planned_functions(c: Path) -> None:
     """T18b: a planned function a later phase adds warns while phases are open, fails once all are ticked."""
-    extra = '#### `greet(name: str) -> str`\nGreet someone. *Why:* a later phase.\n\n| In | Example |\n|---|---|\n| `name` | `"Dev"` |\n\n**Out**\n```text\nhi Dev\n```\n\n### `ui/api.py`'
+    extra = (
+        "#### `greet(name: str) -> str`\nGreet someone. *Why:* a later phase.\n\n"
+        '**In**\n```json\n{\n  "name": "Dev"\n}\n```\n\n**Out**\n```text\nhi Dev\n```\n\n### `ui/api.py`'
+    )
     text = PLAN.format(**GOOD).replace("### `ui/api.py`", extra, 1)
     write(c, "docs/plan.md", text)
     open_run = check(c)
@@ -260,11 +285,13 @@ def planned_functions(c: Path) -> None:
 
 
 def file_rules(c: Path) -> None:
-    """T18c–T18e: plan.md Files + Functions list every file the build writes, with in/out shapes, and ticked phases' files exist."""
+    """T18c–T18e: plan.md Files + Functions list every file the build writes, each function with its In and Out, and ticked phases' files exist."""
     plan(c, tick="x")
     text = (c / "docs/plan.md").read_text()
-    write(c, "docs/plan.md", text.replace('| `text` | `"hi"` |\n', ""))
-    rejects(c, "T18c a function without its In table rejected", "needs an In table")
+    write(c, "docs/plan.md", text.replace('**In**\n```json\n{\n  "text": "hi"\n}\n```\n\n**Out**\n```text\nhello\n```\n\n### `ui/api.py`', '**Out**\n```text\nhello\n```\n\n### `ui/api.py`', 1))
+    rejects(c, "T18c a function without its In block rejected", "needs an **In**")
+    write(c, "docs/plan.md", text.replace('U -- "① hi" --> AG', 'U -- "② hi" --> AG'))
+    rejects(c, "T18f the Flow diagram's numbered arrows must match the steps", "no step 2")
     write(c, "docs/plan.md", text)
     write(c, "scripts/demo.py", '"""Demo."""\n')
     rejects(c, "T18d a code file missing from plan.md Files rejected", "missing from plan.md Files")
@@ -354,13 +381,14 @@ def verify_and_hooks(c: Path) -> None:
 
 def parser(c: Path) -> None:
     """T28: progress.py reads the plan's Status, requirements, Functions and Flow."""
-    code = "import progress as p; print(p.status(), p.requirements(1)[0]['id'], p.interfaces()['src/agent.py'][0]['params'], p.flow())"
-    out = sh(f'.venv/bin/python -c "{code}"', c).stdout.strip()
-    expect(
-        "T28 progress parses Status, requirements, Functions params and Flow",
-        out == "approved 2026-01-01 P1.R1 ['text'] [('reply(\"hi\")', 'hello')]",
-        out,
+    code = (
+        "import progress as p; f = p.flow()[0]; print(p.status(), p.requirements(1)[0]['id'],"
+        " p.interfaces()['src/agent.py'][0]['in'], f['call'], f['in'], f['out'], p.flow_arrows(),"
+        " p.matches({'a': 1, 'b': 2}, {'a': 1, '…': 'b'}), p.matches({'a': 1}, {'a': 2}))"
     )
+    out = sh(f'.venv/bin/python -c "{code}"', c).stdout.strip()
+    want = "approved 2026-01-01 P1.R1 {'text': 'hi'} reply(\"hi\") {'text': 'hi'} hello [1, 1] True False"
+    expect("T28 progress parses Status, requirements, In/Out blocks, numbered arrows, and … matching", out == want, out)
 
 
 def kit_files(c: Path, tmp: Path) -> None:

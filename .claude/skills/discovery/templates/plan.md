@@ -49,18 +49,22 @@ flowchart LR
 
 ## 4. Functions
 Every function the rest of the code calls, file by file: one `###` per Python file (tests excepted), one `####` per
-function. Under it: its docstring line 1 word for word, then `*Why:*`; an **In** table (each argument with a real
-example, or `nothing`); the **Out** it returns as a ```json block (or ```text), with real values. §5 names the records.
-Every ```json block is pretty-printed: one key per line, 2-space indent (`spec.py check` enforces it).
+function. Under it: its docstring line 1 word for word, then `*Why:*`; then **In**, the real arguments as one JSON object
+(`{"<param>": <real value>, …}`), and **Out**, the real value it returns. Both are pretty-printed ```json blocks
+(```text for plain text). Anything the call doesn't read is replaced by `"…": "<what was left out>"`, so you see exactly
+what goes in. §5 names the record shapes.
 
 ### `src/agent.py` · brain: ‹one job›
 
 #### `Agent.reply(text: str) -> str`
-‹One message in, one checked reply out›. *Why:* ‹guards run around the model›.
+‹One message in, one checked reply out›. *Why:* ‹why›.
 
-| In | Example |
-|---|---|
-| `text` | `"‹S1 input›"` |
+**In**
+```json
+{
+  "text": "‹S1 input›"
+}
+```
 
 **Out**
 ```text
@@ -72,9 +76,13 @@ Every ```json block is pretty-printed: one key per line, 2-space indent (`spec.p
 #### `‹name›(‹params›) -> ‹type›`
 ‹docstring line 1›. *Why:* ‹why›.
 
-| In | Example |
-|---|---|
-| `‹param›` | `‹example value›` |
+**In**
+```json
+{
+  "‹param›": "‹the real value, with only the fields this call reads›",
+  "…": "‹what was left out, e.g. 4 more requests›"
+}
+```
 
 **Out**
 ```json
@@ -89,41 +97,55 @@ Each record as typed JSON (where it lives, every field and its type).
 {"‹field›": "str", "‹field›": "int", "at": "str (ISO time)"}
 ```
 
-## 6. Flow (S1): one customer, start to finish
-Spec S1 told hop by hop: which file runs, what it's called with, and the real object it hands on.
-`tests/test_flow.py` runs these steps offline and asserts every one, so this story can't drift from the code.
+## 6. Flow (S1): one request, start to finish
+Spec S1 told hop by hop. The diagram's arrows are numbered ①, ②, … in the order things happen, and each number is the
+step below with that number: read the diagram, then the step. Each step shows the call, the file, why, and what goes
+**In** and comes **Out** as real JSON ("…" marks parts the step doesn't read). `tests/test_flow.py` makes each call
+with its In and checks the result against its Out, so this story can't drift from the code.
 
 ```mermaid
 flowchart LR
-  C(["💬 ‹the user›"])
-  API["ui/api.py<br/>chat()"]
+  U(["‹the user›"])
   AG["src/agent.py<br/>Agent.reply()"]
-  TO["src/tools.py<br/>‹tools›"]
-  DA[("out/‹records›.jsonl")]
+  TO["src/tools.py<br/>‹tool›()"]
+  D[("out/‹records›.jsonl")]
 
-  C -- "‹what they send›" --> API
-  API -- "text" --> AG
-  AG -- "‹fields›" --> TO
-  TO -- "‹record›" --> DA
-  TO -- "‹result›" --> AG
-  AG -- "reply" --> C
+  U -- "① ‹what they send›" --> AG
+  AG -- "② ‹what the tool needs›" --> TO
+  TO -- "② ‹saves›" --> D
+  TO -- "② ‹result›" --> AG
+  AG -- "③ ‹the reply›" --> U
 ```
-Label every arrow with the data it carries. No dead ends (CLAUDE.md, SAFE MERMAID).
 
 ### 1 · ‹what happens, in plain words›
-`‹extract("<S1 input>")›` in `‹src/llm.py›`. ‹One line on why this step exists.›
+`‹tool(…)›` in `‹src/tools.py›`. ‹One line on why this step exists.›
+
+**In**
 ```json
-‹{"intent": "…", …}›
+{
+  "‹param›": "‹real value›"
+}
+```
+
+**Out**
+```json
+‹the real result›
 ```
 
 ### 2 · ‹…›
-`‹tool(…)›` in `‹src/tools.py›`.
-```json
-‹{record}›
-```
+…
 
 ### 3 · The reply the user sees
 `‹Agent.reply("<S1 input>")›` in `src/agent.py`.
+
+**In**
+```json
+{
+  "text": "‹S1 input›"
+}
+```
+
+**Out**
 ```text
 ‹the exact reply›
 ```

@@ -12,6 +12,7 @@ from pathlib import Path
 
 PHASE = re.compile(r"^- \[( |x)\] Phase (\d+): (.*)$", re.M)
 REQUIREMENT = re.compile(r"^\s+- \*\*P(\d+)\.R(\d+)\*\*[^\n]*\n((?:\s{6,}- [^\n]*\n?)*)", re.M)
+CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
 SIGNATURE = re.compile(r"^`([A-Za-z_][\w.]*)\((.*?)\)[^`]*`")  # a `#### `signature`` heading in "Functions"
 
 
@@ -102,15 +103,36 @@ def interfaces() -> dict[str, list[dict]]:
 
 
 def function_entry(block: str) -> dict | None:
-    """One `#### `signature`` block: its name, parameter names, summary line, In table rows and Out block (None if malformed)."""
+    """One `#### `signature`` block: its name, parameter names, summary line, In block and Out block (None if malformed)."""
     found = SIGNATURE.match(block)
     if not found:
         return None
     lines = [line.strip() for line in block.splitlines()[1:] if line.strip()]
     summary = re.split(r"\s*\*Why:\*", lines[0])[0] if lines else ""
-    rows = re.findall(r"^\|\s*(`[^`]+`|—|nothing)\s*\|\s*(.+?)\s*\|\s*$", block, re.M)
-    out = block.split("**Out**", 1)[1].strip() if "**Out**" in block else ""
-    return {"name": found[1], "params": params_of(found[2]), "summary": summary, "in": rows, "out": out}
+    return {"name": found[1], "params": params_of(found[2]), "summary": summary, **in_and_out(block)}
+
+
+def in_and_out(block: str) -> dict:
+    """The ```json / ```text blocks under **In** and **Out** in a plan block, parsed ('' when one is missing)."""
+    found = {}
+    for label in ("In", "Out"):
+        code = re.search(rf"\*\*{label}\*\*\s*\n```(json|text)\n(.*?)\n```", block, re.S)
+        found[label.lower()] = (json.loads(code[2]) if code[1] == "json" else code[2]) if code else ""
+    return found
+
+
+def matches(actual: object, shown: object) -> bool:
+    """True when the real object agrees with what the plan shows; a "…" value or key stands for parts left out."""
+    if shown == "…":
+        return True
+    if isinstance(shown, dict):
+        return isinstance(actual, dict) and all(
+            key == "…" or (key in actual and matches(actual[key], value)) for key, value in shown.items()
+        )
+    if isinstance(shown, list):
+        listed = [item for item in shown if item != "…"]
+        return isinstance(actual, list) and all(matches(a, b) for a, b in zip(actual, listed)) and len(actual) >= len(listed)
+    return actual == shown
 
 
 def file_table() -> dict[str, int]:
@@ -124,15 +146,20 @@ def params_of(signature: str) -> list[str]:
     return [name for name in names if name and name not in ("self", "/")]
 
 
-def flow() -> list[tuple[str, object]]:
-    """Plan "Flow": each `### <n> · <title>` step as (its call, the object it returns): ```json parsed, ```text kept as text."""
+def flow() -> list[dict]:
+    """Plan "Flow": each `### <n> · <title>` step as {'n', 'call', 'in', 'out'}, its In and Out blocks parsed."""
     steps = []
-    for step in re.split(r"^### \d+ · ", section("Flow"), flags=re.M)[1:]:
+    for n, step in re.findall(r"^### (\d+) · (.*?)(?=^### \d+ · |\Z)", section("Flow"), re.M | re.S):
         call = re.search(r"`([A-Za-z_][\w.]*\([^`]*\))`", step)
-        code = re.search(r"```(json|text)\n(.*?)\n```", step, re.S)
-        if call and code:
-            steps.append((call[1], json.loads(code[2]) if code[1] == "json" else code[2]))
+        if call:
+            steps.append({"n": int(n), "call": call[1], **in_and_out(step)})
     return steps
+
+
+def flow_arrows() -> list[int]:
+    """The step numbers (①, ②, …) on the arrows of the Flow diagram, in the order they're drawn."""
+    diagrams = re.findall(r"```mermaid\n(.*?)```", section("Flow"), re.S)
+    return [CIRCLED.index(mark) + 1 for mark in re.findall(r'-- "([①-⑳])', diagrams[0] if diagrams else "")]
 
 
 def scenario_phases() -> dict[str, int]:

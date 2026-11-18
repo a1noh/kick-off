@@ -112,8 +112,8 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 - One way to do each thing across the codebase (e.g. every reply comes from one place).
 
 **Enforced by `spec.py check`** (every phase): it fails when a Python file in `src/`, `ui/`, `evals/` or `scripts/` has no top docstring, a function
-or method has no docstring, a file isn't in §3 Files or has no box in the §2 diagram, a §4 function has no In table or
-Out block, a signature or docstring line 1 doesn't match the code, a JSON block isn't pretty-printed, a doc cites
+or method has no docstring, a file isn't in §3 Files or has no box in the §2 diagram, a §4 function or a §6 Flow step has no
+In or Out block, the Flow diagram's numbered arrows don't match its steps, a signature or docstring line 1 doesn't match the code, a JSON block isn't pretty-printed, a doc cites
 `file:line` or a function that doesn't exist, or kit scaffolding is committed. It warns past ~150 lines per file or ~30 per function.
 Explain as you go: one short ★ Insight per file, on *why*.
 
