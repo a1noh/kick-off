@@ -122,13 +122,15 @@ name). It starts `**Status:** draft`. It cites spec.md (S1, B<n>, D<n>, G<n>, E<
    - one line: the docstring line 1, word for word, then `*Why:* <why>` (`spec.py check` compares the line and the
      parameter names with the code once the file exists);
    - an **In** table `| In | Example |`: one row per argument with a real value (`nothing` when it takes none);
-   - `**Out**` and a ```json block with the real value it returns (```text for plain text), plus one line for the
+   - `**Out**` and a ```json block with the real value it returns, **pretty-printed** (one key per line, 2-space
+     indent, as `json.dumps(value, indent=2)` writes it; ```text for plain text), plus one line for the
      other outcome when there is one ("wrong name → `null`"). `spec.py check` fails on a function without In or Out.
    Include `ui/api.py` (`screen`, `chat`), `evals/scenarios.py` (`run_all`), `evals/run.py` and `scripts/demo.py`.
 5. **Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
+Every ```json block in plan.md (§4, §5, §6) is pretty-printed; `spec.py check` fails otherwise.
 6. **Flow (S1)**: spec S1 as a story, one customer start to finish. First a `flowchart LR` whose arrows are labeled
    with the data they carry. Then one `### <n> · <what happens, in plain words>` per hop: a line with the call in
-   backticks (real arguments) and the file it runs in, one line on why, and the real object it returns in a ```json
+   backticks (real arguments) and the file it runs in, one line on why, and the real object it returns in a pretty-printed ```json
    block (```text for the reply the user sees). Use only functions from §4. Phase 2's `tests/test_flow.py` asserts
    every step (`progress.flow()` reads them), so write the real values.
 7. **Phases** as checkboxes, **exactly 4**. **UI first, then features:** phase 1 builds the whole screen with nothing

@@ -29,6 +29,7 @@ is plain Python." One line on the path a message takes. What it must do and why:
 Every function the rest of the code calls, file by file: one `###` per Python file (tests excepted), one `####` per
 function. Under it: its docstring line 1 word for word, then `*Why:*`; an **In** table (each argument with a real
 example, or `nothing`); the **Out** it returns as a ```json block (or ```text), with real values. §5 names the records.
+Every ```json block is pretty-printed: one key per line, 2-space indent (`spec.py check` enforces it).
 
 ### `src/agent.py` · brain: ‹one job›
 

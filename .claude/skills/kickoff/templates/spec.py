@@ -9,6 +9,7 @@ The rules are written once, in the project's CLAUDE.md ("Plan-driven" and "Codin
 from __future__ import annotations
 
 import ast
+import json
 import os
 import re
 import subprocess
@@ -195,6 +196,8 @@ def doc_problems() -> list[str]:
     for rel in ("docs/talk.md", "docs/plan.md"):
         text = (ROOT / rel).read_text() if (ROOT / rel).exists() else ""
         problems += [f"{rel}: '{ref}' goes stale; name the function instead" for ref in FILE_LINE.findall(text)]
+        if rel == "docs/plan.md":
+            problems += json_problems(text)
         for diagram in re.findall(r"```mermaid\n(.*?)```", text, re.S):
             problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
@@ -204,6 +207,20 @@ def doc_problems() -> list[str]:
         for call in {c for line in lines for c in CALL.findall(line)}:
             if call.split(".")[-1] not in names:
                 problems.append(f"{where}: `{call}()` is not defined in src/, ui/, evals/ or scripts/")
+    return problems
+
+
+def json_problems(text: str) -> list[str]:
+    """Every ```json block in plan.md is valid JSON, pretty-printed: one key per line, 2-space indent."""
+    problems = []
+    for block in re.findall(r"```json\n(.*?)\n```", text, re.S):
+        try:
+            value = json.loads(block)
+        except json.JSONDecodeError as error:
+            problems.append(f"docs/plan.md: a ```json block isn't valid JSON ({error.msg}): {block[:50]!r}")
+            continue
+        if block != json.dumps(value, indent=2, ensure_ascii=False):
+            problems.append(f"docs/plan.md: pretty-print this ```json block (one key per line, 2-space indent): {block[:50]!r}")
     return problems
 
 

@@ -255,9 +255,16 @@ def doc_rules(c: Path) -> None:
     cases = [
         ("T19 a file:line reference in talk.md rejected", "See `src/agent.py:12`.\n", "goes stale"),
         ("T20 talk.md naming a function that doesn't exist rejected", "It calls `send_sms()`.\n", "send_sms"),
+        ("T21b a ```json block in plan.md that isn't pretty-printed rejected", None, "pretty-print"),
         ("T21 a diagram dead end rejected", '```mermaid\nflowchart LR\n  A["a"] -- "x" --> B["b"]\n```\n', "dead end"),
     ]
     for name, extra, needle in cases:
+        if extra is None:  # a plan.md rule: one-line JSON in the Out block
+            plan_text = (c / "docs/plan.md").read_text()
+            write(c, "docs/plan.md", plan_text + '\n**Out**\n```json\n{"a": 1, "b": 2}\n```\n')
+            rejects(c, name, needle)
+            write(c, "docs/plan.md", plan_text)
+            continue
         write(c, "docs/talk.md", talk + extra)
         rejects(c, name, needle)
     write(c, "docs/talk.md", talk)
