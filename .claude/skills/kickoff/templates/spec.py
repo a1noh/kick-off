@@ -136,6 +136,13 @@ def shape_problems(entry: dict) -> list[str]:
 def code_problems() -> tuple[list[str], list[str]]:
     """Coding standards: (failures, warnings) for docstrings, the functions plan.md explains (signatures) and sizes."""
     listed, fails, warns = progress.interfaces(), [], []
+    # A phase not built yet may say "changes `name`" in its Builds line: until it is built, plan and code may differ there.
+    changing = {
+        name
+        for n, (done, _) in progress.phases().items()
+        if not done
+        for name in re.findall(r"changes `([\w.]+)`", progress.phase_block(n))
+    }
     for path in product_files():
         rel = str(path.relative_to(ROOT))
         tree = ast.parse(path.read_text())
@@ -157,7 +164,9 @@ def code_problems() -> tuple[list[str], list[str]]:
                     )
         for problem in signature_problems(tree, listed.get(rel, [])):
             # A planned function a later phase adds is only a warning until every phase is ticked.
-            planned = problem.endswith("listed but not defined") and not all(d for d, _ in progress.phases().values())
+            planned = (problem.endswith("listed but not defined") and not all(d for d, _ in progress.phases().values())) or (
+                problem.split("(")[0].split(":")[0] in changing
+            )
             (warns if planned else fails).append(f"{rel}: plan.md: {problem}")
     return fails, warns
 
@@ -347,8 +356,12 @@ def sync_problems() -> tuple[list[str], list[str]]:
             f"docs/talk.md: every phase is built, so rewrite §1–§6 for all {last} phases and set '**Covers:** phases 1–{last}'"
         )
     questions = progress.section("Likely questions")
-    if "‹" in questions or not re.search(r"^- \*\*", questions, re.M):
-        fails.append("plan.md Likely questions: every phase is built, so answer the questions (no ‹placeholders›)")
+    asked = re.search(r"^\*\*Covers:\*\* phases 1–(\d+)\s*$", questions, re.M)
+    if "‹" in questions or not re.search(r"^- \*\*", questions, re.M) or not asked or int(asked[1]) != last:
+        fails.append(
+            f"plan.md Likely questions: every phase is built, so answer them for all {last} phases (no ‹placeholders›) "
+            f"and put '**Covers:** phases 1–{last}' under the heading"
+        )
     named = talk + questions
     warns += [
         f"{entry['name']}() is in plan.md Functions but never named in docs/talk.md or Likely questions"
@@ -366,9 +379,9 @@ def at_tag(tag: str, rel: str) -> str:
 
 
 DOC_IDS = {
-    "docs/spec.md": r"^### (S\d+)|^\s*- \*\*([BD]\d+)\*\*|^\| ([EG]\d+) \|",
-    "docs/plan.md": r"^- \[[ x]\] (Phase \d+)|\*\*(P\d+\.R\d+)\*\*|^#### `([\w.]+)`",
-    "docs/talk.md": r"\*\*(Phase \d+) ·",
+    "docs/spec.md": r"^### (S\d+)|^\s*- \*\*([BD]\d+)\*\*|^\| ([EGQ]\d+) \|",
+    "docs/plan.md": r"^- \[[ x]\] (Phase \d+)|\*\*(P\d+\.R\d+)\*\*|^#### `([\w.]+)`|^## (8\. Likely questions)",
+    "docs/talk.md": r"\*\*(Phase \d+) ·|^## ([1-6]\. [^\n]+)",
 }
 
 
@@ -390,7 +403,10 @@ def chunks(text: str, pattern: str) -> dict[str, str]:
     for mark, following in zip(marks, [*marks[1:], None]):
         name = "".join(g or "" for g in mark.groups())
         if name:
-            found[name] = text[mark.start() : following.start() if following else len(text)].strip()
+            end = following.start() if following else len(text)
+            if mark.group().startswith("|"):  # a table row is the whole entry: the text after the table isn't part of it
+                end = min(end, (text + "\n").index("\n", mark.start()))
+            found[name] = text[mark.start() : end].strip()
     return found
 
 
@@ -475,6 +491,16 @@ def functions_in(source: str) -> dict[str, str]:
     return found
 
 
+def outside(source: str) -> str:
+    """The part of a Python source that is not inside a function or class: imports, constants, data."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return source
+    keep = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+    return "\n".join(ast.dump(node) for node in tree.body if not isinstance(node, keep))
+
+
 def cmd_changes(n: int) -> int:
     """Print what phase n added to the code (vs. the previous tag), in the plan's words, and what the plan still has to come."""
     before_tag = "plan" if n == 1 else f"phase-{n - 1}"
@@ -487,8 +513,8 @@ def cmd_changes(n: int) -> int:
         before, after = functions_in(old), functions_in(new)
         lines = [f"+ {name}" for name in after if name not in before]
         lines += [f"~ {name}" for name in after if name in before and before[name] != after[name]]
-        if not lines and old != new:
-            lines = ["~ (text outside functions: a constant, a prompt or a docstring)"]
+        if old and outside(old) != outside(new):
+            lines.append("~ (outside functions: a constant, a prompt, data or the file's docstring)")
         any_change = any_change or bool(lines)
         for i, line in enumerate(lines):
             title = titles.get((rel, line[2:]), "")

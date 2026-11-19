@@ -105,7 +105,7 @@ workflow = a record + the action + its new state.
   - Each **Does** list is in the order the code runs (an error path sits at the step where it can happen).
   - Every panel and every value on screen has a function in §4 that produces it (the eval score included), in `src/`.
   - `evals/run.py` (when the plan uses a model) never counts a busy model as a wrong answer: live, a case whose reply
-    is the model-unavailable line is asked again after a pause (3 tries), then listed as **not scored**, apart from the
+    is the model-unavailable line (or, where a fallback reader answers instead, a reply the fallback produced) is asked again after a pause (3 tries), then listed as **not scored**, apart from the
     fails; the scorecard and the Eval score panel say so. It has a requirement and an offline test (an extractor that
     raises). Its cases are spec.md §7 row for row, each with its E id.
   - The model prompt states rules (what each field means), never example inputs taken from the eval cases.
@@ -113,16 +113,11 @@ workflow = a record + the action + its new state.
   - In the §3 diagram, only the numbered request path starts a label with a number; write "all 19 rows", not "19 rows".
   - In a **Try it** line, backticks mark only what the user types into the door (the screen turns each one into a
     Try button). A terminal command or a file name in a Try-it line is written without backticks.
-- **A new feature mid-build** → the user adds it to the bottom of `notes/raw.md` and re-runs `/discovery`. Update
-  **both docs everywhere the feature touches, not just the phases**: spec.md (a scenario or a variation, the §3 panel
-  table, new rules B<n> and decisions D<n> numbered after the existing ones, messy data, eval cases, out of scope) and
-  plan.md (§1, §2 Files, the §3 diagram, new or changed §4 function blocks, §5 Records, §6 Evals, requirements).
-  Never renumber or delete an existing id; a rule that changes keeps its id and gets the new raw.md line as a source.
-  Where it lands: built phases stay ticked and their requirements unchanged; the feature goes into the unticked
-  phases; when every phase is already ticked, it becomes **Phase 5** (6, …) with the same four parts, and that phase
-  ends by refreshing talk.md §1–§6 and §8 (see `/build` §4). A built function the feature changes is listed in the
-  new phase's **Builds** line as "changes `name`". `**Status:** draft` again, list what changed, ask for approval.
-  (A small tweak doesn't need this: the user tells `/build`, which adds the rule, the requirement and the test.)
+- **A change after the plan is approved** is not this skill's job any more: the user says it to `/build` in their own
+  words (`/build` §0b updates spec.md and plan.md first, then builds; after the last phase it adds Phase 5, 6, …). Re-run
+  `/discovery` only when the user brings a whole new round of interview notes: then update both docs everywhere the
+  notes touch, never renumber or delete an id, keep built phases ticked, put new work in the unbuilt phases or a new
+  phase, set `**Status:** draft`, list what changed and ask for approval.
 
 ## 3a. Write `docs/spec.md` first: the whole discovery in plain English
 Copy `templates/spec.md` (this skill's base directory) and keep its headings. It is the WHAT and WHY: no code, no file

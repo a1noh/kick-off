@@ -48,12 +48,13 @@ arrives in step N · **guards / gates** = safety checks in plain Python · **src
 | 1:40–1:55 | `scripts/demo.py`, then talk.md top to bottom | Practice saying it with the app open |
 | 1:55 | Done | |
 
-## Changing things mid-build (the docs change first, every time)
-| What | Do | Where it lands |
+## Changing or adding something (one door: say it to `/build`)
+| When | You type | What happens |
 |---|---|---|
-| A small tweak ("say bye too") | tell `/build` | a rule in spec.md → a requirement + the function block in plan.md → a test → the code |
-| A real feature, some phases not built yet | add it to the bottom of `notes/raw.md`, run `/discovery`, approve | spec.md and plan.md everywhere it touches; the phases not built yet |
-| A real feature, everything built | the same | **Phase 5** (6, …); it ends by rewriting talk.md §1–§6 and plan.md §8 |
+| Phases still unbuilt | `/build also show the phone number` | spec.md rule → plan.md requirement + function block → test → code, inside the phases not built yet |
+| Everything built | `/build add a "Most asked" panel` | the same, as **Phase 5** (6, …): you approve it, it's built, and talk.md §1–§6 + plan.md §8 are rewritten |
+
+You never edit `notes/raw.md` again and never re-run `/discovery` for a change (only for a new round of interview notes).
 
 `spec.py check` won't pass with a rule that has no requirement, a built phase with no Build-story entry, or a finished
 build whose talk.md doesn't cover the last phase. Every handover's 📚 lines list what each doc gained (+) or reworded (~).

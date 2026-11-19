@@ -10,11 +10,12 @@ phase visibly turns something ✅. After each phase the user **tries it in the a
 |---|---|---|
 | `/discovery` | 0:10–0:15, after the interview; re-run after new notes | notes + data → `docs/spec.md` + `docs/plan.md` (**Status: draft**) → the user approves it |
 | `/build` | 0:15–1:30, once per phase (×4) | next unticked phase of the approved plan → tests → code → `spec.py verify N` → app running → commit + tag → **Try it** list → stop |
-A new feature mid-build: add it to the bottom of `notes/raw.md`, run `/discovery` again (it lands in the phases not built
-yet, or as Phase 5), approve. A small tweak: just tell `/build`. Either way the docs change **before** the code, in one
-order: spec.md (the rule) → plan.md (the requirement + the function block) → the test → the code; the last phase
-rewrites talk.md §1–§6 and plan.md §8. `spec.py check` fails on a rule with no requirement, a built phase with no
-Build-story entry, or a finished build whose talk.md doesn't cover the last phase.
+**Changing or adding something, at any point: say it to `/build` in your own words** (`/build also show the phone
+number`). The docs change first, in one order: spec.md (the rule, sourced to your words) → plan.md (the requirement +
+the function block) → the test → the code. Phases still unbuilt absorb it; once everything is built it becomes
+Phase 5 (6, …), which you approve before any code, and which ends by rewriting talk.md §1–§6 and plan.md §8. You never
+edit the notes again. `spec.py check` fails on a rule with no requirement, a built phase with no Build-story entry, or
+a finished build whose talk.md or Likely questions don't cover the last phase.
 Before presenting (1:40, code freeze): `.venv/bin/python scripts/demo.py`, then read `docs/talk.md` top to bottom with the app open.
 
 ## Docs: each has one job (nothing else is written)

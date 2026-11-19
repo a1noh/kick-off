@@ -476,7 +476,7 @@ def mid_build(c: Path) -> None:
     rejects(c, "M8 last phase: talk.md must cover every phase", "phases 1–2")
     amend(c, "docs/talk.md", "**Covers:** nothing built yet", "**Covers:** phases 1–2")
     rejects(c, "M9 last phase: the Likely questions must be answered", "Likely questions")
-    write(c, "docs/plan.md", (c / "docs/plan.md").read_text() + "\n## 8. Likely questions\n- **Why no AI?** It only greets (`reply()`).\n")
+    write(c, "docs/plan.md", (c / "docs/plan.md").read_text() + "\n## 8. Likely questions\n**Covers:** phases 1–2\n\n- **Why no AI?** It only greets (`reply()`).\n")
     expect("M10 everything built, three docs in step → SPEC OK, All built", check(c).returncode == 0 and "All built" in sh(command, c).stdout, check(c).stdout)
     sh("git add -A && git commit -qm p2 && git tag -f phase-2", c)
 
@@ -485,10 +485,20 @@ def mid_build(c: Path) -> None:
     amend(c, "docs/plan.md", "**Status:** approved 2026-01-03", "**Status:** draft")
     state = sh(command, c).stdout.strip()
     expect("M11 new phase after all built: plan is valid as a draft, /build is next, talk still covers what is built", check(c).returncode == 0 and state == "draft /build", check(c).stdout + state)
+    amend(c, "docs/plan.md", "`reply(text: str) -> str`", "`reply(text: str, loud: bool) -> str`")
+    amend(c, "docs/plan.md", '  "text": "hi"  // str · the message\n', '  "text": "hi",  // str · the message\n  "loud": true  // bool · shout it\n')
+    rejects(c, "M11b a built function whose plan signature changed, with no phase saying so, is rejected", "but the code takes (text)")
+    amend(c, "docs/plan.md", "- [ ] Phase 3: nod\n", "- [ ] Phase 3: nod\n  - **Builds:** changes `reply`\n")
+    run = check(c)
+    expect("M11c the unbuilt phase says it changes that function → a warning until the phase is built", run.returncode == 0 and "WARN src/agent.py: plan.md: reply(text, loud)" in run.stdout, run.stdout)
+    amend(c, "docs/plan.md", "`reply(text: str, loud: bool) -> str`", "`reply(text: str) -> str`")
+    amend(c, "docs/plan.md", '  "text": "hi",  // str · the message\n  "loud": true  // bool · shout it\n', '  "text": "hi"  // str · the message\n')
     build_phase(c, 3, "nod")
     write(c, "docs/talk.md", (c / "docs/talk.md").read_text() + STORY.format(n=3))
     rejects(c, "M12 new phase built: a talk.md that still covers phases 1–2 is rejected", "phases 1–3")
     amend(c, "docs/talk.md", "**Covers:** phases 1–2", "**Covers:** phases 1–3")
+    rejects(c, "M12b new phase built: Likely questions that still cover phases 1–2 are rejected", "answer them for all 3 phases")
+    amend(c, "docs/plan.md", "**Covers:** phases 1–2", "**Covers:** phases 1–3")
     verify = sh(f".venv/bin/python {SPEC} verify 3", c).stdout
     out = sh(f".venv/bin/python {SPEC} changes 3", c).stdout
     expect("M13 new phase built and told → SPEC OK, VERIFY OK, 📚 names B4, Phase 3 and its entry",

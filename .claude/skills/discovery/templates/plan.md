@@ -177,6 +177,8 @@ Every `On screen` and `Try it` line describes the app **after** that phase is bu
   - …
 
 ## 8. Likely questions (filled in the last phase, from what was built)
+‹`/build` adds here, when it answers them: **Covers:** phases 1–N›
+
 The technical questions a client or interviewer will most likely ask, each answered in 1–2 lines, naming the function
 that does it (never file:line). Cover: why an LLM at all · prompt injection · a case the guard word list misses · is the
 board mocked (offline board vs live evals) · concurrency / scale · what it never does · cost and model · next fix.

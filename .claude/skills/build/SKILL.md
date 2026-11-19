@@ -20,10 +20,35 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 - `docs/plan.md` must exist with phase checkboxes. If not, say "run /discovery first" and stop.
 - **Approval gate:** if its `**Status:**` line isn't `approved <date>`, say "plan.md is still a draft: re-run /discovery
   to approve it" and stop. Never approve it yourself.
-- Take the **first unticked phase** (`- [ ] Phase N: …`). If all are ticked, say "All built. Before you present:
-  `.venv/bin/python scripts/demo.py`, then read docs/talk.md top to bottom with the app open." and stop.
+- **The user said what they want with the command** (`/build also show the phone number`, or a message asking for a
+  change): that is a change request, see **0b** first.
+- Take the **first unticked phase** (`- [ ] Phase N: …`). If all are ticked and nothing was asked for, say "All built.
+  Before you present: `.venv/bin/python scripts/demo.py`, then read docs/talk.md top to bottom with the app open. To add
+  or change something: `/build <what you want>`." and stop.
 - Say in one line which phase you're building, quoting its `On screen (before → after)` line.
 - Open questions in spec.md that this phase depends on → ask them now, record the answers, then continue.
+
+## 0b. A change the user asks for in words (the only door for changes: the user never edits the notes or re-runs /discovery)
+The docs change **first**, in this order, then the code. The user's words are the source: quote them.
+1. **spec.md**: what the product must now do, in plain English: new rules `B<n> … · decided with user <date>: "<their
+   words>"`, a scenario or eval case when a reply changes, the §3 panel or endpoint table, decisions for anything
+   ambiguous (ask with AskUserQuestion only when the answer changes what you build; otherwise take the careful option
+   and record it). New ids continue the numbering; never renumber or delete one. A rule the change alters keeps its id.
+2. **plan.md**, everywhere it touches: §1, §2 Files, the §3 diagram, each new or changed §4 function block (Does, In,
+   Out), §5 Records, §6 Evals, and the requirements with `Traces to: B<n> · user <date>: "<their words>"`. If the change
+   makes an already-built requirement false (a count, a list), update its Acceptance to what is now true, add
+   ` · updated in phase N`, and update its test: the docs never keep a line that is no longer true.
+3. **Where it lands:**
+   - phases still unbuilt → fold it into them (say which);
+   - everything built → it becomes the next phase, **Phase 5** (6, …), with the same four parts (On screen, Builds,
+     Try it, Requirements). Its Builds line names each built function it alters as "changes `name`" (until the phase
+     is built, `spec.py check` only warns that plan and code differ there). A new board row or panel is written
+     `Board S4 new→✅`.
+4. Run `spec.py check` → `SPEC OK`, then show the user what was added: the output of `spec.py changes <last built
+   phase>`'s 📚 lines plus two or three plain sentences. **A new phase needs their yes:** set `**Status:** draft`, ask
+   "Build Phase N: <name>?" (Approve / Change something), and on Approve set `**Status:** approved <today>` and commit
+   `plan: phase N added (<their words, short>)`. A change folded into unbuilt phases needs no question.
+5. Then build as usual from §1 below. The last phase always ends with the client docs rewritten (§4).
 
 ## 1. Read the phase, change the plan only on purpose
 - The phase's **Requirements** (P<n>.R<k>) are the spec: each has `Traces to`, `Acceptance` (exact "quoted" value) and `Test`.
@@ -32,11 +57,8 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
   exactly those paths, no more.
 - Need a signature, file or record the plan doesn't have, or a different one? **Edit plan.md first** (§2 Files, a §4 function block, §5 Records, plus a
   requirement if behavior changes), keep it minimal, and list it in the handover as `📐 Plan changed: …`.
-- A scope change the user asks for (a small tweak; a real feature goes through `/discovery`) → **all three docs, in this
-  order, before the code**: ① spec.md: a new rule `B<n> … · decided with user <date>` (plus an eval case E<n> when it
-  changes a reply); ② plan.md: a requirement `Traces to: B<n> · user <date>: "<their words>"`, and the changed §4
-  function block (its **Does** steps, In, Out); ③ its test. No re-approval. A change to something that already works
-  (a bug, a layout fix) needs no rule: just the requirement and its test.
+- A change the user asks for while you build → §0b. A fix to something that should already work (a bug, a layout
+  fix) needs no rule: just a requirement sourced to their words, and its test.
 - Run `.venv/bin/python $KIT/spec.py check` before coding: the only failures allowed now are this phase's missing tests.
 
 ## 2. Tests from the requirements, then code
@@ -133,7 +155,8 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
     next week. §7 gets a 1-minute version at the top.
   - plan.md **§8 Likely questions**: 8–10 questions a client or interviewer will ask about **this** build, each
     answered in 1–2 lines naming its function (cover the list in the template: why an LLM, prompt injection, a case the
-    guard misses, offline board vs live evals, concurrency/scale, cost + model, the next fix).
+    guard misses, offline board vs live evals, concurrency/scale, cost + model, the next fix), with
+    `**Covers:** phases 1–<last>` under the heading (`spec.py check` holds it to the last phase, like talk.md's).
 - One commit per phase, its body listing every changed file, then the tag:
   `git add -A && { echo "phase N: <name>"; echo; git diff --cached --name-status; } | git commit -q -F - && git tag -f phase-N`.
   **Never push**: commits stay local so every phase can be diffed (`git diff <plan | phase-(N-1)> phase-N`).

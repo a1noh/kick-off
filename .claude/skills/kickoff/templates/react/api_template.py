@@ -6,6 +6,7 @@ Every decision stays in agent.py (app kind: core.py) and tools.py.
 (panel -> function returning {"kind": "metrics"|"table"|"lines", ...}) as phases go live.
 """
 
+import json
 import uuid
 from pathlib import Path
 
@@ -95,6 +96,12 @@ def screen_text() -> str:
     lines += [f"[row] {b['label']}" for b in sb["board"]] + ["[main]"]
     lines += [f"[info] {p['text']}" for p in s["panels"] if "text" in p]
     lines += [f"[warning] {p['warning']}" for p in s["panels"] if "warning" in p]
+    shown = ("items", "rows", "lines")  # what a live panel displays, so a Try-it line can quote it
+    lines += [
+        f"[panel] {p['name']}: " + json.dumps({k: p[k] for k in shown if k in p}, ensure_ascii=False)
+        for p in s["panels"]
+        if p["live"]
+    ]
     return "\n".join(lines)
 
 

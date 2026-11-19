@@ -162,7 +162,7 @@ def without_comments(block: str) -> tuple[str, dict[str, str]]:
 
 def file_table() -> dict[str, int]:
     """Plan "Files": the table of every file the build writes: path (a folder ends in '/') -> the phase that writes it."""
-    return {path: int(phase) for path, phase in re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(\d)\s*\|", section("Files"), re.M)}
+    return {path: int(phase) for path, phase in re.findall(r"^\|\s*`([^`]+)`\s*\|\s*(\d+)\b[^|]*\|", section("Files"), re.M)}
 
 
 def params_typed(signature: str) -> dict[str, str]:
@@ -194,11 +194,11 @@ def params_of(signature: str) -> list[str]:
 
 
 def scenario_phases() -> dict[str, int]:
-    """Scenario id -> the phase that makes it work, from each phase's On screen line ("Board S2, S3 ⬜→✅", or ❌→✅)."""
+    """Scenario id -> the phase that makes it work, from each phase's On screen line ("Board S2, S3 ⬜→✅"; also ❌→✅, and new→✅ for a row a later phase adds)."""
     found: dict[str, int] = {}
     for n in phases():
         line = re.search(r"On screen[^\n]*", phase_block(n))
-        for group in re.findall(r"Board ([^·]*?)[⬜❌]→✅", line[0] if line else ""):
+        for group in re.findall(r"Board ([^·]*?)(?:[⬜❌]|new)→✅", line[0] if line else ""):
             for sid in re.findall(r"\b(S\d+|[Bb]onus)\b", group):
                 found.setdefault(sid[0].upper() + sid[1:], n)
     return found
