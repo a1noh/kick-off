@@ -11,9 +11,6 @@ blocks in "Functions" and "Evals", the phase lines, Try it and Requirements. -->
 ‹Kind + shape and why, in one line. LLM: "Gemini free tier via .env, extracts ‹fields› only" or "No AI: every step
 is plain Python." One line on the path a request takes. What it must do and why: docs/spec.md.›
 
-‹API shape only: **Scale:** the data today and the size the notes name · what the POC does per request · what breaks
-first · the change that fixes it and the number it aims at.›
-
 ## 2. Files
 **Every file the build writes**, by phase (CLAUDE.md "Coding standards": fewest files, each with one job).
 `spec.py check` fails on a code file that isn't here, and on a ticked phase whose files don't exist.
@@ -28,7 +25,7 @@ first · the change that fixes it and the number it aims at.›
 **How it's checked** (three layers, each with one job; §6 explains the evals):
 - **Tests** (`tests/`): one test per requirement in §7, run while building.
 - **Scenario board** (`evals/scenarios.py`): spec S1–S3 and the bonus played end to end, with their checks.
-- **Evals** (`evals/run.py`): every case in spec.md §7, one score.
+- **Evals** (`evals/run.py`): every case in spec.md §8, one score.
 
 ## 3. How it works
 One simple diagram: **one box per product file in §2** (`src/…`, `ui/api.py`) labeled with its job, the data stores it
@@ -53,10 +50,7 @@ flowchart LR
   TO -- "‹saves›" --> D
 ```
 
-| Step | Who decides | Why |
-|---|---|---|
-| ‹read the messy input› | ‹LLM / Python› | ‹…› |
-| ‹every rule in spec.md› | Python | ‹a prompt can be argued with; an `if` can't› |
+Each box is a step of spec.md §4 The design (who decides each step, and why, is there).
 
 ## 4. Functions
 The implementation spec: every function the rest of the code calls, grouped by file in `src/` (split by kind of work:
@@ -149,11 +143,8 @@ How one runs: a fresh ‹Agent / Desk› on an empty records folder → each com
 (checks not looked at) → otherwise every check: all true `pass` ✅, any false `fail` ❌.
 ‹Then `#### \`run_all(…) -> list[Result]\` · \`evals/scenarios.py\`` with Does, In and Out.›
 
-### `evals/run.py` · the evals: every case in spec.md §7, one score
-‹Search or ranking only, first: each metric in one plain sentence (precision@k: of what we showed, how much was right;
-recall@k: of what was right, how much did we show), one worked example from this project's labelled queries with the
-arithmetic, and why both are needed.›
-An **eval case** is one row of spec.md §7: its input and the one line that must come back. ‹Show one, real values.›
+### `evals/run.py` · the evals: every case in spec.md §8, one score
+An **eval case** is one row of spec.md §8: its input and the one line that must come back. ‹Show one, real values.›
 ‹One sentence on board vs evals for this project: AI → the evals call the real model, the board stays offline.›
 ‹Then `#### \`main() -> dict\` · \`evals/run.py\``: Does, In, and Out = passed · total · one entry per case.›
 

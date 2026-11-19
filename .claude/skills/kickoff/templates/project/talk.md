@@ -13,8 +13,8 @@ _The 3 scenarios in demo order, each as "type X → it does Y → the dashboard 
 
 ## 3. How it works
 **Key line: "The LLM understands, Python decides."** (app kind: "Every rule lives in one place, in plain Python.")
-_Phase 4 copies the finished diagram from plan.md §3 How it works here (the checker then holds it to the same files),
-and points at plan.md §4 for what each function does._
+_The last phase copies the design diagram from spec.md §4 here as is (the checker holds the two to the same text), then
+names the function that does each step and points at plan.md §4 for the details._
 
 ## 4. Decisions we made together
 _3–5 lines, "Chose X over Y because Z", each citing its business rule or decision (spec.md B<n>)._

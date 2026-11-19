@@ -14,7 +14,7 @@ in the folder first. Plan mode isn't needed: the plan file itself is the draft, 
 - Read `notes/raw.md` fully. Number its lines in your head; you'll cite them as `raw.md:L12`.
 - **Data pasted into the notes** (CSV/JSON/text blocks under a file name such as `orders.csv`): if that file is not in
   `data/` yet, write it to `data/<name>` **exactly as pasted** (no cleaning: the gotchas must stay for the code to handle).
-  Mention it in spec.md §6 (messy data).
+  Mention it in spec.md §7 (messy data).
 - Read every file in `data/` and **profile it for gotchas**: duplicates, missing values, inconsistent formats or casing,
   records in the past or outside allowed windows, conflicting rows, inactive/frozen/on-leave entities, capacity already
   full, the same value under two owners, flags stored as strings, values the rules need that the data lacks.
@@ -60,16 +60,16 @@ if it's missing, tell the user to install it before `/build`.
   Every error is a rule with exact JSON: a bad parameter is `400` with a fix-it message, an unknown id `404`, an
   unbuilt route `501` with `🚧 <feature> arrives in phase N`.
 - **plan.md §5 Records** shows each endpoint's request and response as JSON, next to the stored records.
-- **Search or ranking?** Then quality is measured, not eyeballed: spec.md §7 gets a second table, the **labelled
+- **Search or ranking?** Then quality is measured, not eyeballed: spec.md §8 gets a second table, the **labelled
   queries** `| # | Query | Relevant ids (best first) |` (Q1..Qn, 8–12, written from the data, covering synonyms,
   typos, filters and one query with no good answer), and plan.md §6 says how `evals/run.py` scores them: precision@k
   and recall@k per query and on average, the target the notes give (else ask), and how ranking ties are broken (a
-  rule in spec.md). A requirement in phase 4 quotes the target ("precision@3 ≥ 0.8"). **plan.md §6 opens with the
+  rule in spec.md). A requirement in phase 4 quotes the target ("precision@3 ≥ 0.8"). **spec.md §4 explains the
   metrics in plain words**, so the reader never has to hunt for them: one sentence each for what precision@k and
   recall@k ask ("of what we showed, how much was right?" · "of what was right, how much did we show?"), then **one
   worked example from this project's own labelled queries** (the query, the ids returned, the relevant ids, the two
   numbers and the arithmetic), then why both are needed (one alone can be gamed).
-- **Scale** (plan.md §1 gets a `**Scale:**` paragraph, and §8 a question on it): the data size today and the size the
+- **Scale** (spec.md §4 gets a `**Scale:**` paragraph, and plan.md §8 a question on it): the data size today and the size the
   notes name (ask if they don't), what the POC does per request (e.g. "scans all 30 rows in memory"), what breaks
   first as it grows, and the change that fixes it (an index, a search engine, pagination, a cache, a queue), with the
   latency or throughput number it is aiming at. Pagination and a result limit are rules, built in the POC. **Mark
@@ -111,7 +111,7 @@ workflow = a record + the action + its new state.
   - `evals/run.py` (when the plan uses a model) never counts a busy model as a wrong answer: live, a case whose reply
     is the model-unavailable line (or, where a fallback reader answers instead, a reply the fallback produced) is asked again after a pause (3 tries), then listed as **not scored**, apart from the
     fails; the scorecard and the Eval score panel say so. It has a requirement and an offline test (an extractor that
-    raises). Its cases are spec.md §7 row for row, each with its E id.
+    raises). Its cases are spec.md §8 row for row, each with its E id.
   - The model prompt states rules (what each field means), never example inputs taken from the eval cases.
   - The demo data can be reset: `src/data.py` has the reset the screen's Reset button calls, built in phase 2.
   - In the §3 diagram, only the numbered request path starts a label with a number; write "all 19 rows", not "19 rows".
@@ -152,15 +152,22 @@ names, no function names, so the client or a new teammate can read it top to bot
      panels (did the "before → after" in the phase happen?) → for each `Try it` line: start fresh (**New chat** / new
      upload / new question, to fit the shape), give the input, compare
      the reply **and** the panel to the expected result → all match? `/build` · anything off? tell Claude what you saw.
-4. **Business rules B1..Bn**: one line each, each traced to `raw.md:L<n>`, `data/<file>` or "decided with user <date>".
-5. **Decisions D1..Dn** on every ambiguous point (question · answer · why). Anything the notes don't say is an open
+4. **The design** (the most important section for the person presenting it): how the product works as **logical
+   steps**, before any file exists. One mermaid diagram (SAFE MERMAID, no dead ends, **no file or function names**):
+   what comes in → each check or decision in order → every way out (the answer, the stop, the handoff). Then the **who
+   decides each step** table (the AI model only reads; every rule is plain code, and why), **design choices** (3–5
+   lines: chose X over Y because Z, citing B/D ids), and **how we know it works** in plain words (scenarios, eval cases,
+   what passing means; for search or ranking, each metric in one sentence plus one worked example from the labelled
+   queries). For an API, the **Scale** paragraph sits here too. `spec.py check` fails without the diagram.
+5. **Business rules B1..Bn**: one line each, each traced to `raw.md:L<n>`, `data/<file>` or "decided with user <date>".
+6. **Decisions D1..Dn** on every ambiguous point (question · answer · why). Anything the notes don't say is an open
    question, asked in the approval gate below before approval, never decided silently.
-6. **Messy data and what we do about it**: table `# · What's messy · What the product does` (G1, G2, …), in plain words. Fail safe: unknown values take the
+7. **Messy data and what we do about it**: table `# · What's messy · What the product does` (G1, G2, …), in plain words. Fail safe: unknown values take the
    careful path.
-7. **What "good" looks like** (eval cases, 8–15) as a table `# · Input · Expected`, **grown from the 3 scenarios**: exact scenarios, variations,
+8. **What "good" looks like** (eval cases, 8–15) as a table `# · Input · Expected`, **grown from the 3 scenarios**: exact scenarios, variations,
    wrong inputs, and one case per data gotcha.
-8. **Out of scope** (+ the free-LLM-tier gap for personal, financial or health data).
-9. **Open questions**.
+9. **Out of scope** (+ the free-LLM-tier gap for personal, financial or health data).
+10. **Open questions**.
 
 ## 3b. Write `docs/plan.md`: the implementation spec (HOW it's built, the study file)
 Copy `templates/plan.md` and keep its headings (the kit parses **Files**, **How it works**, **Functions**, **Evals**
@@ -180,7 +187,7 @@ completely; a person must also be able to read it once and understand the code.
    file (`src/…`, `ui/api.py`) labeled with its job, the data stores it reads or writes, the user at each end, and
    arrows that say what they carry. The arrows one request follows (the S1 path) start with `1 `, `2 `, `3 `, … in the
    order they happen, once each; background arrows (loading data, saving, the owner's view) stay unnumbered. A guard, a queue or a stop box only when a spec.md rule needs one (CLAUDE.md
-   "Architecture"). SAFE MERMAID (CLAUDE.md), no dead ends. Then a short "who decides what" table. `spec.py check`
+   "Architecture"). SAFE MERMAID (CLAUDE.md), no dead ends. It is spec.md §4's design mapped to files: each step there lands in one box here (who decides lives in spec.md). `spec.py check`
    fails when a product file has no box or a box names a file §2 doesn't list.
 4. **Functions**, the implementation spec, grouped by `src/` file: one `### \`<file>\` — <its one job>` per file, then
    one block per function the rest of the code calls, exactly as the template shows (the kit parses it):
@@ -205,7 +212,7 @@ completely; a person must also be able to read it once and understand the code.
 5. **Records**: each record (input, decision/booking, queue row, audit line) as typed JSON, and where it lives.
 6. **Evals**, so a newcomer learns how the checks work: one `### \`evals/<file>\`` per evals file. Open each with
    what one item is, shown as commented JSON with real values (a scenario from spec S1–S3 + bonus: its commands, the
-   lines the user must see, its checks; an eval case from spec §7: its input and the one line that must come back),
+   lines the user must see, its checks; an eval case from spec §8: its input and the one line that must come back),
    then "how one runs" in a few steps, then its function blocks as in §4. Say in one sentence why the board (always
    offline) and the evals (the real model, in an AI project) are separate.
 7. **Phases** as checkboxes, **exactly 4** on the first run (a later feature adds Phase 5, 6, …). **UI first, then features:** phase 1 builds the whole screen with nothing

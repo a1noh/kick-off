@@ -22,7 +22,7 @@ Before presenting (1:40, code freeze): `.venv/bin/python scripts/demo.py`, then 
 | File | Job | Written by |
 |---|---|---|
 | `notes/raw.md` | the user's raw interview notes. **Never edit it** (a hook blocks it) | the user |
-| `docs/spec.md` | **the whole discovery in plain English (what + why)**: problem + success, the demo scenarios S1–S3, what the app shows, business rules B1..Bn (each traced to `raw.md:L<n>` or "decided with user <date>"), decisions D1..Dn, messy data G1..Gn, eval cases E1..En, out of scope. No code | `/discovery` (+ scope changes) |
+| `docs/spec.md` | **the whole discovery in plain English (what + why)**: problem + success, the demo scenarios S1–S3, what the app shows, **§4 The design** (the logical steps as one diagram, who decides each step, the design choices, how we know it works), business rules B1..Bn (each traced to `raw.md:L<n>` or "decided with user <date>"), decisions D1..Dn, messy data G1..Gn, eval cases E1..En, out of scope. No code | `/discovery` (+ scope changes) |
 | `docs/plan.md` | **the implementation spec (how), the one to study**: Status, §1 Overview, §2 Files (every file the build writes), §3 How it works (one diagram + who decides what), §4 Functions (each function: what it Does in order, its In and Out), §5 Records, §6 Evals (how it's checked), §7 Phases with requirements P<n>.R<k>, §8 Likely questions. The code is built from it. Cites spec.md, never restates it | `/discovery`; `/build` ticks phases |
 | `docs/talk.md` | **for the client and viewers**: the problem, the demo, how it works, decisions, safety, results, the build story. Cites functions by name (never `file:line`) | `/build` (§7 every phase, the rest in phase 4) |
 View the diagrams with ⇧⌘V in VS Code. Git history is the build log.
@@ -90,7 +90,7 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 ## Architecture: as small as the code, drawn from the plan
 - **The LLM understands; plain Python decides.** Every rule (identity, limits, money, eligibility, capacity, clashes,
   allowed state changes, safety) lives in code. An action that must never go wrong re-checks its own conditions.
-- The diagram (plan.md §3 How it works) has **one box per product file in §2 Files** and one arrow per call, labeled with the data it
+- The design (spec.md §4) is the logical steps, with no file names; plan.md §3 maps it to files and has **one box per product file in §2 Files** and one arrow per call, labeled with the data it
   carries. It is drawn for this project, never from a fixed template; `spec.py check` fails if a file has no box.
 - **Guards only when a rule needs one**, never by default:
   - **guard in** (before the model): when a spec rule must hold even if the model is wrong, down or talked into

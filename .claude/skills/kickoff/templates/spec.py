@@ -224,7 +224,7 @@ def plain(text: str) -> str:
 def doc_problems() -> list[str]:
     """Docs stay accurate: no file:line references, and every named function exists in the code."""
     problems, names = [], defined_names()
-    for rel in ("docs/talk.md", "docs/plan.md"):
+    for rel in ("docs/talk.md", "docs/plan.md", "docs/spec.md"):
         text = (ROOT / rel).read_text() if (ROOT / rel).exists() else ""
         problems += [f"{rel}: '{ref}' goes stale; name the function instead" for ref in FILE_LINE.findall(text)]
         if rel == "docs/plan.md":
@@ -233,6 +233,7 @@ def doc_problems() -> list[str]:
             problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
     problems += architecture_problems()
     problems += arrow_number_problems()
+    problems += design_problems()
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
     checked = [("docs/talk.md", talk, progress.ticked(1)), ("plan.md How it works", progress.section("How it works"), progress.ticked(2))]
     for where, text, live in checked:
@@ -243,12 +244,32 @@ def doc_problems() -> list[str]:
     return problems
 
 
+def design_problems() -> list[str]:
+    """spec.md §4 The design: one diagram of the logical steps (no file names), and talk.md §3 shows that same diagram once every phase is built."""
+    spec_path = ROOT / "docs" / "spec.md"
+    if not spec_path.exists() or not progress.plan_text():
+        return []
+    found = re.search(r"^## \d+\. The design\b[^\n]*\n(.*?)(?=^## |\Z)", spec_path.read_text(), re.M | re.S)
+    if not found:
+        return ["docs/spec.md: needs a '## 4. The design' section: the logical steps as one diagram, who decides each step, the design choices"]
+    diagrams = re.findall(r"```mermaid\n(.*?)```", found[1], re.S)
+    if not diagrams:
+        return ["docs/spec.md The design: needs one mermaid diagram of the logical steps"]
+    problems = [f"docs/spec.md The design: '{f}' is a file name; the design shows steps, plan.md §3 maps them to files" for f in PRODUCT_PATH.findall(diagrams[0])]
+    every = progress.phases()
+    talk_path = ROOT / "docs" / "talk.md"
+    if every and all(done for done, _ in every.values()) and talk_path.exists():
+        shown = re.findall(r"```mermaid\n(.*?)```", talk_path.read_text(), re.S)
+        if diagrams[0].strip() not in [d.strip() for d in shown]:
+            problems.append("docs/talk.md §3: copy spec.md §4's design diagram here as is (it changed, or it isn't there)")
+    return problems
+
+
 def architecture_problems() -> list[str]:
     """The architecture diagram matches the code plan: one box per product file in plan.md Files, and no other files."""
     planned = {f for f in progress.file_table() if re.match(r"(src/.+|ui/[^/]+)\.py$", f)}
     talk = (ROOT / "docs" / "talk.md").read_text() if (ROOT / "docs" / "talk.md").exists() else ""
     diagrams = [("plan.md How it works", progress.section("How it works"), bool(planned))]
-    diagrams.append(("docs/talk.md §3", talk, progress.ticked(4)))  # talk.md copies the diagram in phase 4
     problems = []
     for where, text, live in diagrams:
         drawn = {f for block in re.findall(r"```mermaid\n(.*?)```", text, re.S) for f in PRODUCT_PATH.findall(block)}

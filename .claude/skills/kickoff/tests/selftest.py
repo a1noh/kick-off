@@ -132,6 +132,8 @@ PHASE = (
 )
 PHASE_TEST = 'from agent import reply\n\n\ndef test_r1_{name}():\n    """plan.md P{n}.R1: yo -> hello."""\n    assert reply("yo") == "hello"\n'
 
+DESIGN = '```mermaid\nflowchart LR\n  U(["user"])\n  R["greet back"]\n  U -- "hi" --> R\n  R -- "hello" --> U\n```\n'
+
 
 def block(title: str) -> str:
     """The bash block under a '## <title>' heading in SKILL.md."""
@@ -205,7 +207,7 @@ def setup(c: Path) -> None:
 
 def plan_rules(c: Path) -> None:
     """T6–T13: requirements are grounded, quoted and tested, behind the approval gate."""
-    write(c, "docs/spec.md", "# Spec: probe\n## Business rules\n- **B1** greet back · raw.md:L3\n")
+    write(c, "docs/spec.md", "# Spec: probe\n## 4. The design\n" + DESIGN + "## Business rules\n- **B1** greet back · raw.md:L3\n")
     write(c, "src/agent.py", AGENT)
     write(c, "ui/api.py", API)
     write(c, "tests/test_phase1.py", TEST.format(want="hello"))
@@ -442,6 +444,16 @@ def build_phase(c: Path, n: int, name: str) -> None:
     amend(c, "docs/plan.md", f"- [ ] Phase {n}:", f"- [x] Phase {n}:")
 
 
+def design(c: Path) -> None:
+    """T33: spec.md must have The design with a diagram of steps, and no file names in it."""
+    good = (c / "docs/spec.md").read_text()
+    write(c, "docs/spec.md", good.replace("## 4. The design\n" + DESIGN, ""))
+    rejects(c, "T33 spec.md with no design section is rejected", "needs a '## 4. The design' section")
+    write(c, "docs/spec.md", good.replace('R["greet back"]', 'R["src/agent.py"]'))
+    rejects(c, "T33b a file name in the design diagram is rejected", "is a file name")
+    write(c, "docs/spec.md", good)
+
+
 def mid_build(c: Path) -> None:
     """M1–M12: a tweak, a feature folded into an unbuilt phase, and a phase added after everything was built keep the three docs in step."""
     start = sh("git add -A && git commit -qm before-scenarios; git rev-parse HEAD", c).stdout.split()[-1]
@@ -474,6 +486,8 @@ def mid_build(c: Path) -> None:
     rejects(c, "M7 feature: the built phase needs its Build-story entry", "phase 2 is ticked but has no Build-story entry")
     write(c, "docs/talk.md", (c / "docs/talk.md").read_text() + STORY.format(n=2))
     rejects(c, "M8 last phase: talk.md must cover every phase", "phases 1–2")
+    rejects(c, "M7b everything built: talk.md must show spec.md's design diagram", "copy spec.md §4's design diagram")
+    write(c, "docs/talk.md", (c / "docs/talk.md").read_text() + "\n" + DESIGN)
     amend(c, "docs/talk.md", "**Covers:** nothing built yet", "**Covers:** phases 1–2")
     rejects(c, "M9 last phase: the Likely questions must be answered", "Likely questions")
     write(c, "docs/plan.md", (c / "docs/plan.md").read_text() + "\n## 8. Likely questions\n**Covers:** phases 1–2\n\n- **Why no AI?** It only greets (`reply()`).\n")
@@ -651,6 +665,7 @@ def main() -> int:
     verify_and_hooks(c)
     parser(c)
     changes(c)
+    design(c)
     mid_build(c)
     kit_files(c, tmp)
     passed = sum(ok for _, ok, _ in results)

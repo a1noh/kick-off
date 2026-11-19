@@ -28,28 +28,61 @@ Must be true at the end: ‹a positive fact first: something saved, an exact rep
 How to check a phase: open the app → look at the Scenario board and the panels → for each Try-it line start fresh, give
 the input, compare the reply and the panels.
 
-## 4. Business rules
+## 4. The design
+How the product works, as logical steps, before any file exists: the thinking the build follows. No file or function
+names here (plan.md §3 maps each step to its file).
+
+```mermaid
+flowchart LR
+  IN(["‹the user sends …›"])
+  A["‹1 read: what comes in›"]
+  B["‹2 check: the rule that stops it›"]
+  C["‹3 decide: the rule that picks the answer›"]
+  OUT(["‹the reply›"])
+  STOP(["‹the stop reply›"])
+
+  IN -- "‹what they send›" --> A
+  A -- "‹what was read›" --> B
+  B -- "‹passes›" --> C
+  B -- "‹fails›" --> STOP
+  C -- "‹the answer›" --> OUT
+```
+
+**Who decides each step**
+| Step | Who | Why |
+|---|---|---|
+| ‹read the messy input› | ‹the AI model / plain code› | ‹it only reads; it never decides› |
+| ‹every rule in §5› | plain code | ‹a prompt can be argued with; an `if` can't› |
+
+**Design choices** (what we chose, what we turned down, why)
+- ‹Chose X over Y because Z› (B‹n›, D‹n›)
+
+**How we know it works**
+‹The checks in plain words: the demo scenarios (§2), the eval cases (§8) and what passing means. For search or
+ranking: what each quality number asks, one worked example from the labelled queries, and the target.›
+
+## 5. Business rules
 One line each, numbered, plain English, each with its source. The code must follow every one; tests cite them.
 - **B1** ‹rule, e.g. "A customer sees a bike's status only after the ticket and last name match the same row."› · raw.md:L‹n›
 - **B2** ‹rule› · data/‹file› (‹the fact in the data›)
 - **B3** ‹rule› · decided with user ‹date› (see D1)
 
-## 5. Decisions on the ambiguous points
+## 6. Decisions on the ambiguous points
 The notes were silent or unclear here, so we asked. Format: the question · the answer · why.
 - **D1** ‹question› · ‹answer› · ‹why› · decided with user ‹date›
 
-## 6. Messy data and what we do about it
+## 7. Messy data and what we do about it
 | # | What's messy | What the product does |
 |---|---|---|
 | G1 | ‹e.g. the same repair listed twice› | ‹e.g. shows it once› |
 
-## 7. What "good" looks like (the eval cases)
+## 8. What "good" looks like (the eval cases)
 | # | Input | Expected |
 |---|---|---|
 | E1 | ‹S1 input› | "‹exact reply›" |
 
-## 8. Out of scope (today)
+## 9. Out of scope (today)
 - ‹what we deliberately won't build› · raw.md:L‹n›
 
-## 9. Open questions (ask before the phase that needs them)
+## 10. Open questions (ask before the phase that needs them)
 - none

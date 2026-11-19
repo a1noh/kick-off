@@ -113,7 +113,7 @@ The docs change **first**, in this order, then the code. The user's words are th
   `str` and `src/core.py` checks them (the spec's `400`, never the framework's `422`). From phase 2 each route calls its
   `src/core.py` function. Phase 4's `evals/run.py` prints the eval cases **and** the labelled-query scores
   (precision@k, recall@k per query and on average; with a keyword reader, both readers side by side), and you replace
-  the Scale paragraph's estimates with numbers you measured (time one request with and without the model).
+  the Scale paragraph's estimates (spec.md §4) with numbers you measured (time one request with and without the model).
 - **Later phases** replace stubs and turn placeholders live. **Never remove a panel or a board row.** An owner action
   calls a gated function in `src/tools.py` and is audited. From phase 2, keep `scripts/demo.py` running.
 - One short ★ Insight per file: *why*, not what.
@@ -153,8 +153,8 @@ The docs change **first**, in this order, then the code. The user's words are th
   new feature shows up in the demo, the decisions, the limits and the questions. Then set talk.md's
   `**Covers:** phases 1–<last>` line:
   - `docs/talk.md` §1–§6, for the client: the problem in their words (spec.md), the 3 scenarios as "type X →
-    it does Y", how it works (plan.md §3's diagram copied as is, "LLM understands, Python decides", a pointer to plan.md
-    §4 for each function), 3–5 decisions
+    it does Y", how it works (spec.md §4's design diagram copied as is, "LLM understands, Python decides", the
+    function that does each step, a pointer to plan.md §4), 3–5 decisions
     citing B<n>/D<n>, safety & known limits naming the function that enforces each, eval score + production metrics +
     next week. §7 gets a 1-minute version at the top.
   - plan.md **§8 Likely questions**: 8–10 questions a client or interviewer will ask about **this** build, each
