@@ -33,7 +33,7 @@ How the product works, as logical steps, before any file exists: the thinking th
 names here (plan.md §3 maps each step to its file).
 
 ```mermaid
-flowchart LR
+flowchart TD
   IN(["‹the user sends …›"])
   A["‹1 read: what comes in›"]
   B["‹2 check: the rule that stops it›"]

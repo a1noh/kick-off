@@ -102,7 +102,7 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
   (python-dotenv). Never read or print `.env`. The LLM **extracts** JSON fields; replies are Python templates filled from
   tool results. Generated text (a draft, a summary) is checked against the source and approved by a human before sending.
 - Tests never call the network: the extractor is a parameter, tests pass a 1-line fixed function. An audit log (JSONL) of every decision.
-- Diagrams: mermaid `flowchart LR`, quoted labels, labeled solid arrows. No HTML tags, no dotted, two-way or chained
+- Diagrams: mermaid `flowchart TD` (top to bottom: a long left-to-right diagram renders as a thin strip that the VS Code preview can lose), quoted labels, labeled solid arrows. No HTML tags, no dotted, two-way or chained
   arrows. **A clear path, no dead ends**: every node has an arrow out, except stores and end points.
 
 ## Coding standards (the one place these rules live: plan.md, `/build` and `spec.py check` all follow it)

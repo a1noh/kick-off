@@ -34,7 +34,7 @@ numbered 1, 2, 3, … in order; background arrows (loading, saving, the owner's 
 when a spec.md rule needs one. `spec.py check` fails when a product file has no box. SAFE MERMAID (CLAUDE.md).
 
 ```mermaid
-flowchart LR
+flowchart TD
   U(["‹the user›"])
   API["ui/api.py<br/>‹door›"]
   AG["src/agent.py<br/>‹orchestrates: one job›"]
