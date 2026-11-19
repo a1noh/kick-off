@@ -84,7 +84,7 @@ def screen() -> dict:
 
 
 def screen_text() -> str:
-    """The screen as text, the format the kit's spec.py verify reads (scripts/spec.py verify writes it to verify.md)."""
+    """The screen as text, the format the kit's spec.py verify reads."""
     s = screen()
     sb = s["sidebar"]
     lines = ["[tabs] " + " | ".join(s["tabs"]), "[sidebar]", f"### {s['title']}", f"**Progress** {sb['progress']}"]

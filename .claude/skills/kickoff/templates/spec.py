@@ -514,6 +514,7 @@ def cmd_changes(n: int) -> int:
         before, after = functions_in(old), functions_in(new)
         lines = [f"+ {name}" for name in after if name not in before]
         lines += [f"~ {name}" for name in after if name in before and before[name] != after[name]]
+        lines += [f"- {name} (removed)" for name in before if name not in after]
         if old and outside(old) != outside(new):
             lines.append("~ (outside functions: a constant, a prompt, data or the file's docstring)")
         any_change = any_change or bool(lines)
@@ -535,7 +536,7 @@ def cmd_changes(n: int) -> int:
         written = functions_in((ROOT / rel).read_text()) if (ROOT / rel).exists() else {}
         for entry in entries:
             if entry["name"] not in written:
-                print(f"   still to write (phase {max(table.get(rel, upcoming[0]), upcoming[0])}): {rel} · {entry['name']} — {entry.get('title', '')}")
+                print(f"   still to write (phase {max(table.get(rel, upcoming[0]), upcoming[0])} or later): {rel} · {entry['name']} — {entry.get('title', '')}")
     return 0
 
 

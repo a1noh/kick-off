@@ -74,7 +74,7 @@ The docs change **first**, in this order, then the code. The user's words are th
   - Tab 1 = the user's door. Tab 2 = **📊 Owner dashboard** (KPIs, domain view, queue, audit, eval score), read-only.
     Panels not live yet show `⬜ <panel>: arrives in phase N`.
   - **Scenario board** with **3 states** (⬜ not built: every reply is a 🚧 stub and sub-checks are not evaluated ·
-    ❌ fail · ✅ pass), computed offline by `evals/scenarios.py` `run_all(extractor) -> list[Result]`
+    ❌ fail · ✅ pass), computed offline by `evals/scenarios.py` `run_all(agent_factory) -> list[Result]` (the factory builds the door with an offline extractor)
     (`Result.state`, `Result.checks: [(label, bool | None)]`), cached on file mtimes. A "did *not* happen" check is
     vacuously true on a stub, so it is only evaluated after a real reply.
   - A stub `src/agent.py` (app: `src/core.py`) with its final interface from plan.md; every reply is `🚧 <feature> arrives in
@@ -93,7 +93,7 @@ The docs change **first**, in this order, then the code. The user's words are th
   class Console:
       """<its plan.md line>"""
 
-      def __init__(self, extract: Callable = extract, out_dir: Path = OUT) -> None:
+      def __init__(self, extract: Callable | None = None, out_dir: Path = OUT) -> None:  # phase 2: default extract = llm.extract
           """<its plan.md line>"""
           self.app = FastAPI()
           self.app.include_router(make_router(extract, out_dir))
@@ -141,7 +141,7 @@ The docs change **first**, in this order, then the code. The user's words are th
 6. The app is running. **React:** rebuild if `ui/web/` changed (`cd ui/web && npm run build`). If `.app.pid` is alive,
    restart it (uvicorn doesn't reload Python). Else take the first free port from 8501 to 8510 (`lsof -ti tcp:$P` empty),
    run `.venv/bin/uvicorn api:app --app-dir ui --port $P > out/app.log 2>&1 &`, save `echo $! > .app.pid; echo $P > .app.port`,
-   check `curl -s localhost:$P/api/screen` returns JSON, `open http://localhost:$P`.
+   check `curl -s localhost:$P/api/screen` returns JSON (retry for a few seconds: the server needs a moment), `open http://localhost:$P`.
 
 ## 4. Docs for this phase, then commit (local only)
 - Append to `docs/talk.md` §7 Build story: `**Phase N · <name>** · Was broken: … · Fixed by: `function()` … · Why it

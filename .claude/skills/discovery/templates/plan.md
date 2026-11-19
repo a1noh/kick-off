@@ -150,6 +150,9 @@ How one runs: a fresh ‹Agent / Desk› on an empty records folder → each com
 ‹Then `#### \`run_all(…) -> list[Result]\` · \`evals/scenarios.py\`` with Does, In and Out.›
 
 ### `evals/run.py` · the evals: every case in spec.md §7, one score
+‹Search or ranking only, first: each metric in one plain sentence (precision@k: of what we showed, how much was right;
+recall@k: of what was right, how much did we show), one worked example from this project's labelled queries with the
+arithmetic, and why both are needed.›
 An **eval case** is one row of spec.md §7: its input and the one line that must come back. ‹Show one, real values.›
 ‹One sentence on board vs evals for this project: AI → the evals call the real model, the board stays offline.›
 ‹Then `#### \`main() -> dict\` · \`evals/run.py\``: Does, In, and Out = passed · total · one entry per case.›

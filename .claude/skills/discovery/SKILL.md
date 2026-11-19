@@ -64,7 +64,11 @@ if it's missing, tell the user to install it before `/build`.
   queries** `| # | Query | Relevant ids (best first) |` (Q1..Qn, 8–12, written from the data, covering synonyms,
   typos, filters and one query with no good answer), and plan.md §6 says how `evals/run.py` scores them: precision@k
   and recall@k per query and on average, the target the notes give (else ask), and how ranking ties are broken (a
-  rule in spec.md). A requirement in phase 4 quotes the target ("precision@3 ≥ 0.8").
+  rule in spec.md). A requirement in phase 4 quotes the target ("precision@3 ≥ 0.8"). **plan.md §6 opens with the
+  metrics in plain words**, so the reader never has to hunt for them: one sentence each for what precision@k and
+  recall@k ask ("of what we showed, how much was right?" · "of what was right, how much did we show?"), then **one
+  worked example from this project's own labelled queries** (the query, the ids returned, the relevant ids, the two
+  numbers and the arithmetic), then why both are needed (one alone can be gamed).
 - **Scale** (plan.md §1 gets a `**Scale:**` paragraph, and §8 a question on it): the data size today and the size the
   notes name (ask if they don't), what the POC does per request (e.g. "scans all 30 rows in memory"), what breaks
   first as it grows, and the change that fixes it (an index, a search engine, pagination, a cache, a queue), with the
