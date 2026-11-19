@@ -595,12 +595,15 @@ DIAGRAM_PAGE = """<!doctype html>
 
 
 def cmd_diagrams() -> int:
-    """Write docs/diagrams/diagrams.html: every mermaid diagram in spec.md, plan.md and talk.md on one page, under its section."""
-    sections = []
+    """Write docs/diagrams/diagrams.html: every distinct mermaid diagram in the docs on one page, under its section."""
+    sections, seen = [], set()
     for rel in ("docs/spec.md", "docs/plan.md", "docs/talk.md"):
         path = ROOT / rel
         text = path.read_text() if path.exists() else ""
         for found in re.finditer(r"```mermaid\n(.*?)```", text, re.S):
+            if found[1].strip() in seen:  # talk.md repeats spec.md's design diagram: show it once
+                continue
+            seen.add(found[1].strip())
             heading = ([h for h in re.findall(r"^## (.+)$", text[: found.start()], re.M)] or [""])[-1]
             body = found[1].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             sections.append(f'<section><h2>{heading}</h2><p class="where">{rel}</p><pre class="mermaid">\n{body}</pre></section>')
