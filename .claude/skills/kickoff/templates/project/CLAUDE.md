@@ -25,7 +25,8 @@ Before presenting (1:40, code freeze): `.venv/bin/python scripts/demo.py`, then 
 | `docs/spec.md` | **the whole discovery in plain English (what + why)**: problem + success, the demo scenarios S1–S3, what the app shows, **§4 The design** (the logical steps as one diagram, who decides each step, the design choices, how we know it works), business rules B1..Bn (each traced to `raw.md:L<n>` or "decided with user <date>"), decisions D1..Dn, messy data G1..Gn, eval cases E1..En, out of scope. No code | `/discovery` (+ scope changes) |
 | `docs/plan.md` | **the implementation spec (how), the one to study**: Status, §1 Overview, §2 Files (every file the build writes), §3 How it works (one diagram + who decides what), §4 Functions (each function: what it Does in order, its In and Out), §5 Records, §6 Evals (how it's checked), §7 Phases with requirements P<n>.R<k>, §8 Likely questions. The code is built from it. Cites spec.md, never restates it | `/discovery`; `/build` ticks phases |
 | `docs/talk.md` | **for the client and viewers**: the problem, the demo, how it works, decisions, safety, results, the build story. Cites functions by name (never `file:line`) | `/build` (§7 every phase, the rest in phase 4) |
-View the diagrams with ⇧⌘V in VS Code. Git history is the build log.
+**See every diagram on one page:** `docs/diagrams/diagrams.html` (open it in a browser; the kit rewrites it from the
+markdown every time Claude finishes a turn, with `spec.py diagrams`). Git history is the build log.
 
 ## Product layout (Coding standards below decide what exists: every file is named in plan.md §2 Files)
 `src/` = the product (Python decides) · `ui/` = the screen only · `tests/` · `evals/` · `data/` · `scripts/demo.py`.

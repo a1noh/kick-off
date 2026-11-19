@@ -24,6 +24,7 @@ if ls tests/test_*.py >/dev/null 2>&1; then
   fi
 fi
 
+"$PY" "$KIT/spec.py" diagrams >/dev/null 2>&1   # keep docs/diagrams/diagrams.html in step with the docs
 OUT=$("$PY" "$KIT/spec.py" check 2>&1)
 if [ $? -ne 0 ]; then
   echo "plan.md or the code breaks a kit rule - fix it before finishing (CLAUDE.md: Plan-driven, Coding standards):" >&2

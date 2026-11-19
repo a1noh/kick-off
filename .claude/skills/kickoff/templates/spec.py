@@ -1,8 +1,9 @@
-"""The kit's rule checker for a /kickoff project. Runs from the kit, in the project folder; writes no files.
+"""The kit's rule checker for a /kickoff project. Runs from the kit, in the project folder; only `diagrams` writes a file.
 
   .venv/bin/python <kit>/templates/spec.py check      plan + code + docs obey the rules (the Stop hook runs it)
   .venv/bin/python <kit>/templates/spec.py verify N   run phase N's requirement tests + Try-it screen claims, print them
   .venv/bin/python <kit>/templates/spec.py changes N  what phase N added to the code (in the plan's words), what's coming
+  .venv/bin/python <kit>/templates/spec.py diagrams   every diagram in the docs on one page: docs/diagrams/diagrams.html
 
 The rules are written once, in the project's CLAUDE.md ("Plan-driven" and "Coding standards"); this file enforces them.
 """
@@ -568,6 +569,49 @@ def cmd_changes(n: int) -> int:
     return 0
 
 
+DIAGRAM_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}: diagrams</title>
+<style>
+  :root {{ color-scheme: light dark; --bg: #ffffff; --ink: #1f2328; --muted: #59636e; --line: #d1d9e0; }}
+  @media (prefers-color-scheme: dark) {{ :root {{ --bg: #1e1e1e; --ink: #e6e6e6; --muted: #9da5ae; --line: #3a3a3a; }} }}
+  body {{ margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 -apple-system, system-ui, sans-serif; }}
+  main {{ max-width: 1000px; margin: 0 auto; padding: 24px 16px 64px; }}
+  h1 {{ font-size: 24px; margin: 0 0 4px; }} p.note {{ color: var(--muted); margin: 0 0 24px; }}
+  section {{ border-top: 1px solid var(--line); padding: 20px 0; }} h2 {{ font-size: 18px; margin: 0 0 4px; }}
+  p.where {{ color: var(--muted); margin: 0 0 12px; font-size: 14px; }} .mermaid {{ text-align: center; }}
+</style></head>
+<body><main>
+<h1>{title}</h1>
+<p class="note">Every diagram in docs/, drawn from the markdown by the kit (spec.py diagrams). Open this file in a browser; the markdown is the source.</p>
+{sections}
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({{ startOnLoad: true, theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default" }});
+</script>
+</body></html>
+"""
+
+
+def cmd_diagrams() -> int:
+    """Write docs/diagrams/diagrams.html: every mermaid diagram in spec.md, plan.md and talk.md on one page, under its section."""
+    sections = []
+    for rel in ("docs/spec.md", "docs/plan.md", "docs/talk.md"):
+        path = ROOT / rel
+        text = path.read_text() if path.exists() else ""
+        for found in re.finditer(r"```mermaid\n(.*?)```", text, re.S):
+            heading = ([h for h in re.findall(r"^## (.+)$", text[: found.start()], re.M)] or [""])[-1]
+            body = found[1].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            sections.append(f'<section><h2>{heading}</h2><p class="where">{rel}</p><pre class="mermaid">\n{body}</pre></section>')
+    title = (re.findall(r"^# (?:Spec|Plan): (.+)$", (ROOT / "docs" / "spec.md").read_text(), re.M) or ["Diagrams"])[0] if (ROOT / "docs" / "spec.md").exists() else "Diagrams"
+    out = ROOT / "docs" / "diagrams" / "diagrams.html"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(DIAGRAM_PAGE.format(title=title, sections="\n".join(sections) or "<p>No diagrams yet.</p>"))
+    print(f"{out.relative_to(ROOT)}: {len(sections)} diagram(s)")
+    return 0
+
+
 def cmd_check() -> int:
     """Print every rule problem (and warning); exit 1 when any rule fails."""
     fails, warns = code_problems()
@@ -613,6 +657,8 @@ if __name__ == "__main__":
     if args[:1] == ["_render"]:
         print("<<<SCREEN>>>\n" + _render())
         sys.exit(0)
+    if args[:1] == ["diagrams"]:
+        sys.exit(cmd_diagrams())
     if args[:1] == ["changes"] and len(args) == 2 and args[1].isdigit():
         sys.exit(cmd_changes(int(args[1])))
     if args[:1] == ["verify"] and len(args) == 2 and args[1].isdigit():

@@ -18,7 +18,7 @@ Lives in the kit only (`<kit>/CHEATSHEET.md`); `/kickoff` prints its path.
 3. Keep on screen: `notes/raw.md` · the app (from phase 1; `/build` prints its URL) · Source Control `⌃⇧G` → Graph
    (every step commits and tags itself: `kickoff` → `plan` → `phase-1` … `phase-4`)
 
-**Can't see a diagram?** ⇧⌘V in VS Code (`/kickoff` installs the mermaid preview), or view the `.md` on GitHub.
+**See the diagrams:** open `docs/diagrams/diagrams.html` in a browser (every diagram on one page, kept up to date by the kit).
 
 ## Words you'll see
 **the app** = 2 tabs: the user's door (chat, upload, Q&A, form) + the **📊 Owner dashboard** · **Scenario board** = the

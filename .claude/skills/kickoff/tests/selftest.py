@@ -452,6 +452,9 @@ def design(c: Path) -> None:
     write(c, "docs/spec.md", good.replace('R["greet back"]', 'R["src/agent.py"]'))
     rejects(c, "T33b a file name in the design diagram is rejected", "is a file name")
     write(c, "docs/spec.md", good)
+    out = sh(f".venv/bin/python {SPEC} diagrams", c).stdout
+    page = (c / "docs/diagrams/diagrams.html").read_text() if (c / "docs/diagrams/diagrams.html").exists() else ""
+    expect("T33c spec.py diagrams writes every doc diagram onto one page", "diagram(s)" in out and page.count('class="mermaid"') >= 2 and "greet back" in page, out)
 
 
 def mid_build(c: Path) -> None:

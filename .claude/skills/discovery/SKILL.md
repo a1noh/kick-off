@@ -280,7 +280,8 @@ are only checked once a phase is ticked), every B<n> cited must exist and every 
 until it prints `SPEC OK`.
 
 ## 5. Finish: the approval gate
-- Tell the user: view the diagrams with **⇧⌘V** on `docs/plan.md`.
+- Run `.venv/bin/python $KIT/spec.py diagrams` and tell the user: every diagram is on one page,
+  `docs/diagrams/diagrams.html` (`open docs/diagrams/diagrams.html`).
 - **Open questions first:** ask them with AskUserQuestion (max 4 per call; recommended answer first). Write each answer
   into spec.md as a decision (`D<n> … · decided with user <date>`) and update the rules and plan that use it.
 - On a re-run: list in 3–5 bullets what changed in spec.md and plan.md, and why (which new raw.md lines).
