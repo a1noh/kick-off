@@ -22,6 +22,7 @@ const SAMPLE = {
       { id: "S1", title: "Happy path", state: "not_built", label: "⬜ S1 · Happy path", checks: ["⬜ reply matches"], done: 0, total: 1, not_built: true, note: "not built yet (🚧 stub reply)", works_in: 2 },
       { id: "S2", title: "Handoff", state: "not_built", label: "⬜ S2 · Handoff", checks: ["⬜ queue row written"], done: 0, total: 1, not_built: true, note: "not built yet (🚧 stub reply)", works_in: 3 },
     ],
+    can_reset: true,
     next: "/build",
   },
   panels: [{ name: "KPIs", phase: 2, live: false, wide: true, shows: "counts", text: "⬜ KPIs: arrives in phase 2" }],

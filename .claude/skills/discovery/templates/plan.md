@@ -11,6 +11,9 @@ blocks in "Functions" and "Evals", the phase lines, Try it and Requirements. -->
 ‹Kind + shape and why, in one line. LLM: "Gemini free tier via .env, extracts ‹fields› only" or "No AI: every step
 is plain Python." One line on the path a request takes. What it must do and why: docs/spec.md.›
 
+‹API shape only: **Scale:** the data today and the size the notes name · what the POC does per request · what breaks
+first · the change that fixes it and the number it aims at.›
+
 ## 2. Files
 **Every file the build writes**, by phase (CLAUDE.md "Coding standards": fewest files, each with one job).
 `spec.py check` fails on a code file that isn't here, and on a ticked phase whose files don't exist.
@@ -115,7 +118,11 @@ down (`null` = `None`, `true` = `True`). `.jsonl` ("JSON Lines") is a text file 
 only ever added, never changed.
 ### ‹record› (`out/‹name›.jsonl`)
 ```json
-{"‹field›": "str", "‹field›": "int", "at": "str (ISO time)"}
+{
+  "‹field›": "str",
+  "‹field›": "int",
+  "at": "str (ISO time)"
+}
 ```
 
 ## 6. Evals

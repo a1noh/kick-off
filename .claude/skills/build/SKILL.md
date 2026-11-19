@@ -54,20 +54,55 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
     vacuously true on a stub, so it is only evaluated after a real reply.
   - A stub `src/agent.py` (app: `src/core.py`) with its final interface from plan.md; every reply is `🚧 <feature> arrives in
     phase N.` and never claims success or shows data. No `llm.py` / `data.py` yet.
-  - Required tests: `test_stub_replies_never_show_green` and `tests/test_screen.py::test_screen_matches_plan_and_board`.
+  - Required tests: `test_stub_replies_never_show_green` and `tests/test_screen.py::test_screen_matches_plan_and_board`
+    (the kit's file, copied below): give each the docstring citing the requirement the plan maps to it (`"""plan.md P1.R3: …"""`).
   - **The screen** (the kit's React template):
-    `cp $KIT/react/api_template.py ui/api.py; mkdir -p ui/web; cp -R $KIT/react/{package.json,vite.config.js,index.html,src} ui/web/; cp $KIT/react/test_screen_api.py tests/test_screen.py`,
+    `cp $KIT/react/api_template.py ui/api.py; mkdir -p ui/web; for f in package.json vite.config.js index.html src; do cp -R $KIT/react/$f ui/web/; done; cp $KIT/react/test_screen_api.py tests/test_screen.py`,
     then `uv pip install --python .venv/bin/python fastapi==0.115.6 uvicorn==0.32.1 httpx==0.28.1` and
     `(cd ui/web && npm install --no-audit --no-fund && npm run build)`. Fill `ui/api.py`'s TITLE, TABS, PANELS, WIDE
-    and SHOWS (spec.md §3 table). The guide sidebar comes with the template: don't rewrite it. `npm test` must pass.
+    and SHOWS (spec.md §3 table); from phase 2 set `RESET` to the plan's reset function (the Reset button only shows once it is set). The guide sidebar comes with the template: don't rewrite it. `npm test` must pass.
+- **API shape** (plan.md §1 says `API`): phase 1 also builds `src/service.py`: `make_router(extract, out_dir)` with
+  **every** endpoint answering `501` and `{"status": "not_built", "message": "🚧 <feature> arrives in phase N."}`, and
+  the console (each instance owns its app, so the board and the tests pass an offline extractor and a temp folder):
+  ```python
+  class Console:
+      """<its plan.md line>"""
+
+      def __init__(self, extract: Callable = extract, out_dir: Path = OUT) -> None:
+          """<its plan.md line>"""
+          self.app = FastAPI()
+          self.app.include_router(make_router(extract, out_dir))
+
+      def reply(self, line: str) -> str:
+          """<its plan.md line>"""
+          method, _, rest = line.strip().partition(" ")
+          path, brace, body = rest.partition(" {")
+          if method.upper() not in ("GET", "POST", "PUT", "DELETE") or not path.startswith("/"):
+              return '400\n{"error": "Type a request line, like GET /v1/<an endpoint>."}'
+          response = TestClient(self.app).request(method.upper(), path, json=json.loads(brace.strip() + body) if brace else None)
+          return f"{response.status_code}\n{json.dumps(response.json(), indent=2, ensure_ascii=False)}"
+  ```
+  In `ui/api.py`: `app.include_router(make_router(...))`, `config["agent_factory"] = Console`,
+  `TABS[0] = "🔌 API console"`, and `DOOR = {"name": "API console", "fresh": "Clear", "placeholder": "GET /v1/…"}`; the
+  board plays its request lines through `Console` too. A reply is "not built" when it contains 🚧. Route parameters are
+  `str` and `src/core.py` checks them (the spec's `400`, never the framework's `422`). From phase 2 each route calls its
+  `src/core.py` function. Phase 4's `evals/run.py` prints the eval cases **and** the labelled-query scores
+  (precision@k, recall@k per query and on average; with a keyword reader, both readers side by side), and you replace
+  the Scale paragraph's estimates with numbers you measured (time one request with and without the model).
 - **Later phases** replace stubs and turn placeholders live. **Never remove a panel or a board row.** An owner action
   calls a gated function in `src/tools.py` and is audited. From phase 2, keep `scripts/demo.py` running.
 - One short ★ Insight per file: *why*, not what.
 
 ## 3. Verify (nothing goes back to the user until all of this is green)
-1. `.venv/bin/python -m pytest -q tests`: green.
+1. **Tick the phase** in plan.md (`- [x] Phase N: …`) first: the tests and the screen checks read the ticks, so a test like
+   "phase 3 unticked → 🚧 stub" is only true once the plan says what is built. If anything below stays red, untick it
+   before you stop. Then `.venv/bin/python -m pytest -q tests`: green.
 2. From phase 2: `.venv/bin/python scripts/demo.py` (live Gemini if the plan uses it; key missing or Gemini down → say so, continue).
-3. **Tick the phase** in plan.md (`- [x] Phase N: …`): the screen checks must see the after-tick state.
+   **A live run that fails is a finding, not a number to tune away.** Fix the prompt with a general rule (what the
+   field means), never by pasting the failing input into it; re-run at least twice; and report every prompt change with
+   the score before and after. talk.md §6 states the score as the last run in `out/evals.json` plus how it varied
+   ("10/10 live; 9/10 on 2 of 7 runs before the prompt fix"), and names the failures that were the safe kind.
+3. (The tick from step 1 stays.)
 4. `.venv/bin/python $KIT/spec.py verify N`: runs the phase's requirement tests and its Try-it screen claims against
    the rendered screen, prints them, and must end `VERIFY OK`. A ❌ claim means the plan, the screen and the guide
    disagree: fix the code (or, if the plan line is wrong, fix the plan and say so), then repeat from step 1.

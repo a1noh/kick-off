@@ -61,9 +61,11 @@ export default function Sidebar({ s, title, onReset, onTry, busy }) {
           <Board board={s.board} />
         </section>
 
-        <button type="button" className="ghost reset" onClick={onReset}>
-          <RotateCcw size={14} aria-hidden /> Reset demo data
-        </button>
+        {s.can_reset && (
+          <button type="button" className="ghost reset" onClick={onReset}>
+            <RotateCcw size={14} aria-hidden /> Reset demo data
+          </button>
+        )}
       </Collapsible.Content>
     </Collapsible.Root>
   );

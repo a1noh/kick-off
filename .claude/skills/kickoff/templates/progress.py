@@ -168,12 +168,24 @@ def file_table() -> dict[str, int]:
 def params_typed(signature: str) -> dict[str, str]:
     """Parameter name -> its type from a signature's inside, e.g. 'text: str, n: int = 2' -> {'text': 'str', 'n': 'int'}."""
     found = {}
-    for part in re.split(r",(?![^\[]*\])", signature):
+    for part in split_top(signature):
         name, _, rest = part.partition(":")
         name = name.split("=")[0].strip().lstrip("*")
         if name and name not in ("self", "/"):
             found[name] = rest.split("=")[0].strip()
     return found
+
+
+def split_top(text: str) -> list[str]:
+    """Split on the commas outside brackets, so 'a: dict[str, list[str]], b: int' gives two parts."""
+    parts, depth, start = [], 0, 0
+    for i, char in enumerate(text):
+        depth += char in "[(" 
+        depth -= char in "])"
+        if char == "," and depth == 0:
+            parts.append(text[start:i])
+            start = i + 1
+    return [*parts, text[start:]]
 
 
 def params_of(signature: str) -> list[str]:
@@ -182,11 +194,11 @@ def params_of(signature: str) -> list[str]:
 
 
 def scenario_phases() -> dict[str, int]:
-    """Scenario id -> the phase that makes it work, from each phase's On screen line ("Board S2, S3 ⬜→✅")."""
+    """Scenario id -> the phase that makes it work, from each phase's On screen line ("Board S2, S3 ⬜→✅", or ❌→✅)."""
     found: dict[str, int] = {}
     for n in phases():
         line = re.search(r"On screen[^\n]*", phase_block(n))
-        for group in re.findall(r"Board ([^·]*?)⬜→✅", line[0] if line else ""):
+        for group in re.findall(r"Board ([^·]*?)[⬜❌]→✅", line[0] if line else ""):
             for sid in re.findall(r"\b(S\d+|[Bb]onus)\b", group):
                 found.setdefault(sid[0].upper() + sid[1:], n)
     return found

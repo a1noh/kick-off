@@ -27,6 +27,9 @@ in the folder first. Plan mode isn't needed: the plan file itself is the draft, 
   booking, calculator, planner), **dashboard** (data → filters, charts, tables), **workflow** (records move through
   states: tickets, approvals, inventory). An app may have **one optional AI helper** for a single step (e.g. "type your
   request in words → booking fields"), never for a rule.
+- **API** (either kind): the notes ask for an API, endpoints or a service other programs call ("build an API from this
+  dataset"). The product is its HTTP routes; see **The API shape** below. Agent kind when a route takes free text
+  (a search box, a question), app kind when every parameter is a field.
 - **Default: agent.** Only pick app when the notes clearly have no free text at the core.
 - Mixed? Pick the kind whose **core** job it is, and put the rest in Out of scope or in the optional helper.
   Nothing fits? Pick the closest shape, say so in one line, and adapt the door (CLAUDE.md "The app"): the method
@@ -37,6 +40,44 @@ Say kind + shape and why in one line of the Goal.
 the door and the Owner dashboard change per project. It needs Node ≥ 18 (`node -v`, or `bash -lc 'node -v'` for nvm):
 if it's missing, tell the user to install it before `/build`.
 
+**The API shape** (the method never changes; only the door does):
+- **The door is the request.** Tab 1 is a **🔌 API console**: the user types a request line (`GET /v1/providers/search?q=heart
+  doctor in austin`, or `POST /v1/… {json}`) and sees the status code and the JSON. Scenarios, Try-it lines and eval
+  inputs are request lines; an expected value is **one plain piece** of the reply in quotes, with no quote marks inside
+  it: a message text ("2 active providers match.") or a value ("1003"), never a key-value pair. The screen and the
+  checker pass a console line when the reply contains that piece.
+- **Files:** `src/service.py` is the product's HTTP door: a FastAPI `APIRouter` under `/v1` with one thin route per
+  endpoint (typed parameters, calls one `src/core.py` function, returns its dict and status) and a `Console` class whose
+  `reply(line)` runs a request line against those routes in-process. The router comes from
+  `make_router(extract, out_dir)`, so the board, the tests and the evals can pass an offline extractor and a temporary
+  folder. `ui/api.py` includes the router (so `/docs` lists the real endpoints) and uses `Console` where a chat build
+  uses `Agent`. Every rule stays in `src/`: `src/core.py` (one function per endpoint) arrives in phase 2; in phase 1
+  the routes themselves answer `501`.
+- **Parameters arrive as text and `src/core.py` checks them**, so every bad value gets the spec's own `400` and
+  fix-it message (a typed `page: int` would answer with the framework's `422` instead). A line the console can't read
+  is a `400` too, with an example request line.
+- **spec.md §3** adds an endpoint table `| Method + path | Parameters | Returns | Errors | Works from phase |`.
+  Every error is a rule with exact JSON: a bad parameter is `400` with a fix-it message, an unknown id `404`, an
+  unbuilt route `501` with `🚧 <feature> arrives in phase N`.
+- **plan.md §5 Records** shows each endpoint's request and response as JSON, next to the stored records.
+- **Search or ranking?** Then quality is measured, not eyeballed: spec.md §7 gets a second table, the **labelled
+  queries** `| # | Query | Relevant ids (best first) |` (Q1..Qn, 8–12, written from the data, covering synonyms,
+  typos, filters and one query with no good answer), and plan.md §6 says how `evals/run.py` scores them: precision@k
+  and recall@k per query and on average, the target the notes give (else ask), and how ranking ties are broken (a
+  rule in spec.md). A requirement in phase 4 quotes the target ("precision@3 ≥ 0.8").
+- **Scale** (plan.md §1 gets a `**Scale:**` paragraph, and §8 a question on it): the data size today and the size the
+  notes name (ask if they don't), what the POC does per request (e.g. "scans all 30 rows in memory"), what breaks
+  first as it grows, and the change that fixes it (an index, a search engine, pagination, a cache, a queue), with the
+  latency or throughput number it is aiming at. Pagination and a result limit are rules, built in the POC. **Mark
+  every number as measured or estimated**; `/build` phase 4 replaces estimates it can measure (time per request with
+  and without the model) with the measured ones.
+- **The model has to earn its place.** If a keyword reader in code could read the query too, the labelled queries
+  include at least two that only the model gets right (a paraphrase no synonym list has), and the eval prints both
+  readers' scores side by side. A fallback from the model to the keyword reader records why (the error) in the
+  request log.
+- **The board mid-build:** a scenario whose route already works but whose rule arrives later shows ❌, not ⬜, so its
+  phase line says `Board S3 ❌→✅`.
+
 From the interviewer's answers in raw.md, take **exactly 3**, in their words where possible:
 1. **Happy path**: their typical example
 2. **Edge case**: their tricky or messy case
@@ -44,7 +85,7 @@ From the interviewer's answers in raw.md, take **exactly 3**, in their words whe
    blocks the action (clash, over capacity, not allowed) or it needs someone's approval. (Add a "bonus" for the
    check-in stop trigger if the notes name one: injection, abuse, a dangerous input.)
 A scenario's input fits the shape: chat = a conversation; batch = an item + its expected result; Q&A = a question +
-the answer and its source; tool = the form values + the result; dashboard = a filter + what the chart/table shows;
+the answer and its source; API = a request line + the status and JSON; tool = the form values + the result; dashboard = a filter + what the chart/table shows;
 workflow = a record + the action + its new state.
 
 **Variability: thin or messy notes.** Never stall, never invent silently:
@@ -56,6 +97,22 @@ workflow = a record + the action + its new state.
 - **The interviewer names a stack**: React / a web frontend → `**UI:** react` (if Node ≥ 18). Anything else (a database,
   another framework, an API) → keep the POC as is and add a line to spec.md Out of scope + talk §6: "In production this would be
   <their stack>; the logic in core/tools ports as is."
+- **Checks to make on your own plan before §4** (each one broke a real build):
+  - The offline extractor in `evals/scenarios.py` (the fixed stand-in for the model) must give the right fields for
+    **every** input a requirement, scenario or eval case uses offline: walk each input through its keyword list.
+  - A function the kit's screen calls with no arguments (`Agent()`, `run_all()`) shows its defaults in its signature.
+  - A function in a phase-1 file may only call what phase 1 builds; if it needs a later file, say what it does until then.
+  - Each **Does** list is in the order the code runs (an error path sits at the step where it can happen).
+  - Every panel and every value on screen has a function in §4 that produces it (the eval score included), in `src/`.
+  - `evals/run.py` (when the plan uses a model) never counts a busy model as a wrong answer: live, a case whose reply
+    is the model-unavailable line is asked again after a pause (3 tries), then listed as **not scored**, apart from the
+    fails; the scorecard and the Eval score panel say so. It has a requirement and an offline test (an extractor that
+    raises). Its cases are spec.md §7 row for row, each with its E id.
+  - The model prompt states rules (what each field means), never example inputs taken from the eval cases.
+  - The demo data can be reset: `src/data.py` has the reset the screen's Reset button calls, built in phase 2.
+  - In the §3 diagram, only the numbered request path starts a label with a number; write "all 19 rows", not "19 rows".
+  - In a **Try it** line, backticks mark only what the user types into the door (the screen turns each one into a
+    Try button). A terminal command or a file name in a Try-it line is written without backticks.
 - **A new feature mid-build** → the user adds it to the bottom of `notes/raw.md` and re-runs `/discovery`. Update
   **both docs everywhere the feature touches, not just the phases**: spec.md (a scenario or a variation, the §3 panel
   table, new rules B<n> and decisions D<n> numbered after the existing ones, messy data, eval cases, out of scope) and
@@ -185,7 +242,7 @@ completely; a person must also be able to read it once and understand the code.
      - **`On screen (before → after):`** one line naming exactly what changes in the app, e.g.
        `Board S1 ⬜→✅ · Refund requests ⬜→live · S1 reply 🚧→real`.
      - **`Builds:`** the file list above, in this project's words.
-     - **`Try it:`** 2–4 lines: `` `<exact input>` → "<exact text the user should see>" ``, with the expected reply or
+     - **`Try it:`** 2–5 lines: `` `<exact input>` → "<exact text the user should see>" ``, with the expected reply or
        panel text **in quotes, character for character** (including emoji and the final period). Use the scenarios' exact inputs
        (an "input" is whatever the shape takes: a chat line, a sample file to upload, a question).
        - **Phase 1** (nothing works yet, so it's a tour): line 1 = S1's input → its exact 🚧 stub reply, e.g.

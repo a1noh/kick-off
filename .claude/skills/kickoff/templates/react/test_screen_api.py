@@ -44,10 +44,11 @@ def test_stub_replies_never_show_green():
 
 
 def test_chat_sessions_are_separate():
+    real = api.config["agent_factory"]
     api.config["agent_factory"] = StubAgent
     try:
         a, b = (client.post("/api/new").json()["session"] for _ in range(2))
         assert a != b
         assert client.post("/api/chat", json={"session": a, "text": "hi"}).json()["reply"].startswith("🚧")
     finally:
-        api.config["agent_factory"] = api.Agent
+        api.config["agent_factory"] = real

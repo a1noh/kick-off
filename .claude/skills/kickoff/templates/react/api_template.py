@@ -20,6 +20,7 @@ from evals.scenarios import run_all
 UI = Path(__file__).resolve().parent  # ui/ (the product code is in src/, on the path via classroom.pth)
 TITLE = "Product name"  # /build: from plan.md title
 TABS = ["💬 Chat", "📊 Owner dashboard"]  # /build: tab 1 = the shape's door (spec.md §3)
+DOOR = {"name": "Chat", "fresh": "New chat", "placeholder": "Type your message…"}  # /build: tab 1's own words
 PANELS: dict[str, int] = {"KPIs": 2, "Queue": 3, "Audit log": 3, "Eval score": 4}  # /build: spec.md §3 table
 WIDE: set[str] = {"KPIs", "Queue"}  # /build: panels that run full width in the §2b sketch
 SHOWS: dict[str, str] = {}  # /build: panel -> what it will show (§2b table "Shows" column), for the empty state
@@ -76,8 +77,9 @@ def screen() -> dict:
         "try_it": progress.try_it(n),
         "board": board,
         "next": progress.next_command(),
+        "can_reset": RESET is not None,
     }
-    return {"title": TITLE, "tabs": TABS, "sidebar": sidebar, "panels": [panel(p) for p in PANELS]}
+    return {"title": TITLE, "tabs": TABS, "door": DOOR, "sidebar": sidebar, "panels": [panel(p) for p in PANELS]}
 
 
 def screen_text() -> str:
@@ -106,13 +108,13 @@ class Message(BaseModel):
 app = FastAPI(title=TITLE)
 
 
-@app.get("/api/screen")
+@app.get("/api/screen", include_in_schema=False)
 def get_screen() -> dict:
     """GET /api/screen: the whole screen as one JSON (see screen())."""
     return screen()
 
 
-@app.post("/api/new")
+@app.post("/api/new", include_in_schema=False)
 def new_chat() -> dict:
     """A fresh chat: a new session id and a new agent (nothing carries over, e.g. who verified)."""
     sid = uuid.uuid4().hex
@@ -120,7 +122,7 @@ def new_chat() -> dict:
     return {"session": sid}
 
 
-@app.post("/api/chat")
+@app.post("/api/chat", include_in_schema=False)
 def chat(m: Message) -> dict:
     """POST /api/chat: pass one message to this session's agent and return its reply."""
     agent = sessions.get(m.session)
@@ -129,7 +131,7 @@ def chat(m: Message) -> dict:
     return {"reply": agent.reply(m.text)}
 
 
-@app.post("/api/reset")
+@app.post("/api/reset", include_in_schema=False)
 def reset() -> dict:
     """Rebuild the demo records from data/ and drop every chat."""
     if RESET is None:

@@ -4,7 +4,7 @@ import { ArrowUp, MessageSquarePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { allInputs } from "../lib/tryit.js";
 
-export default function Chat({ chat, onSend, onNew, suggestions = [] }) {
+export default function Chat({ chat, onSend, onNew, suggestions = [], door = {} }) {
   const [text, setText] = useState("");
   const input = useRef(null);
   const end = useRef(null);
@@ -25,10 +25,10 @@ export default function Chat({ chat, onSend, onNew, suggestions = [] }) {
   };
 
   return (
-    <section className="chat" aria-label="Chat">
+    <section className="chat" aria-label={door.name || "Chat"}>
       <div className="chat-head">
         <button type="button" className="ghost" onClick={onNew}>
-          <MessageSquarePlus size={15} aria-hidden /> New chat
+          <MessageSquarePlus size={15} aria-hidden /> {door.fresh || "New chat"}
         </button>
       </div>
 
@@ -74,7 +74,7 @@ export default function Chat({ chat, onSend, onNew, suggestions = [] }) {
           ref={input}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Type your message…"
+          placeholder={door.placeholder || "Type your message…"}
           aria-label="Message"
           disabled={!chat.session}
         />

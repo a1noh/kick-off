@@ -33,7 +33,9 @@ export default function TryIt({ lines, phase, onTry, busy }) {
   const run = async (i, j, step) => {
     const reply = await onTry(step.input);
     if (reply === null || reply === undefined) return;
-    const ok = step.expect === null || reply === step.expect;
+    // An API console replies "<status>\n<JSON>": the plan quotes one piece of it, so the reply must contain it.
+    const console = /^\d{3}\n/.test(reply || "");
+    const ok = step.expect === null || reply === step.expect || (console && reply.includes(step.expect));
     set(`${i}.${j}`, ok ? "match" : "differs");
     toast(ok ? "Reply matches" : "Reply differs from the plan", { description: ok ? undefined : reply });
   };

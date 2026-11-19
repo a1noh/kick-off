@@ -75,7 +75,7 @@ echo "SETUP OK: $DEST"
 ## Verify block
 Runs each hook exactly as Claude Code will (the command from `.claude/settings.json`), so it proves the kit is found.
 ```bash
-cd "$DEST" && export CLAUDE_PROJECT_DIR="$PWD" && KIT="$KIT_HOME/templates"
+DEST="${DEST:-$PWD}"; cd "$DEST" && export CLAUDE_PROJECT_DIR="$PWD" && KIT="$KIT_HOME/templates"
 hook() { .venv/bin/python -c "import json,sys; print(json.load(open('.claude/settings.json'))['hooks'][sys.argv[1]][0]['hooks'][0]['command'])" "$1"; }
 printf 'import os\ndef probe( x ):\n  return x\n' > zz_probe.py
 echo '{"tool_name":"Write","tool_input":{"file_path":"'"$PWD"'/zz_probe.py","content":"x"}}' | bash -c "$(hook PostToolUse)"

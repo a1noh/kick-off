@@ -52,6 +52,10 @@ export default function App({ initialScreen = null }) {
     [chat.session, chat.sending, refresh, initialScreen],
   );
 
+  useEffect(() => {
+    if (screen?.title) document.title = screen.title;
+  }, [screen?.title]);
+
   if (!screen) return <p className="loading">Loading…</p>;
 
   const reset = () =>
@@ -76,7 +80,7 @@ export default function App({ initialScreen = null }) {
           ))}
         </nav>
         {tab === 0 ? (
-          <Chat chat={chat} onSend={send} onNew={newChat} suggestions={screen.sidebar.try_it} />
+          <Chat chat={chat} onSend={send} onNew={newChat} suggestions={screen.sidebar.try_it} door={screen.door} />
         ) : (
           <section aria-label={screen.tabs[1]}>
             <div className="panels">

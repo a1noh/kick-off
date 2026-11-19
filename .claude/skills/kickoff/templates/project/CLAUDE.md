@@ -47,7 +47,7 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 - **Must match the sketch in spec.md §3.** Everything exists from phase 1: panels not live yet show `⬜ <panel>: arrives
   in phase N`; unbuilt behavior replies `🚧 <feature> arrives in phase N` and never claims success. Never remove a panel.
 - **Tab 1, the user's door** (the shape): chat (input + history + "New chat"), batch (upload / "use sample" → results),
-  Q&A (question → answer + source), tool (form → result + updated view), dashboard (filters → KPIs, chart, table),
+  Q&A (question → answer + source), API (a request line → status + JSON), tool (form → result + updated view), dashboard (filters → KPIs, chart, table),
   workflow (records → pick one → allowed actions → new state). One-click actions sit in the chat header (`ACTIONS`).
 - **Tab 2, 📊 Owner dashboard**: KPIs, the domain view of what the system did, the handoff/blocked queue, the audit log,
   the eval score. At most one owner action, only if the notes name a human step, through a gated tool, audited.
@@ -81,6 +81,9 @@ Hooks (in `.claude/settings.json`, found at run time): ruff on every edit, the r
 - **Agent** (the core job needs free text): **chat**, **batch** (a file of items, each classified/extracted, then routed) or **Q&A**.
 - **App** (no free text at the core): **tool**, **dashboard** or **workflow**, with at most **one optional AI helper**
   for a single step (e.g. words → form fields); the app still works with it off.
+- **API** (the notes ask for an API or a service): the product is its `/v1` routes in `src/service.py`; tab 1 is a
+  **🔌 API console** (a request line → status + JSON). Search or ranking is scored on labelled queries (precision@k,
+  recall@k); plan.md §1 has a **Scale** paragraph.
 - Every shape: ① read the input → ② Python decides → ③ act → ④ output. Extra steps only when a spec rule needs one.
 
 ## Architecture: as small as the code, drawn from the plan

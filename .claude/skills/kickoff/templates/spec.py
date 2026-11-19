@@ -144,13 +144,14 @@ def code_problems() -> tuple[list[str], list[str]]:
         if rel.startswith(("src/", "evals/")) and rel not in listed:  # §3 explains the backend, §5 the evals; ui/ gets a §2 line
             fails.append(f"{rel}: no function of it is explained in plan.md Functions (src/) or Evals (evals/)")
         lines = len(path.read_text().splitlines())
-        if lines > MAX_FILE:
+        sized = rel != "ui/api.py"  # the kit's screen template: its size is the kit's, not this build's
+        if sized and lines > MAX_FILE:
             warns.append(f"{rel}: {lines} lines (aim for ~{MAX_FILE})")
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 if not ast.get_docstring(node):
                     fails.append(f"{rel}:{node.lineno} {node.name}() has no docstring")
-                if node.end_lineno - node.lineno + 1 > MAX_FUNCTION:
+                if sized and node.end_lineno - node.lineno + 1 > MAX_FUNCTION:
                     warns.append(
                         f"{rel}: {node.name}() is {node.end_lineno - node.lineno + 1} lines (aim for ~{MAX_FUNCTION})"
                     )
@@ -254,7 +255,7 @@ def arrow_number_problems() -> list[str]:
     diagrams = re.findall(r"```mermaid\n(.*?)```", progress.section("How it works"), re.S)
     numbers = [int(n) for n in re.findall(r'-- "(\d+) ', diagrams[0] if diagrams else "")]
     if numbers and numbers != list(range(1, len(numbers) + 1)):
-        return [f"plan.md How it works: number the request's arrows 1, 2, 3, … once each, in order (found {numbers})"]
+        return [f"plan.md How it works: number the request's arrows 1, 2, 3, … once each, in order (found {numbers}); a background arrow's label must not start with a number"]
     return []
 
 
@@ -330,6 +331,13 @@ def sync_problems() -> tuple[list[str], list[str]]:
         for n, (done, _) in sorted(every.items())
         if done and not re.search(rf"\*\*Phase {n} ·", talk)
     ]
+    evals = "".join(path.read_text() for path in ROOT.glob("evals/*.py")) if (ROOT / "evals" / "run.py").exists() else ""
+    spec = (ROOT / "docs" / "spec.md").read_text() if (ROOT / "docs" / "spec.md").exists() else ""
+    warns += [
+        f"docs/spec.md {case}: not found in evals/ (an eval case the runner never plays?)"
+        for case in re.findall(r"^\| ([EQ]\d+) \|", spec, re.M)
+        if evals and f'"{case}"' not in evals
+    ]
     if not all(done for done, _ in every.values()):
         return fails, warns
     last = max(every)
@@ -346,7 +354,7 @@ def sync_problems() -> tuple[list[str], list[str]]:
         f"{entry['name']}() is in plan.md Functions but never named in docs/talk.md or Likely questions"
         for rel, entries in progress.interfaces().items()
         for entry in entries
-        if rel.startswith("src/") and f"{entry['name'].split('.')[-1]}(" not in named
+        if rel.startswith("src/") and not re.search(rf"\b{re.escape(entry['name'].split('.')[-1])}\b", named)
     ]
     return fails, warns
 
@@ -377,7 +385,7 @@ def doc_changes(before_tag: str) -> list[str]:
 
 def chunks(text: str, pattern: str) -> dict[str, str]:
     """Id -> the text from that id up to the next id or `## ` heading, so a reworded rule or function block shows as changed."""
-    marks = list(re.finditer(pattern + r"|^## ", text, re.M))
+    marks = list(re.finditer(pattern + r"|^###? ", text, re.M))
     found = {}
     for mark, following in zip(marks, [*marks[1:], None]):
         name = "".join(g or "" for g in mark.groups())
@@ -470,36 +478,37 @@ def functions_in(source: str) -> dict[str, str]:
 def cmd_changes(n: int) -> int:
     """Print what phase n added to the code (vs. the previous tag), in the plan's words, and what the plan still has to come."""
     before_tag = "plan" if n == 1 else f"phase-{n - 1}"
-    titles = {e["name"]: e.get("title", "") for entries in progress.interfaces().values() for e in entries}
+    titles = {(rel, e["name"]): e.get("title", "") for rel, entries in progress.interfaces().items() for e in entries}
     print(f"🧩 Added in phase {n} (code vs. {before_tag})")
     any_change = False
     for path in product_files():
         rel = str(path.relative_to(ROOT))
-        before, after = functions_in(at_tag(before_tag, rel)), functions_in(path.read_text())
+        old, new = at_tag(before_tag, rel), path.read_text()
+        before, after = functions_in(old), functions_in(new)
         lines = [f"+ {name}" for name in after if name not in before]
         lines += [f"~ {name}" for name in after if name in before and before[name] != after[name]]
-        if not lines:
-            continue
-        any_change = True
+        if not lines and old != new:
+            lines = ["~ (text outside functions: a constant, a prompt or a docstring)"]
+        any_change = any_change or bool(lines)
         for i, line in enumerate(lines):
-            name = line[2:]
-            label = f"{line} — {titles[name]}" if titles.get(name) else line
-            print(f"   {rel if i == 0 else '':<22} {label}")
-    print("   (no function changes)" if not any_change else f"   See the code: git diff {before_tag} phase-{n} -- src/ ui/*.py evals/")
+            title = titles.get((rel, line[2:]), "")
+            print(f"   {rel if i == 0 else '':<22} {line} — {title}" if title else f"   {rel if i == 0 else '':<22} {line}")
+    print("   (no code changes)" if not any_change else f"   See the code: git diff {before_tag} phase-{n} -- src/ ui/*.py evals/")
     print(f"📚 Docs since {before_tag}", *doc_changes(before_tag), sep="\n")
-    written = {name for path in product_files() for name in functions_in(path.read_text())}
-    coming = [(path, e) for path, entries in progress.interfaces().items() for e in entries if e["name"] not in written]
     upcoming = [k for k, (done, _) in sorted(progress.phases().items()) if not done]
-    if upcoming:
-        nxt = upcoming[0]
-        screen = re.search(r"On screen \(before → after\):\*\*\s*(.*)", progress.phase_block(nxt))
-        print(f"🔜 Coming in phase {nxt}: {progress.phases()[nxt][1]}")
-        if screen:
-            print(f"   On screen: {screen[1].strip()}")
-    else:
+    if not upcoming:
         print("🔜 Coming: nothing, every phase is built")
-    for path, entry in coming:
-        print(f"   still to write: {path} · {entry['name']} — {entry.get('title', '')}")
+        return 0
+    screen = re.search(r"On screen \(before → after\):\*\*\s*(.*)", progress.phase_block(upcoming[0]))
+    print(f"🔜 Coming in phase {upcoming[0]}: {progress.phases()[upcoming[0]][1]}")
+    if screen:
+        print(f"   On screen: {screen[1].strip()}")
+    table = progress.file_table()
+    for rel, entries in progress.interfaces().items():
+        written = functions_in((ROOT / rel).read_text()) if (ROOT / rel).exists() else {}
+        for entry in entries:
+            if entry["name"] not in written:
+                print(f"   still to write (phase {max(table.get(rel, upcoming[0]), upcoming[0])}): {rel} · {entry['name']} — {entry.get('title', '')}")
     return 0
 
 
@@ -530,7 +539,7 @@ def cmd_verify(n: int) -> int:
         )
     screen = render_screen()
     rows, missing = screen_claims(n, screen)
-    print("Try-it screen claims:", *(rows or ["  (none)"]), sep="\n")
+    print("Try-it screen claims:", *(rows or ["  (none: this phase's Try-it lines all have an input, so only its tests were checked)"]), sep="\n")
     bad = (
         failed
         or (["app exception"] if "APP EXCEPTION" in screen else [])
