@@ -221,6 +221,9 @@ def plain(text: str) -> str:
     return re.sub(r"\s+", " ", text.replace("`", "")).strip().rstrip(".").casefold()
 
 
+DOC_WARNINGS: list[str] = []  # filled by doc_problems, printed as WARN by cmd_check
+
+
 def doc_problems() -> list[str]:
     """Docs stay accurate: no file:line references, and every named function exists in the code."""
     problems, names = [], defined_names()
@@ -231,6 +234,10 @@ def doc_problems() -> list[str]:
             problems += json_problems(text) + hidden_tag_problems(text)
         for diagram in re.findall(r"```mermaid\n(.*?)```", text, re.S):
             problems += [f"{rel}: diagram node {node} is a dead end (no arrow out)" for node in dead_ends(diagram)]
+            if len(set(re.findall(r"^\s*(\w+)[\[\(]", diagram, re.M))) > 9 or any(
+                len(label.split()) > 6 for label in re.findall(r'"([^"]+)"', diagram)
+            ):
+                DOC_WARNINGS.append(f"{rel}: a diagram has more than 9 boxes or a label over 6 words; keep it simple (8 boxes, 1–4 words)")
     problems += architecture_problems()
     problems += arrow_number_problems()
     problems += design_problems()
@@ -566,7 +573,7 @@ def cmd_check() -> int:
     fails, warns = code_problems()
     sync_fails, sync_warns = sync_problems()
     problems = plan_problems() + fails + file_problems() + doc_problems() + sync_fails + repo_problems()
-    warns += sync_warns
+    warns += sync_warns + DOC_WARNINGS
     if progress.last_ticked() and (ROOT / "ui" / "api.py").exists():
         _, missing = screen_claims(progress.last_ticked(), render_screen())
         problems += [f"phase {progress.last_ticked()} Try it says {q} is on screen, but it isn't" for q in missing]

@@ -153,7 +153,7 @@ names, no function names, so the client or a new teammate can read it top to bot
      upload / new question, to fit the shape), give the input, compare
      the reply **and** the panel to the expected result → all match? `/build` · anything off? tell Claude what you saw.
 4. **The design** (the most important section for the person presenting it): how the product works as **logical
-   steps**, before any file exists. One mermaid diagram (SAFE MERMAID, no dead ends, **no file or function names**):
+   steps**, before any file exists. One mermaid diagram (SAFE MERMAID, no dead ends, **no file or function names**; **Keep it simple: at most 8 boxes, every label 1–4 words** (a box says what it is or does, an arrow what it carries), no `<br/>`.):
    what comes in → each check or decision in order → every way out (the answer, the stop, the handoff). Then the **who
    decides each step** table (the AI model only reads; every rule is plain code, and why), **design choices** (3–5
    lines: chose X over Y because Z, citing B/D ids), and **how we know it works** in plain words (scenarios, eval cases,
@@ -183,7 +183,7 @@ completely; a person must also be able to read it once and understand the code.
    calls the others, builds the reply, decides nothing itself), the decisions (`rules.py` / guards: pure functions),
    the reads and writes (`data.py` / `tools.py`). `spec.py check` fails on a code file that isn't in the table, and on
    a ticked phase whose files don't exist. Under it, "How it's checked" in 3 bullets: tests, the board, the evals.
-3. **How it works**: **one simple diagram** drawn for this project, never from a fixed template: one box per product
+3. **How it works**: **one simple diagram** drawn for this project, never from a fixed template (**Keep it simple: at most 8 boxes, every label 1–4 words** (a box says what it is or does, an arrow what it carries), no `<br/>`. The box is the file name, then a colon and its job in 1–3 words): one box per product
    file (`src/…`, `ui/api.py`) labeled with its job, the data stores it reads or writes, the user at each end, and
    arrows that say what they carry. The arrows one request follows (the S1 path) start with `1 `, `2 `, `3 `, … in the
    order they happen, once each; background arrows (loading data, saving, the owner's view) stay unnumbered. A guard, a queue or a stop box only when a spec.md rule needs one (CLAUDE.md

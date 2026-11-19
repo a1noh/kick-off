@@ -36,9 +36,9 @@ when a spec.md rule needs one. `spec.py check` fails when a product file has no 
 ```mermaid
 flowchart TD
   U(["‹the user›"])
-  API["ui/api.py<br/>‹door›"]
-  AG["src/agent.py<br/>‹orchestrates: one job›"]
-  TO["src/tools.py<br/>‹acts: one job›"]
+  API["ui/api.py: ‹door›"]
+  AG["src/agent.py: ‹one job›"]
+  TO["src/tools.py: ‹one job›"]
   D[("out/‹records›.jsonl")]
 
   U -- "1 ‹what they send›" --> API
