@@ -379,7 +379,7 @@ def at_tag(tag: str, rel: str) -> str:
 
 
 DOC_IDS = {
-    "docs/spec.md": r"^### (S\d+)|^\s*- \*\*([BD]\d+)\*\*|^\| ([EGQ]\d+) \|",
+    "docs/spec.md": r"^### (S\d+|Bonus)|^\s*- \*\*([BD]\d+)\*\*|^\| ([EGQ]\d+) \|",
     "docs/plan.md": r"^- \[[ x]\] (Phase \d+)|\*\*(P\d+\.R\d+)\*\*|^#### `([\w.]+)`|^## (8\. Likely questions)",
     "docs/talk.md": r"\*\*(Phase \d+) ·|^## ([1-6]\. [^\n]+)",
 }
@@ -484,7 +484,8 @@ def functions_in(source: str) -> dict[str, str]:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             found[node.name] = ast.get_source_segment(source, node) or ""
         elif isinstance(node, ast.ClassDef):
-            found[node.name] = ast.get_source_segment(source, node) or ""
+            # The class itself is its header, docstring and attributes: a changed method is reported as that method.
+            found[node.name] = "\n".join(ast.dump(item) for item in node.body if not isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)))
             for item in node.body:
                 if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     found[f"{node.name}.{item.name}"] = ast.get_source_segment(source, item) or ""

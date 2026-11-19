@@ -238,7 +238,8 @@ completely; a person must also be able to read it once and understand the code.
        `Board S1 ⬜→✅ · Refund requests ⬜→live · S1 reply 🚧→real`.
      - **`Builds:`** the file list above, in this project's words.
      - **`Try it:`** 2–5 lines: `` `<exact input>` → "<exact text the user should see>" ``, with the expected reply or
-       panel text **in quotes, character for character** (including emoji and the final period). Use the scenarios' exact inputs
+       panel text **in quotes, character for character** (including emoji and the final period); a reply of several lines
+       quotes **one whole line** of it (the screen's Try button passes when the reply has that line). Use the scenarios' exact inputs
        (an "input" is whatever the shape takes: a chat line, a sample file to upload, a question).
        - **Phase 1** (nothing works yet, so it's a tour): line 1 = S1's input → its exact 🚧 stub reply, e.g.
          `"🚧 Rescheduling arrives in phase 2."`; then "open the 📊 Owner dashboard tab → every panel shows

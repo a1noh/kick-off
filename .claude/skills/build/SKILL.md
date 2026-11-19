@@ -19,7 +19,7 @@ venv's `classroom.pth`. Product layout and rules: the project's `CLAUDE.md` (thi
 ## 0. Check
 - `docs/plan.md` must exist with phase checkboxes. If not, say "run /discovery first" and stop.
 - **Approval gate:** if its `**Status:**` line isn't `approved <date>`, say "plan.md is still a draft: re-run /discovery
-  to approve it" and stop. Never approve it yourself.
+  to approve it" and stop. Never approve it yourself (the only approval `/build` records is the user's yes to a new phase, §0b).
 - **The user said what they want with the command** (`/build also show the phone number`, or a message asking for a
   change): that is a change request, see **0b** first.
 - Take the **first unticked phase** (`- [ ] Phase N: …`). If all are ticked and nothing was asked for, say "All built.
@@ -36,16 +36,19 @@ The docs change **first**, in this order, then the code. The user's words are th
    and record it). New ids continue the numbering; never renumber or delete one. A rule the change alters keeps its id.
 2. **plan.md**, everywhere it touches: §1, §2 Files, the §3 diagram, each new or changed §4 function block (Does, In,
    Out), §5 Records, §6 Evals, and the requirements with `Traces to: B<n> · user <date>: "<their words>"`. If the change
-   makes an already-built requirement false (a count, a list), update its Acceptance to what is now true, add
-   ` · updated in phase N`, and update its test: the docs never keep a line that is no longer true.
+   makes an already-built line false (a count, a list, a reply's text), make it true everywhere it is quoted: the
+   requirement's Acceptance (add ` · updated in phase N` at the end of that line), the Try-it lines of earlier
+   phases, spec.md's scenarios and eval rows, and the §4/§6 examples. The docs never keep a line that is no longer
+   true. The old **tests and eval expectations** change later, as the first step of building the phase (tests first:
+   they go red, then the code turns them green), so the docs commit stays green.
 3. **Where it lands:**
    - phases still unbuilt → fold it into them (say which);
    - everything built → it becomes the next phase, **Phase 5** (6, …), with the same four parts (On screen, Builds,
      Try it, Requirements). Its Builds line names each built function it alters as "changes `name`" (until the phase
-     is built, `spec.py check` only warns that plan and code differ there). A new board row or panel is written
-     `Board S4 new→✅`.
-4. Run `spec.py check` → `SPEC OK`, then show the user what was added: the output of `spec.py changes <last built
-   phase>`'s 📚 lines plus two or three plain sentences. **A new phase needs their yes:** set `**Status:** draft`, ask
+     is built, `spec.py check` only warns that plan and code differ there). A new board row is written
+     `Board S4 new→✅`, a new panel `Most asked new→live`.
+4. Run `spec.py check` → `SPEC OK`, then show the user what was added: the 📚 lines of `spec.py changes <the new phase's number>`
+   (it compares with the last built phase) plus two or three plain sentences. **A new phase needs their yes:** set `**Status:** draft`, ask
    "Build Phase N: <name>?" (Approve / Change something), and on Approve set `**Status:** approved <today>` and commit
    `plan: phase N added (<their words, short>)`. A change folded into unbuilt phases needs no question.
 5. Then build as usual from §1 below. The last phase always ends with the client docs rewritten (§4).
@@ -118,7 +121,8 @@ The docs change **first**, in this order, then the code. The user's words are th
 ## 3. Verify (nothing goes back to the user until all of this is green)
 1. **Tick the phase** in plan.md (`- [x] Phase N: …`) first: the tests and the screen checks read the ticks, so a test like
    "phase 3 unticked → 🚧 stub" is only true once the plan says what is built. If anything below stays red, untick it
-   before you stop. Then `.venv/bin/python -m pytest -q tests`: green.
+   before you stop. A requirement that is proved by the docs ("talk.md is filled") needs those docs written first
+   (step 5). Then `.venv/bin/python -m pytest -q tests`: green.
 2. From phase 2: `.venv/bin/python scripts/demo.py` (live Gemini if the plan uses it; key missing or Gemini down → say so, continue).
    **A live run that fails is a finding, not a number to tune away.** Fix the prompt with a general rule (what the
    field means), never by pasting the failing input into it; re-run at least twice; and report every prompt change with

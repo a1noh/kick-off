@@ -35,7 +35,9 @@ export default function TryIt({ lines, phase, onTry, busy }) {
     if (reply === null || reply === undefined) return;
     // An API console replies "<status>\n<JSON>": the plan quotes one piece of it, so the reply must contain it.
     const console = /^\d{3}\n/.test(reply || "");
-    const ok = step.expect === null || reply === step.expect || (console && reply.includes(step.expect));
+    // A reply of several lines: the plan quotes one whole line of it.
+    const oneLine = (reply || "").split("\n").includes(step.expect);
+    const ok = step.expect === null || reply === step.expect || oneLine || (console && reply.includes(step.expect));
     set(`${i}.${j}`, ok ? "match" : "differs");
     toast(ok ? "Reply matches" : "Reply differs from the plan", { description: ok ? undefined : reply });
   };
